@@ -1,0 +1,16 @@
+<div class="sidebar">
+    <img src="../../../assets/logo.png" alt="Vaxaro Logo">
+
+    <ul>
+        @for(item of menuItems; track item){
+        <li>
+            {{ item }}
+        </li>
+        }
+    </ul>
+
+    <div class="logout">
+        <span class="material-icons">logout</span>
+        <span>Logout</span>
+    </div>
+</div>
