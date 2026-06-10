@@ -17,7 +17,6 @@ $gray-900: #0f172a;
 $success: #22c55e;
 $purple: #8b5cf6;
 
-// ─── Wrapper ──────────────────────────────────────────────────────────────────
 .login-wrapper {
   display: flex;
   min-height: 100vh;
@@ -25,31 +24,29 @@ $purple: #8b5cf6;
   background: $gray-100;
 }
 
-// ─── LEFT PANEL ───────────────────────────────────────────────────────────────
 .left-panel {
   position: sticky;
   top: 0;
   width: 52%;
   height: 100vh;
   flex-shrink: 0;
-  background: #f1f6fd; // <-- Aapki image ka background color light blue (#f1f6fd) hai. Jab aap ye color denge to image aur panel ek jaisa lagega aur pata hi nahi chalega ki image 100x100 ki hai ya badi!
+  background: #f1f6fd;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px; // <-- Isse image ko thoda breathing space milega aur wo box ke hisab se automatic shrink hogi
+  padding: 20px;
 }
 
 .panel-image {
   width: 100%;
-  height: auto; // <-- Isko auto kar dein taaki image stretch ya crop na ho
-  max-height: 100%; // <-- Maximum pure box ki height jitna hi badhegi
-  object-fit: contain; // <-- Isse image kabhi bhi cut ya crop nahi hogi, safe adjust hogi
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
   object-position: center;
   display: block;
 }
 
-// ─── RIGHT PANEL ──────────────────────────────────────────────────────────────
 .right-panel {
   width: 48%;
   min-height: 100vh;
@@ -62,7 +59,6 @@ $purple: #8b5cf6;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.06);
 }
 
-// Language selector
 .lang-selector {
   display: flex;
   align-items: center;
@@ -98,7 +94,6 @@ $purple: #8b5cf6;
   }
 }
 
-// Form container
 .form-container {
   flex: 1;
   display: flex;
@@ -109,7 +104,6 @@ $purple: #8b5cf6;
   margin: 0 auto;
 }
 
-// Form header
 .form-header {
   margin-bottom: 28px;
 
@@ -128,9 +122,8 @@ $purple: #8b5cf6;
   }
 }
 
-// Field group
 .field-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 
   label {
     display: block;
@@ -207,7 +200,6 @@ $purple: #8b5cf6;
   }
 }
 
-// Form options row
 .form-options {
   display: flex;
   align-items: center;
@@ -282,7 +274,6 @@ $purple: #8b5cf6;
   }
 }
 
-// Login button
 .login-btn {
   width: 100%;
   padding: 13px;
@@ -309,7 +300,6 @@ $purple: #8b5cf6;
   }
 }
 
-// Divider
 .divider {
   display: flex;
   align-items: center;
@@ -330,7 +320,6 @@ $purple: #8b5cf6;
   }
 }
 
-// Social buttons
 .social-btns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -371,7 +360,6 @@ $purple: #8b5cf6;
   }
 }
 
-// Role section
 .role-section {
   h3 {
     font-size: 14px;
@@ -478,7 +466,6 @@ $purple: #8b5cf6;
     }
 }
 
-// Footer
 .page-footer {
   padding: 16px 0 20px;
   text-align: center;
@@ -494,7 +481,6 @@ $purple: #8b5cf6;
   }
 }
 
-// ─── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 960px) {
   .login-wrapper {
     flex-direction: column;
