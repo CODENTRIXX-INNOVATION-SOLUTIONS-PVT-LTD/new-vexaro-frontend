@@ -1,0 +1,15 @@
+.revenue-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.card-header h3 {
+    margin: 0 0 20px;
+    color: #111827;
+}
+
+.chart-wrapper {
+    height: 350px;
+}   
