@@ -3,14 +3,14 @@
 
     <ul>
         @for(item of menuItems; track item){
-        <li>
-            {{ item }}
-        </li>
+         <li [routerLink]="item.route">
+      {{ item.label }}
+    </li>
         }
     </ul>
 
-    <div class="logout">
-        <span class="material-icons">logout</span>
-        <span>Logout</span>
-    </div>
+   <div class="logout" (click)="logout()">
+    <span class="material-icons">logout</span>
+    <span>Logout</span>
+</div>
 </div>

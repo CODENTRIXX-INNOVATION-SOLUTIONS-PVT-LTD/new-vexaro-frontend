@@ -1,0 +1,108 @@
+* {
+  box-sizing: border-box;
+}
+
+.dashboard {
+  padding: 20px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 12px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar input {
+  width: 400px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.topbar-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.stats {
+  margin-top: 20px;
+
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.card h4 {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.card h2 {
+  margin-bottom: 10px;
+}
+
+.chart-section {
+  margin-top: 20px;
+
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.chart-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.fake-chart {
+  margin-top: 20px;
+  height: 250px;
+  background: #eef2ff;
+  border-radius: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bottom-section {
+  margin-top: 20px;
+
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.table-card,
+.revenue-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}

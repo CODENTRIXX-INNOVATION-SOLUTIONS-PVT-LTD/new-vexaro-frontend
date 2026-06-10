@@ -1,0 +1,28 @@
+<div class="stats-container">
+
+    @for(card of cards; track card.title){
+
+    <div class="card">
+
+        <h4>{{card.title}}</h4>
+
+        <h2>{{card.value}}</h2>
+
+        <p
+            [class.positive]="card.symbol === '+'"
+            [class.negative]="card.symbol === '-'">
+
+            <span class="arrow">
+                {{ card.symbol === '+' ? '↑' : '↓' }}
+            </span>
+
+            {{card.percentage}}%
+        </p>
+
+        <p>vs last month</p>
+
+    </div>
+
+    }
+
+</div>

@@ -1,0 +1,46 @@
+<div class="header">
+
+    <div class="search-box">
+        <span class="material-icons">search</span>
+
+        <input
+            type="text"
+            placeholder="Search anything..." />
+    </div>
+
+    <div class="header-right">
+
+        <button class="icon-btn">
+            <span class="material-icons">mail_outline</span>
+        </button>
+
+        <button class="icon-btn notification">
+            <span class="material-icons">notifications_none</span>
+            <span class="badge">3</span>
+        </button>
+
+        <div class="profile">
+
+            <img
+                [src]="profileImage"
+                [alt]="userName">
+
+            <div class="profile-info">
+
+                <span class="role">{{ role }}</span>
+
+                <h4>{{ userName }}</h4>
+
+                <p>{{ email }}</p>
+
+            </div>
+
+            <span class="material-icons dropdown">
+                expand_more
+            </span>
+
+        </div>
+
+    </div>
+
+</div>

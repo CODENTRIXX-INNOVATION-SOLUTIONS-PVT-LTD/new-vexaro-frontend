@@ -1,14 +1,6 @@
 <div class="layout">
-
-  <app-sidebar
-    title="Super Admin"
-    [menuItems]="menuItems">
-  </app-sidebar>
-
-  <div class="content">
-
-    <h1>Super Admin Dashboard</h1>
-
-  </div>
-
+    <app-sidebar title="Super Admin" [menuItems]="menuItems"></app-sidebar>
+    <div class="content">
+        <router-outlet></router-outlet>
+    </div>
 </div>
