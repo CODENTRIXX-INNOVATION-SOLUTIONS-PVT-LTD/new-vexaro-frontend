@@ -4,6 +4,7 @@ import { MerchantDashboard } from './dashboards/merchant-dashboard/merchant-dash
 import { DistributorDashboard } from './dashboards/distributor-dashboard/distributor-dashboard';
 import { WarehouseDashboard } from './dashboards/warehouse-dashboard/warehouse-dashboard';
 import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './register/register.component';
 
 // SUPER-ADMIN
 import { Dashboard } from './pages/super-admin/dashboard/dashboard';
@@ -42,6 +43,10 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent
+  },
+  {
+    path: 'register',
+    component: RegisterComponent
   },
   {
     path: 'super-admin',
