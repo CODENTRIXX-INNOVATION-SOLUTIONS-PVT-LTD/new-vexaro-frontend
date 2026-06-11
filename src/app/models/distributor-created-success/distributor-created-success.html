@@ -1,0 +1,55 @@
+<div class="success-modal">
+
+    <!-- Close -->
+    <button class="close-btn" (click)="closeModal()">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <!-- Success Icon -->
+    <div class="success-icon">
+        <i class="fa-solid fa-check"></i>
+    </div>
+
+    <h2>Distributor Created Successfully!</h2>
+
+    <p class="subtitle">
+        Login credentials have been generated and sent.
+    </p>
+
+    <!-- Credentials Card -->
+    <div class="credential-card">
+
+        <h3>Distributor Credentials</h3>
+
+        <label>Username</label>
+
+        <div class="input-box">
+            <input type="text" [value]="username" readonly>
+
+            <button (click)="copyText(username)">
+                <i class="fa-regular fa-copy"></i>
+            </button>
+        </div>
+
+        <label>Temporary Password</label>
+
+        <div class="input-box">
+            <input type="text" [value]="password" readonly>
+
+            <button (click)="copyText(password)">
+                <i class="fa-regular fa-copy"></i>
+            </button>
+        </div>
+
+        <div class="info">
+            <i class="fa-solid fa-circle-info"></i>
+            Credentials sent via Email & SMS
+        </div>
+
+    </div>
+
+    <button class="done-btn" (click)="closeModal()">
+        Done
+    </button>
+
+</div>

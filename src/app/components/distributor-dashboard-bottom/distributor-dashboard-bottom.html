@@ -1,0 +1,93 @@
+<div class="bottom-section">
+
+    <!-- Today's Deliveries -->
+    <div class="deliveries-card">
+
+        <div class="card-header">
+            <h3>Today's Deliveries</h3>
+            <button>View All</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tracking ID</th>
+                    <th>Merchant</th>
+                    <th>Customer</th>
+                    <th>Area</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let delivery of deliveries">
+
+                    <td>{{ delivery.trackingId }}</td>
+
+                    <td>{{ delivery.merchant }}</td>
+
+                    <td>{{ delivery.customer }}</td>
+
+                    <td>{{ delivery.area }}</td>
+
+                    <td>
+                        <span
+                            class="status"
+                            [ngClass]="{
+                                'delivered': delivery.status === 'Delivered',
+                                'transit': delivery.status === 'Out for Delivery',
+                                'pending': delivery.status === 'Pending'
+                            }">
+
+                            {{ delivery.status }}
+
+                        </span>
+                    </td>
+
+                    <td>
+                       <button class="update-btn">
+                <i class="fas fa-edit"></i>
+                  Update
+                  </button>
+                    </td>
+
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <!-- Quick Summary -->
+    <div class="summary-card">
+
+        <h3>Quick Summary</h3>
+
+        <div class="summary-item">
+            <span>Total Shipments</span>
+            <strong>{{ summary.totalShipments }}</strong>
+        </div>
+
+        <div class="summary-item">
+            <span>Delivered Today</span>
+            <strong>{{ summary.deliveredToday }}</strong>
+        </div>
+
+        <div class="summary-item">
+            <span>Pending</span>
+            <strong>{{ summary.pending }}</strong>
+        </div>
+
+        <div class="summary-item">
+            <span>Failed</span>
+            <strong>{{ summary.failed }}</strong>
+        </div>
+
+        <div class="summary-item">
+            <span>COD Collected</span>
+            <strong>₹{{ summary.codCollected | number }}</strong>
+        </div>
+
+    </div>
+
+</div>

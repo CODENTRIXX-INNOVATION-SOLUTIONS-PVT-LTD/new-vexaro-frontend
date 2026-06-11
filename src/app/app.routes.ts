@@ -25,6 +25,7 @@ import { Inventory } from './pages/warehouse/inventory/inventory';
 import { ScanReceive } from './pages/warehouse/scan-receive/scan-receive';
 import { ScanDispatch } from './pages/warehouse/scan-dispatch/scan-dispatch';
 import { Support } from './pages/warehouse/support/support';
+import { WarehouseDashboardPage } from './pages/warehouse/dashboard/dashboard';
 
 //  DISTRIBUTOR
 import { Deliveries } from './pages/distributor/deliveries/deliveries';
@@ -33,11 +34,15 @@ import { Pickups } from './pages/distributor/pickups/pickups';
 import { FailedDeliveries } from './pages/distributor/failed-deliveries/failed-deliveries';
 import { Drivers } from './pages/distributor/drivers/drivers';
 import { CreateShipment } from './pages/merchant/create-shipment/create-shipment';
+import { DistrubuterDashboardPage } from './pages/distributor/dashboard/dashboard';
 
 // MARCHAND
 import { BulkUpload } from './pages/merchant/bulk-upload/bulk-upload';
 import { Payments } from './pages/merchant/payments/payments';
 import { AddressBook } from './pages/merchant/address-book/address-book';
+import { MarchandeDashboardPage } from './pages/merchant/dashboard/dashboard';
+import { UpdateDistributor } from './components/update-distributor/update-distributor';
+
 
 export const routes: Routes = [
   {
@@ -55,6 +60,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: Dashboard },
       { path: 'merchants', component: Merchants },
       { path: 'distributors', component: Distributors },
+      { path: 'distributors/update/:id', component: UpdateDistributor },
       { path: 'warehouses', component: Warehouses },
       { path: 'shipments', component: Shipments },
       { path: 'tracking', component: Tracking },
@@ -70,7 +76,7 @@ export const routes: Routes = [
     path: 'merchant',
     component: MerchantDashboard,
     children: [
-      { path: 'dashboard', component: Dashboard },
+      { path: 'dashboard', component: MarchandeDashboardPage },
       { path: 'shipments', component: Shipments },
       { path: 'create-shipment', component: CreateShipment },
       { path: 'bulk-upload', component: BulkUpload },
@@ -85,7 +91,7 @@ export const routes: Routes = [
     path: 'distributor',
     component: DistributorDashboard,
     children: [
-      { path: 'dashboard', component: Dashboard },
+      { path: 'dashboard', component: DistrubuterDashboardPage },
       { path: 'deliveries', component: Deliveries },
       { path: 'assign-delivery', component: AssignDelivery },
       { path: 'pickups', component: Pickups },
@@ -100,7 +106,7 @@ export const routes: Routes = [
     path: 'warehouse',
     component: WarehouseDashboard,
     children: [
-      { path: 'dashboard', component: Dashboard },
+      { path: 'dashboard', component: WarehouseDashboardPage },
       { path: 'inbound-shipments', component: InboundShipments },
       { path: 'outbound-shipments', component: OutboundShipments },
       { path: 'inventory', component: Inventory },

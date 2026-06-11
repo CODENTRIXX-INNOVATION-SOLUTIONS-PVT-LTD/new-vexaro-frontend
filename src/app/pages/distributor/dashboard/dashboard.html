@@ -1,1 +1,14 @@
-<p>dashboard works!</p>
+<div class="dashboard">
+    <app-dashboard-header
+        role="Distributor"
+        userName="Ketan Meena"
+        email="ketan@gmail.com"
+        profileImage="https://i.pravatar.cc/150?img=12"
+    ></app-dashboard-header>
+    <app-stats-cards [cards]="cards"></app-stats-cards>
+    <div class="two-section">
+        <app-delivery-overview></app-delivery-overview>
+        <app-delivery-by-status></app-delivery-by-status>
+    </div>
+    <app-distributor-dashboard-bottom></app-distributor-dashboard-bottom>
+</div>

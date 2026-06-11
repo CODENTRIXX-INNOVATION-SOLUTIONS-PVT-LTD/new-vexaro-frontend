@@ -1,28 +1,25 @@
 <div class="stats-container">
-
     @for(card of cards; track card.title){
-
     <div class="card">
-
-        <h4>{{card.title}}</h4>
-
-        <h2>{{card.value}}</h2>
-
-        <p
-            [class.positive]="card.symbol === '+'"
-            [class.negative]="card.symbol === '-'">
-
+        <div class="card-header">
+            <h4>{{ card.title }}</h4>
+            <div class="icon-box" [style.background-color]="card.bgColor">
+                <i [class]="card.icon" [style.color]="card.iconColor"></i>
+            </div>
+        </div>
+        <h2>{{ card.value }}</h2>
+        @if(card.percentage){
+        <p [class.positive]="card.symbol === '+'" [class.negative]="card.symbol === '-'">
             <span class="arrow">
                 {{ card.symbol === '+' ? '↑' : '↓' }}
+        {{ card.percentage }}%
             </span>
-
-            {{card.percentage}}%
         </p>
+        }
 
-        <p>vs last month</p>
-
+    @if(card.compairTo){
+        <p>{{ card.compairTo }}</p>
+        }
     </div>
-
     }
-
 </div>

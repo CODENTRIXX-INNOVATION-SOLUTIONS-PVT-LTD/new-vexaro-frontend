@@ -1,0 +1,53 @@
+<div class="shipment-card">
+
+    <div class="header">
+
+        <h2>Recent Inboud Shipments</h2>
+
+        <button class="view-btn">
+            View All
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Tracking ID</th>
+                    <th>Courier</th>
+                    <th>From</th>
+                    <th>Status</th>
+                    <th>item</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(shipment of shipments; track shipment.trackingId){
+
+                <tr>
+
+                    <td>{{shipment.trackingId}}</td>
+                    <td>{{shipment.customer}}</td>
+                    <td>{{shipment.destination}}</td>
+                    <td>
+                        <span
+                            class="status"
+                            [class.delivered]="shipment.status === 'Delivered'"
+                            [class.transit]="shipment.status === 'In Transit'"
+                            [class.pending]="shipment.status === 'Pending'">
+                            {{shipment.status}}
+                        </span>
+                    </td>
+                    <td>{{shipment.items}}</td>
+                    <td>{{shipment.date}}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

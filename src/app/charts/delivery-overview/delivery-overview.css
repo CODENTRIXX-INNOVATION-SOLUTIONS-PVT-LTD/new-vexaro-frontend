@@ -1,0 +1,12 @@
+.chart-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    height: 350px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.chart-container {
+    height: calc(100% - 60px);
+    position: relative;
+}

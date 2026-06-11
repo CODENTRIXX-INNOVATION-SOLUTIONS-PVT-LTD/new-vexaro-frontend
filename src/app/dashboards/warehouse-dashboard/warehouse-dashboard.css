@@ -1,8 +1,10 @@
-.layout{
-  display:flex;
+.layout {
+  display: flex;
 }
 
-.content{
-  flex:1;
-  padding:20px;
+.content {
+  flex: 1;
+  padding: 20px;
+  max-height: 100vh;
+  overflow: scroll;
 }

@@ -1,0 +1,91 @@
+.shipment-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 22px;
+    color: #111827;
+}
+
+.view-btn {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f8fafc;
+}
+
+th {
+    text-align: left;
+    padding: 16px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+td {
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.delivered {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.transit {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.pending {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+tr:hover {
+    background: #f9fafb;
+}
+
+@media(max-width:768px) {
+
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+}

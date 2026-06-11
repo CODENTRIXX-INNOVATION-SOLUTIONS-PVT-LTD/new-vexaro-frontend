@@ -7,8 +7,10 @@ import { Component, Input } from '@angular/core';
   styleUrl: './dashboard-header.css'
 })
 export class DashboardHeader {
-  @Input() role = 'Super Admin';
-  @Input() userName = 'Vishwas Gour';
-  @Input() email = 'vishwasgour@gmail.com';
-  @Input() profileImage = 'https://i.pravatar.cc/150?img=12';
+  @Input() role = '';
+  @Input() userName = '';
+  @Input() email = '';
+  @Input() profileImage = '';
+  // https://i.pravatar.cc/150?img=12
+
 }

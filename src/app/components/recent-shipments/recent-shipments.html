@@ -18,10 +18,9 @@
                 <tr>
                     <th>Tracking ID</th>
                     <th>Customer</th>
-                    <th>Destination</th>
                     <th>Status</th>
+                    <th>Courier</th>
                     <th>Date</th>
-                    <th>Amount</th>
                 </tr>
             </thead>
 
@@ -35,7 +34,6 @@
 
                     <td>{{shipment.customer}}</td>
 
-                    <td>{{shipment.destination}}</td>
 
                     <td>
                         <span
@@ -49,9 +47,8 @@
                         </span>
                     </td>
 
+                    <td>{{shipment.courier}}</td>
                     <td>{{shipment.date}}</td>
-
-                    <td>{{shipment.amount}}</td>
 
                 </tr>
 
