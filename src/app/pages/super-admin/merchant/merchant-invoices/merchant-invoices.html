@@ -1,0 +1,54 @@
+<div class="page">
+
+    <div class="page-header">
+        <h1>Invoices</h1>
+        <p>Manage merchant invoices and billing history</p>
+    </div>
+
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Invoice No</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (invoice of invoices; track invoice.invoiceNo) {
+
+                <tr>
+
+                    <td>{{ invoice.invoiceNo }}</td>
+
+                    <td>{{ invoice.date }}</td>
+
+                    <td>₹{{ invoice.amount }}</td>
+
+                    <td>
+                        <span class="badge"
+                            [class.paid]="invoice.status === 'Paid'"
+                            [class.pending]="invoice.status === 'Pending'"
+                            [class.overdue]="invoice.status === 'Overdue'">
+
+                            {{ invoice.status }}
+
+                        </span>
+                    </td>
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

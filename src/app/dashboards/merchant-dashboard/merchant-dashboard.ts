@@ -9,13 +9,14 @@ import { RouterOutlet } from '@angular/router';
 })
 export class MerchantDashboard {
   menuItems = [
-  { label: 'Dashboard', route: '/merchant/dashboard' },
-  { label: 'Shipments', route: '/merchant/shipments' },
-  { label: 'Create Shipment', route: '/merchant/create-shipment' },
-  { label: 'Bulk Upload', route: '/merchant/bulk-upload' },
-  { label: 'Payments', route: '/merchant/payments' },
-  { label: 'Reports', route: '/merchant/reports' },
-  { label: 'Address Book', route: '/merchant/address-book' },
-  { label: 'Support', route: '/merchant/support' }
-];
+    { label: 'Dashboard', route: '/merchant/dashboard' },
+    { label: 'Shipments', route: '/merchant/shipments' },
+    { label: 'Tracking', route: '/merchant/tracking' },
+    { label: 'Create Shipment', route: '/merchant/create-shipment' },
+    { label: 'Bulk Upload', route: '/merchant/bulk-upload' },
+    { label: 'Payments', route: '/merchant/payments' },
+    { label: 'Reports', route: '/merchant/reports' },
+    { label: 'Address Book', route: '/merchant/address-book' },
+    { label: 'Support', route: '/merchant/support' }
+  ];
 }

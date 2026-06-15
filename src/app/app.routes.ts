@@ -7,17 +7,18 @@ import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 
 // SUPER-ADMIN
-import { Dashboard } from './pages/super-admin/dashboard/dashboard';
-import { Merchants } from './pages/super-admin/merchants/merchants';
-import { Distributors } from './pages/super-admin/distributors/distributors';
+import { SuperAdminDashboardPage } from './pages/super-admin/dashboard/SuperAdminDashboardPage';
+import { Merchant } from './pages/super-admin/merchant/merchant-list/merchant-list';
+import { DistributorList } from './pages/super-admin/distributor/distributor-list/distributor-list';
 import { Warehouses } from './pages/super-admin/warehouses/warehouses';
 import { Shipments } from './pages/super-admin/shipments/shipments';
 import { Tracking } from './pages/super-admin/tracking/tracking';
 import { RateManagement } from './pages/super-admin/rate-management/rate-management';
-import { Reports } from './pages/super-admin/reports/reports';
+import { AdminReports } from './pages/super-admin/admin-reports/admin-reports';
 import { UserManagement } from './pages/super-admin/user-management/user-management';
-import { Setting } from './pages/super-admin/setting/setting';
-
+import { AdminSetting } from './pages/super-admin/admin-setting/admin-setting';
+import { AdminPayment } from './pages/super-admin/admin-payment/admin-payment';
+import { MerchantProfile } from './pages/super-admin/merchant/merchant-profile/merchant-profile';
 // WAREHOUSE
 import { InboundShipments } from './pages/warehouse/inbound-shipments/inbound-shipments';
 import { OutboundShipments } from './pages/warehouse/outbound-shipments/outbound-shipments';
@@ -29,19 +30,21 @@ import { WarehouseDashboardPage } from './pages/warehouse/dashboard/dashboard';
 
 //  DISTRIBUTOR
 import { Deliveries } from './pages/distributor/deliveries/deliveries';
-import { AssignDelivery } from './pages/distributor/assign-delivery/assign-delivery';
+import { DAssignDelivery } from './pages/distributor/assign-delivery/assign-delivery';
 import { Pickups } from './pages/distributor/pickups/pickups';
 import { FailedDeliveries } from './pages/distributor/failed-deliveries/failed-deliveries';
 import { Drivers } from './pages/distributor/drivers/drivers';
 import { CreateShipment } from './pages/merchant/create-shipment/create-shipment';
-import { DistrubuterDashboardPage } from './pages/distributor/dashboard/dashboard';
+import { DistrubuterDashboardPage } from './pages/distributor/dashboard/DistrubuterDashboardPage';
 
 // MARCHAND
 import { BulkUpload } from './pages/merchant/bulk-upload/bulk-upload';
 import { Payments } from './pages/merchant/payments/payments';
 import { AddressBook } from './pages/merchant/address-book/address-book';
 import { MarchandeDashboardPage } from './pages/merchant/dashboard/dashboard';
-import { UpdateDistributor } from './components/update-distributor/update-distributor';
+import { DistributorProfile } from './pages/super-admin/distributor/distributor-profile/distributor-profile';
+import { Reports } from './pages/merchant/reports/reports';
+
 
 
 export const routes: Routes = [
@@ -54,21 +57,21 @@ export const routes: Routes = [
     component: RegisterComponent
   },
   {
-    path: 'super-admin',
-    component: SuperAdminDashboard,
+    path: 'super-admin', component: SuperAdminDashboard,
     children: [
-      { path: 'dashboard', component: Dashboard },
-      { path: 'merchants', component: Merchants },
-      { path: 'distributors', component: Distributors },
-      { path: 'distributors/update/:id', component: UpdateDistributor },
+      { path: 'dashboard', component: SuperAdminDashboardPage },
+      { path: 'merchants', component: Merchant },
+      { path: 'distributors', component: DistributorList },
+      { path: 'distributors/profile/:id', component: DistributorProfile },
       { path: 'warehouses', component: Warehouses },
       { path: 'shipments', component: Shipments },
       { path: 'tracking', component: Tracking },
       { path: 'rate-management', component: RateManagement },
-      { path: 'payments', component: PaymentResponse },
-      { path: 'reports', component: Reports },
+      { path: 'merchants/profile/:id', component: MerchantProfile },
+      { path: 'payments', component: AdminPayment },
+      { path: 'reports', component: AdminReports },
       { path: 'user-management', component: UserManagement },
-      { path: 'settings', component: Setting },
+      { path: 'settings', component: AdminSetting },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -84,6 +87,7 @@ export const routes: Routes = [
       { path: 'reports', component: Reports },
       { path: 'address-book', component: AddressBook },
       { path: 'support', component: Support },
+      { path: 'merchants/profile/:id', component: MerchantProfile },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -93,7 +97,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DistrubuterDashboardPage },
       { path: 'deliveries', component: Deliveries },
-      { path: 'assign-delivery', component: AssignDelivery },
+      { path: 'assign-delivery', component: DAssignDelivery },
       { path: 'pickups', component: Pickups },
       { path: 'failed-deliveries', component: FailedDeliveries },
       { path: 'reports', component: Reports },

@@ -1,7 +1,7 @@
 .sidebar {
     width: 250px;
     height: 100vh;
-   background-color: #1a202c;;
+    background-color: #1a202c;
     color: white;
     padding: 20px;
     display: flex;
@@ -29,8 +29,40 @@
     margin-bottom: 5px;
 }
 
-.sidebar li:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+/* Super Admin */
+.super-admin li:hover {
+    background-color: rgba(12, 74, 245, 0.45);
+}
+
+.super-admin li.active-menu {
+    background-color: rgba(12, 74, 245, 0.864);
+}
+
+/* Merchant */
+.merchant li:hover {
+    background-color: rgba(255, 138, 0, 0.45);
+}
+
+.merchant li.active-menu {
+    background-color: #ff8a00;
+}
+
+/* Distributor */
+.distributor li:hover {
+    background-color: rgba(0, 229, 137, 0.45);
+}
+
+.distributor li.active-menu {
+    background-color: rgb(0, 229, 137);
+}
+
+/* Warehouse */
+.warehouse li:hover {
+    background-color: rgba(179, 0, 255, 0.45);
+}
+
+.warehouse li.active-menu {
+    background-color: rgb(179, 0, 255);
 }
 
 .logout {

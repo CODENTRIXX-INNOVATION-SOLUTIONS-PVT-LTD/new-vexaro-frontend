@@ -1,0 +1,37 @@
+<div class="table-card">
+
+    <div class="header">
+        <h2>Recent Registrations</h2>
+
+        <button class="view-btn">
+            View All
+        </button>
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(user of registrations; track user.id){
+                <tr>
+                    <td>{{user.id}}</td>
+                    <td>{{user.name}}</td>
+                    <td>{{user.role}}</td>
+                    <td>{{user.email}}</td>
+                    <td>{{user.date}}</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -6,6 +6,6 @@ import { Component } from '@angular/core';
   templateUrl: './assign-delivery.html',
   styleUrl: './assign-delivery.css',
 })
-export class AssignDelivery {
+export class DAssignDelivery {
 
 }

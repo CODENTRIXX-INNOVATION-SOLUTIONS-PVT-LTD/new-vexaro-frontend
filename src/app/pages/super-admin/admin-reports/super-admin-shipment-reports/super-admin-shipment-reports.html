@@ -1,0 +1,121 @@
+<app-stats-cards [cards]="shipmentCards"></app-stats-cards>
+<div class="filter-card">
+
+    <select>
+        <option>Today</option>
+        <option>Last 7 Days</option>
+        <option>Last 30 Days</option>
+    </select>
+
+    <select>
+        <option>All Status</option>
+        <option>Delivered</option>
+        <option>Pending</option>
+        <option>Failed</option>
+    </select>
+
+    <button class="btn-primary">
+        Apply Filters
+    </button>
+
+</div>
+<div class="analytics-grid">
+
+    <div class="analytics-card">
+        <h4>Delivery Success Rate</h4>
+        <h2>92%</h2>
+    </div>
+
+    <div class="analytics-card">
+        <h4>Average Delivery Time</h4>
+        <h2>2.4 Days</h2>
+    </div>
+
+    <div class="analytics-card">
+        <h4>Delayed Shipments</h4>
+        <h2>54</h2>
+    </div>
+
+</div>
+<div class="charts-grid">
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <h3>Shipment Trend</h3>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="shipmentTrendChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <h3>Status Distribution</h3>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="shipmentStatusChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Top Merchants By Shipments</h3>
+    </div>
+
+    <table>
+
+        <tr>
+            <th>Merchant</th>
+            <th>Shipments</th>
+            <th>Delivered</th>
+        </tr>
+
+        <tr>
+            <td>ABC Store</td>
+            <td>250</td>
+            <td>230</td>
+        </tr>
+
+        <tr>
+            <td>XYZ Fashion</td>
+            <td>180</td>
+            <td>170</td>
+        </tr>
+
+    </table>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Recent Shipments</h3>
+    </div>
+
+    <table>
+
+        <tr>
+            <th>Tracking ID</th>
+            <th>Merchant</th>
+            <th>Status</th>
+            <th>Date</th>
+        </tr>
+
+        <tr>
+            <td>TRK1001</td>
+            <td>ABC Store</td>
+            <td><span class="badge delivered">Delivered</span></td>
+            <td>15 Aug 2026</td>
+        </tr>
+
+    </table>
+
+</div>

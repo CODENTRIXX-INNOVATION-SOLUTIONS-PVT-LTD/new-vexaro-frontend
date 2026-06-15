@@ -1,0 +1,151 @@
+<div class="page-container">
+
+    <div class="page-header">
+
+        <div>
+
+            <h2>Distributors</h2>
+
+            <div class="breadcrumb">
+                <a routerLink="/super-admin/dashboard">Dashboard</a>
+                <span>›</span>
+                <span class="active">Distributors</span>
+            </div>
+
+        </div>
+
+        <button class="add-btn" (click)="showModal = true">
+            <i class="fa-solid fa-plus"></i>
+            Add Distributor
+        </button>
+
+    </div>
+
+    <div class="table-card">
+
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search distributor...">
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Distributor Name</th>
+                    <th>Region</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Active Shipments</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for(distributor of distributors; track distributor.id){
+
+                <tr>
+
+                    <td>{{ distributor.id }}</td>
+                    <td>{{ distributor.name }}</td>
+                    <td>{{ distributor.region }}</td>
+                    <td>{{ distributor.contactPerson }}</td>
+                    <td>{{ distributor.phone }}</td>
+                    <td>{{ distributor.activeShipments }}</td>
+
+                    <td>
+                        <span class="status" [class.active-status]="distributor.status === 'Active'"
+                            [class.inactive-status]="distributor.status === 'Inactive'">
+
+                            {{ distributor.status }}
+
+                        </span>
+                    </td>
+                    <td class="action-cell">
+
+                        <div class="action-menu">
+
+                            <button class="menu-btn" (click)="toggleMenu(distributor.id); $event.stopPropagation()">
+
+                                <i class="fa-solid fa-ellipsis"></i>
+
+                            </button>
+
+                            @if(activeMenu === distributor.id){
+
+                            <div class="dropdown-menu">
+
+                                <button (click)="viewDistributor(distributor.id)">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <span>Distributor Details</span>
+                                </button>
+
+                                <button>
+                                    <i class="fa-solid fa-warehouse"></i>
+                                    <span>Assign Warehouse</span>
+                                </button>
+
+                                <button>
+                                    <i class="fa-solid fa-truck-fast"></i>
+                                    <span>View Shipments</span>
+                                </button>
+
+                                <button>
+                                    <i class="fa-solid fa-key"></i>
+                                    <span>Generate Login</span>
+                                </button>
+
+                            </div>
+
+                            }
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+        <div class="table-footer">
+            Showing 1 to 5 of 12 entries
+        </div>
+
+    </div>
+
+    <div class="info-box">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>
+            Click on <strong>"Add Distributor"</strong> button to create a new
+            distributor.
+        </span>
+    </div>
+
+</div>
+
+<!-- Modal -->
+
+@if(showModal){
+<div class="modal-overlay">
+    <div class="modal-container">
+        <app-add-distributor-modal (close)="closeModal()" (distributorSaved)="onDistributorSaved()">
+        </app-add-distributor-modal>
+    </div>
+</div>
+
+}
+
+@if(showSuccessModal){
+<div class="modal-overlay">
+    <div class="modal-container">
+        <app-distributor-created-success (close)="closeSuccessModal()">
+        </app-distributor-created-success>
+    </div>
+</div>
+}

@@ -15,13 +15,13 @@ menuItems = [
   { label: 'Dashboard', route: '/super-admin/dashboard' },
   { label: 'Merchants', route: '/super-admin/merchants' },
   { label: 'Distributors', route: '/super-admin/distributors' },
-  { label: 'Warehouses', route: '/super-admin/warehouses' },
-  { label: 'Shipments', route: '/super-admin/shipments' },
-  { label: 'Tracking', route: '/super-admin/tracking' },
-  { label: 'Rate Management', route: '/super-admin/rate-management' },
+  // { label: 'Warehouses', route: '/super-admin/warehouses' },
+  // { label: 'Shipments', route: '/super-admin/shipments' },
+  // { label: 'Tracking', route: '/super-admin/tracking' },
+  // { label: 'Rate Management', route: '/super-admin/rate-management' },
   { label: 'Payments', route: '/super-admin/payments' },
   { label: 'Reports', route: '/super-admin/reports' },
-  { label: 'User Management', route: '/super-admin/user-management' },
+  // { label: 'User & Roles', route: '/super-admin/user-management' },
   { label: 'Settings', route: '/super-admin/settings' }
 ];
 

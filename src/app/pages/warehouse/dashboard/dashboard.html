@@ -1,13 +1,9 @@
 <div class="dashboard">
-    <app-dashboard-header
-        role="Warehouse Manager"
-        userName="Om Sharma"
-        email="om@gmail.com"
-        profileImage="https://i.pravatar.cc/150?img=12"
-    ></app-dashboard-header>
+    <app-dashboard-header role="Warehouse Manager" userName="Om Sharma" email="om@gmail.com"
+        profileImage="https://i.pravatar.cc/150?img=12"></app-dashboard-header>
     <app-stats-cards [cards]="cards"></app-stats-cards>
     <app-warehouse-chart-section></app-warehouse-chart-section>
-     <div class="two-section">
+    <div class="two-section">
         <app-recent-inbound-shipments></app-recent-inbound-shipments>
         <div class="quick-section">
             <h3>Quick Actions</h3>
@@ -17,7 +13,7 @@
             </button>
             <button class="action-btn">
                 <span class="material-icons">upload_file</span>
-               Scan Outbound
+                Scan Outbound
             </button>
             <button class="action-btn">
                 <span class="material-icons">print</span>

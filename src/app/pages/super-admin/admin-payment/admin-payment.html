@@ -1,0 +1,51 @@
+<app-stats-cards [cards]="paymentCards"></app-stats-cards>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Wallet Recharge Transactions</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Distributor</th>
+                <th>Recharge Amount</th>
+                <th>Admin Earnings</th>
+                <th>Payment Method</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let payment of payments">
+
+                <td>{{ payment.transactionId }}</td>
+                <td>{{ payment.distributor }}</td>
+                <td>₹{{ payment.rechargeAmount }}</td>
+                <td>₹{{ payment.adminCommission }}</td>
+                <td>{{ payment.paymentMethod }}</td>
+                <td>{{ payment.date }}</td>
+
+                <td>
+                    <span
+                        class="badge"
+                        [class.success]="payment.status === 'Success'"
+                        [class.failed]="payment.status === 'Failed'">
+
+                        {{ payment.status }}
+
+                    </span>
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>

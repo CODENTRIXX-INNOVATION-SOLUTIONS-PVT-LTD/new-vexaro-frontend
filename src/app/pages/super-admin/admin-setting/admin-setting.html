@@ -1,0 +1,110 @@
+<div class="page">
+
+    <div class="page-header">
+        <h1>Settings</h1>
+        <p>Manage company, notification and API configurations</p>
+    </div>
+
+    <!-- Company Settings -->
+
+    <div class="card">
+
+        <h2>Company Settings</h2>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text"
+                    [(ngModel)]="settings.companySettings.companyName">
+            </div>
+
+            <div class="form-group">
+                <label>Logo</label>
+                <input type="file">
+            </div>
+
+            <div class="form-group">
+                <label>GST Number</label>
+                <input type="text"
+                    [(ngModel)]="settings.companySettings.gstNumber">
+            </div>
+
+            <div class="form-group full-width">
+                <label>Address</label>
+                <textarea rows="4"
+                    [(ngModel)]="settings.companySettings.address">
+                </textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Support Email</label>
+                <input type="email"
+                    [(ngModel)]="settings.companySettings.supportEmail">
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Notification Settings -->
+
+    <div class="card">
+
+        <h2>Notification Settings</h2>
+
+        <div class="setting-row">
+            <span>SMS Notifications</span>
+            <input type="checkbox"
+                [(ngModel)]="settings.notificationSettings.smsEnabled">
+        </div>
+
+        <div class="setting-row">
+            <span>Email Notifications</span>
+            <input type="checkbox"
+                [(ngModel)]="settings.notificationSettings.emailEnabled">
+        </div>
+
+        <div class="setting-row">
+            <span>WhatsApp Notifications</span>
+            <input type="checkbox"
+                [(ngModel)]="settings.notificationSettings.whatsappEnabled">
+        </div>
+
+    </div>
+
+    <!-- API Settings -->
+
+    <div class="card">
+
+        <h2>API Settings</h2>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>API Key</label>
+                <input type="text"
+                    [(ngModel)]="settings.apiSettings.apiKey">
+            </div>
+
+            <div class="form-group">
+                <label>Webhook URL</label>
+                <input type="text"
+                    [(ngModel)]="settings.apiSettings.webhookUrl">
+            </div>
+
+            <div class="form-group full-width">
+                <label>Secret Key</label>
+                <input type="text"
+                    [(ngModel)]="settings.apiSettings.secretKey">
+            </div>
+
+        </div>
+
+    </div>
+
+    <button class="save-btn" (click)="saveSettings()">
+        Save Settings
+    </button>
+
+</div>

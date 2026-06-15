@@ -1,9 +1,14 @@
 <div class="sidebar">
     <img src="../../../assets/logo.png" alt="Vaxaro Logo">
 
-    <ul>
+   <ul [class]="title.toLowerCase()">
         @for(item of menuItems; track item){
-         <li [routerLink]="item.route">
+        <li
+    [routerLink]="item.route"
+    routerLinkActive="active-menu"
+   >
+
+
       {{ item.label }}
     </li>
         }

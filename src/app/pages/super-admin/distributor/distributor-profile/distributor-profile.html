@@ -1,0 +1,303 @@
+<div class="page">
+
+    <!-- Back Button -->
+    <div class="back-link" routerLink="/super-admin/distributors">
+        <i class="fas fa-arrow-left"></i>
+        Distributors
+    </div>
+
+
+    <!-- Header -->
+    <div class="page-header">
+
+        <div class="header-left">
+
+            <div class="profile-avatar">
+                {{ distributor.distributorName.charAt(0) }}
+            </div>
+
+            <div class="profile-info">
+
+                <div class="title-row">
+
+                    <h1>{{ distributor.distributorName }}</h1>
+
+                    <span class="status-chip" [class.active-chip]="distributor.status === 'Active'"
+                        [class.inactive-chip]="distributor.status === 'Inactive'">
+
+                        <i class="fas fa-circle"></i>
+                        {{ distributor.status }}
+
+                    </span>
+
+                </div>
+
+                <p>{{ distributor.region }} • {{ distributor.city }}</p>
+
+                <div class="meta-info">
+
+                    <span>
+                        <i class="fas fa-user"></i>
+                        {{ distributor.contactPerson }}
+                    </span>
+
+                    <span>
+                        <i class="fas fa-phone"></i>
+                        {{ distributor.contactPhone }}
+                    </span>
+
+                    <span>
+                        <i class="fas fa-envelope"></i>
+                        {{ distributor.contactEmail }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="header-actions">
+
+          <button
+    class="btn-outline"
+    [class.active-tab]="activeTab === 'profile'"
+    (click)="changeTab('profile')">
+    <i class="fas fa-user"></i>
+    Profile
+</button>
+
+<button
+    class="btn-outline"
+    [class.active-tab]="activeTab === 'merchants'"
+    (click)="changeTab('merchants')">
+    <i class="fas fa-store"></i>
+    Assigned Merchants
+</button>
+
+<button
+    class="btn-outline"
+    [class.active-tab]="activeTab === 'warehouses'"
+    (click)="changeTab('warehouses')">
+    <i class="fas fa-warehouse"></i>
+    Assigned Warehouses
+</button>
+
+<button
+    class="btn-outline"
+    [class.active-tab]="activeTab === 'shipments'"
+    (click)="changeTab('shipments')">
+    <i class="fas fa-truck"></i>
+    Shipments
+</button>
+
+<button
+    class="btn-outline"
+    [class.active-tab]="activeTab === 'performance'"
+    (click)="changeTab('performance')">
+    <i class="fas fa-chart-line"></i>
+    Performance
+</button>
+
+<button
+    class="btn-outline"
+    [class.active-tab]="activeTab === 'payments'"
+    (click)="changeTab('payments')">
+    <i class="fas fa-money-bill-wave"></i>
+    Payments
+</button>
+
+            <button class="btn-status" [class.active-btn]="distributor.status !== 'Active'"
+                [class.inactive-btn]="distributor.status === 'Active'" (click)="toggleStatus()">
+
+                <i class="fas fa-power-off"></i>
+
+                {{
+                distributor.status === 'Active'
+                ? 'Deactivate'
+                : 'Activate'
+                }}
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="distriburo-profile-section" *ngIf="activeTab === 'profile'">
+
+        <div class="content-grid">
+
+            <!-- COMPANY INFORMATION -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    <div class="icon-circle blue">
+                        <i class="fas fa-building"></i>
+                    </div>
+
+                    <span>Company Information</span>
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Distributor Name</label>
+                        <input type="text" [(ngModel)]="distributor.distributorName" name="distributorName" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Display Name</label>
+                        <input type="text" [(ngModel)]="distributor.displayName" name="displayName" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" [(ngModel)]="distributor.email" name="email" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" [(ngModel)]="distributor.phone" name="phone" readonly>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Address</label>
+
+                        <textarea rows="4" [(ngModel)]="distributor.address" name="address" readonly>
+                        </textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Region</label>
+                        <input type="text" [(ngModel)]="distributor.region" name="region" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" [(ngModel)]="distributor.city" name="city" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pincode</label>
+                        <input type="text" [(ngModel)]="distributor.pincode" name="pincode" readonly>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDE -->
+
+            <div class="right-section">
+
+                <!-- CONTACT INFO -->
+
+                <div class="card">
+
+                    <div class="card-title">
+
+                        <div class="icon-circle green">
+                            <i class="fas fa-user"></i>
+                        </div>
+
+                        <span>Login & Contact Information</span>
+
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contact Person</label>
+                        <input type="text" [(ngModel)]="distributor.contactPerson" name="contactPerson" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contact Phone</label>
+                        <input type="text" [(ngModel)]="distributor.contactPhone" name="contactPhone" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contact Email</label>
+                        <input type="email" [(ngModel)]="distributor.contactEmail" name="contactEmail" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+
+                        <div class="status-badge" [class.active-status]="distributor.status === 'Active'"
+                            [class.inactive-status]="distributor.status === 'Inactive'">
+
+                            {{ distributor.status }}
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- BUSINESS INFO -->
+
+                <div class="card">
+
+                    <div class="card-title">
+
+                        <div class="icon-circle purple">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+
+                        <span>Business Information</span>
+
+                    </div>
+
+                    <div class="form-group">
+                        <label>GST Number</label>
+                        <input type="text" [(ngModel)]="distributor.gstNumber" name="gstNumber" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>PAN Number</label>
+                        <input type="text" [(ngModel)]="distributor.panNumber" name="panNumber" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Payment Terms</label>
+
+                        <select [(ngModel)]="distributor.paymentTerms" name="paymentTerms" readonly>
+
+                            <option>7 Days</option>
+                            <option>15 Days</option>
+                            <option>30 Days</option>
+                            <option>45 Days</option>
+
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Credit Limit</label>
+
+                        <input type="number" [(ngModel)]="distributor.creditLimit" name="creditLimit" readonly>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <app-distributor-merchants *ngIf="activeTab === 'merchants'">
+    </app-distributor-merchants>
+
+    <app-distributor-warehouses *ngIf="activeTab === 'warehouses'">
+    </app-distributor-warehouses>
+
+    <app-distributor-shipments *ngIf="activeTab === 'shipments'">
+    </app-distributor-shipments>
+
+    <app-distributor-performance *ngIf="activeTab === 'performance'">
+    </app-distributor-performance>
+
+    <app-distributor-payments *ngIf="activeTab === 'payments'">
+    </app-distributor-payments>
+
+</div>

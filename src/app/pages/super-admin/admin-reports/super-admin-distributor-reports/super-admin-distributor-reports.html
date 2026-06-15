@@ -1,0 +1,156 @@
+<app-stats-cards [cards]="distributorCards"></app-stats-cards>
+
+<div class="filter-card">
+
+    <select>
+        <option>This Week</option>
+        <option>This Month</option>
+        <option>This Quarter</option>
+    </select>
+
+    <button class="btn-primary">
+        Generate Report
+    </button>
+
+</div>
+
+<div class="analytics-grid">
+
+    <div
+        class="analytics-card"
+        *ngFor="let item of distributorInsights">
+
+        <i [class]="item.icon"></i>
+
+        <div>
+            <h4>{{ item.title }}</h4>
+            <h2>{{ item.value }}</h2>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="charts-grid">
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <div>
+                <h3>Distributor Performance</h3>
+                <p>Top distributors by completed deliveries</p>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="distributorPerformanceChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <div>
+                <h3>Regional Coverage</h3>
+                <p>Delivery distribution by region</p>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="regionalChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Top Distributors</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Distributor</th>
+                <th>Deliveries</th>
+                <th>Success Rate</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let distributor of topDistributors">
+                <td>{{ distributor.distributorName }}</td>
+                <td>{{ distributor.deliveries }}</td>
+                <td>{{ distributor.successRate }}</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Regional Performance</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Region</th>
+                <th>Deliveries</th>
+                <th>Success Rate</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let region of regionalPerformance">
+                <td>{{ region.region }}</td>
+                <td>{{ region.deliveries }}</td>
+                <td>{{ region.successRate }}</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Recent Activities</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Distributor</th>
+                <th>Activity</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let activity of recentActivities">
+                <td>{{ activity.distributor }}</td>
+                <td>{{ activity.activity }}</td>
+                <td>{{ activity.date }}</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>

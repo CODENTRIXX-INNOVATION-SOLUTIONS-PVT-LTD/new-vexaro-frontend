@@ -1,0 +1,264 @@
+/* Filters */
+
+.filter-card {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.filter-card select {
+    min-width: 200px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    outline: none;
+    background: white;
+    font-size: 14px;
+}
+
+.filter-card select:focus {
+    border-color: #2563eb;
+}
+
+.btn-primary {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: .3s;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+/* Analytics */
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.analytics-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.analytics-card i {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.analytics-card h4 {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.analytics-card h2 {
+    margin: 6px 0 0;
+    color: #0f172a;
+    font-size: 28px;
+}
+
+/* Charts */
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.chart-card h3 {
+    margin: 0;
+    color: #0f172a;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 340px;
+    margin-top: 20px;
+}
+
+/* Tables */
+
+.table-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.card-header h3 {
+    margin: 0;
+    color: #0f172a;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th {
+    background: #f8fafc;
+    color: #475569;
+    text-align: left;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+table td {
+    padding: 14px;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+table tr:hover {
+    background: #f8fafc;
+}
+
+/* Status Badges */
+
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.success {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.failed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Responsive */
+
+@media (max-width: 992px) {
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .filter-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-card select,
+    .btn-primary {
+        width: 100%;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-wrapper {
+        height: 280px;
+    }
+
+}.card-header h3 {
+    margin: 0;
+    color: #0f172a;
+}
+
+.card-header p {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.source-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.source-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.sales {
+    background: #2563eb;
+}
+
+.subscription {
+    background: #16a34a;
+}
+
+.commission {
+    background: #d97706;
+}
+
+.delivery {
+    background: #9333ea;
+}

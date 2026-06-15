@@ -1,0 +1,51 @@
+<div class="page">
+
+    <div class="page-header">
+        <h1>Merchant Documents</h1>
+        <p>View and manage uploaded merchant documents</p>
+    </div>
+
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Document Name</th>
+                    <th>Uploaded On</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (document of documents; track document.name) {
+
+                <tr>
+
+                    <td>{{ document.name }}</td>
+
+                    <td>{{ document.uploadedOn }}</td>
+
+                    <td>
+                        <span class="badge"
+                            [class.verified]="document.status === 'Verified'"
+                            [class.pending]="document.status === 'Pending'"
+                            [class.rejected]="document.status === 'Rejected'">
+
+                            {{ document.status }}
+
+                        </span>
+                    </td>
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

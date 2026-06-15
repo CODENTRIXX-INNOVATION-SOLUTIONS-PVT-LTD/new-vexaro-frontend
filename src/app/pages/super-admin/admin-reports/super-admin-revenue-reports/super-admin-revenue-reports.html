@@ -1,0 +1,200 @@
+<app-stats-cards [cards]="revenueCards"></app-stats-cards>
+
+<div class="filter-card">
+
+    <select>
+        <option>This Week</option>
+        <option>This Month</option>
+        <option>This Year</option>
+    </select>
+
+    <button class="btn-primary">
+        Generate Report
+    </button>
+
+</div>
+
+<div class="analytics-grid">
+
+    <div
+        class="analytics-card"
+        *ngFor="let item of revenueInsights">
+
+        <i [class]="item.icon"></i>
+
+        <div>
+            <h4>{{ item.title }}</h4>
+            <h2>{{ item.value }}</h2>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="charts-grid">
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <div>
+                <h3>Revenue Growth Trend</h3>
+                <p>Monthly revenue generated across the platform</p>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="revenueTrendChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <div>
+                <h3>Revenue Sources</h3>
+                <p>Revenue contribution by source</p>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="revenueSourceChart"></canvas>
+        </div>
+
+        <div class="source-summary">
+
+            <div class="source-item">
+                <span class="dot sales"></span>
+                Merchant Sales
+            </div>
+
+            <div class="source-item">
+                <span class="dot subscription"></span>
+                Subscriptions
+            </div>
+
+            <div class="source-item">
+                <span class="dot commission"></span>
+                Commissions
+            </div>
+
+            <div class="source-item">
+                <span class="dot delivery"></span>
+                Delivery Charges
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Top Revenue Merchants</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Merchant</th>
+                <th>Revenue</th>
+                <th>Orders</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let merchant of topRevenueMerchants">
+
+                <td>{{ merchant.merchantName }}</td>
+                <td>{{ merchant.revenue }}</td>
+                <td>{{ merchant.orders }}</td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Payment Method Performance</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Payment Method</th>
+                <th>Transactions</th>
+                <th>Revenue</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let payment of paymentMethods">
+
+                <td>{{ payment.method }}</td>
+                <td>{{ payment.transactions }}</td>
+                <td>{{ payment.revenue }}</td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Recent Transactions</h3>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Merchant</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr *ngFor="let txn of recentTransactions">
+
+                <td>{{ txn.transactionId }}</td>
+                <td>{{ txn.merchant }}</td>
+                <td>{{ txn.amount }}</td>
+
+                <td>
+
+                    <span
+                        class="badge"
+                        [class.success]="txn.status === 'Success'"
+                        [class.pending]="txn.status === 'Pending'">
+
+                        {{ txn.status }}
+
+                    </span>
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
