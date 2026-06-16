@@ -24,6 +24,16 @@
     height: 320px;
     position: relative;
 }
+ 
+.warehouse-chart {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 18px;
+}
+
+@media (max-width: 900px){
+  .warehouse-chart { grid-template-columns: 1fr; }
+}
 @media (max-width: 768px) {
     .chart-section {
         flex-direction: column;

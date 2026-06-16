@@ -84,6 +84,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: MarchandeDashboardPage },
       { path: 'shipments', component: Shipments },
+      { path: 'tracking', component: Tracking },
       { path: 'create-shipment', component: CreateShipment },
       { path: 'bulk-upload', component: BulkUpload },
       { path: 'payments', component: Payments },
@@ -104,6 +105,9 @@ export const routes: Routes = [
       { path: 'assign-delivery', component: DAssignDelivery },
       { path: 'pickups', component: Pickups },
       { path: 'shipments', component: DistributorShipment },
+
+      { path: 'tracking', component: Tracking },
+
       { path: 'failed-deliveries', component: FailedDeliveries },
       { path: 'reports', component: Reports },
       { path: 'drivers', component: Drivers },

@@ -1,21 +1,20 @@
-<div class="sidebar">
+<nav class="sidebar" aria-label="Primary navigation" [class.collapsed]="collapsed">
     <img src="../../../assets/logo.png" alt="Vaxaro Logo">
 
-   <ul [class]="title.toLowerCase()">
-        @for(item of menuItems; track item){
-        <li
-    [routerLink]="item.route"
-    routerLinkActive="active-menu"
-   >
+    <button type="button" class="sidebar-toggle" (click)="toggleCollapse()" aria-label="Toggle menu">
+        <span class="material-icons">menu</span>
+    </button>
 
-
-      {{ item.label }}
-    </li>
+    <ul [class]="sidebarClass">
+        @for(item of menuItems; track item.route){
+            <li routerLinkActive="active-menu">
+                <a [routerLink]="item.route">{{ item.label }}</a>
+            </li>
         }
     </ul>
 
-   <div class="logout" (click)="logout()">
-    <span class="material-icons">logout</span>
-    <span>Logout</span>
-</div>
-</div>
+    <button type="button" class="logout" (click)="logout()">
+        <span class="material-icons" aria-hidden="true">logout</span>
+        <span>Logout</span>
+    </button>
+</nav>

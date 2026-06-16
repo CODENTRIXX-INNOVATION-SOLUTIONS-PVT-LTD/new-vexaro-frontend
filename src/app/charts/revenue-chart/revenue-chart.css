@@ -11,5 +11,11 @@
 }
 
 .chart-wrapper {
-    height: 350px;
+        height: 350px;
+        max-height: 50vh;
+        min-height: 200px;
 }   
+
+@media (max-width: 900px){
+    .chart-wrapper { height: 260px; }
+}

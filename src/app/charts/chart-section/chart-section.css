@@ -1,7 +1,12 @@
 .chart-section {
-    display: flex;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
     margin-top: 20px;
+}
+
+@media (max-width: 900px){
+    .chart-section { grid-template-columns: 1fr; }
 }
 
 .chart-card {
@@ -25,7 +30,7 @@
     position: relative;
 }
 @media (max-width: 768px) {
-    .chart-section {
-        flex-direction: column;
+    .chart-card {
+        padding: 18px;
     }
 }
