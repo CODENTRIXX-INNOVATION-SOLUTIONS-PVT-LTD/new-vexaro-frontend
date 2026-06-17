@@ -32,12 +32,10 @@
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-
     transition: all 0.3s ease;
 }
 
@@ -65,9 +63,9 @@
     font-size: 20px;
 }
 
-.chart-section{
-    display:grid;
+.chart-section {
+    display: grid;
     grid-template-columns: 2fr 1fr;
-    gap:24px;
-    margin-top:24px;
+    gap: 24px;
+    margin-top: 24px;
 }

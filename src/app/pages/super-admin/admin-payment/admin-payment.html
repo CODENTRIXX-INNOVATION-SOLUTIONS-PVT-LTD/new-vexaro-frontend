@@ -1,51 +1,279 @@
 <app-stats-cards [cards]="paymentCards"></app-stats-cards>
 
-<div class="table-card">
+<!-- Financial Section Navigation Tabs -->
+<div class="financial-tabs">
+    <button class="tab-btn" [class.active]="activeTab === 'wallet'" (click)="changeTab('wallet')">
+        <i class="fas fa-wallet"></i> Distributor Wallet
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'recharge'" (click)="changeTab('recharge')">
+        <i class="fas fa-plus-circle"></i> Recharge Distributor
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="changeTab('transactions')">
+        <i class="fas fa-exchange-alt"></i> Transactions
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'commission'" (click)="changeTab('commission')">
+        <i class="fas fa-percent"></i> Commission
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'refunds'" (click)="changeTab('refunds')">
+        <i class="fas fa-undo"></i> Refunds
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'requests'" (click)="changeTab('requests')">
+        <i class="fas fa-list-ul"></i> Recharge Requests
+    </button>
+</div>
 
-    <div class="card-header">
-        <h3>Wallet Recharge Transactions</h3>
+<!-- Tab Contents -->
+<div class="tab-content-container">
+
+    <!-- TAB 1: Distributor Wallet -->
+    <div class="table-card" *ngIf="activeTab === 'wallet'">
+        <div class="card-header">
+            <h3>Distributor Wallet Balances</h3>
+            <p class="card-subtitle">Overview of available funds and statuses for all distributors</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Distributor</th>
+                    <th>Wallet Balance</th>
+                    <th>Last Recharge</th>
+                    <th>Last Recharge Date</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let dist of distributors">
+                    <td class="name-cell">
+                        <i class="fas fa-building icon-label"></i>
+                        {{ dist.name }}
+                    </td>
+                    <td class="balance-cell">₹{{ dist.balance.toLocaleString('en-IN') }}</td>
+                    <td>
+                        <span class="amount-badge">₹{{ dist.lastRechargeAmount.toLocaleString('en-IN') }}</span>
+                    </td>
+                    <td class="date-cell">{{ dist.lastRechargeDate }}</td>
+                    <td>
+                        <span class="badge status-badge" 
+                            [class.success]="dist.status === 'Active'" 
+                            [class.failed]="dist.status === 'Inactive'">
+                            {{ dist.status }}
+                        </span>
+                    </td>
+                    <td class="text-right">
+                        <button class="btn-action-primary" (click)="quickRecharge(dist.id)" [disabled]="dist.status === 'Inactive'">
+                            <i class="fas fa-plus"></i> Recharge
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <table>
+    <!-- TAB 2: Recharge Distributor Form -->
+    <div class="form-card" *ngIf="activeTab === 'recharge'">
+        <div class="card-header">
+            <h3>Recharge Distributor Wallet</h3>
+            <p class="card-subtitle">Add funds to a distributor's virtual credit wallet</p>
+        </div>
+        <form (ngSubmit)="submitRecharge()" #rechargeForm="ngForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="distributor">Select Distributor <span class="required">*</span></label>
+                    <select id="distributor" [(ngModel)]="rechargeModel.distributorId" name="distributorId" required>
+                        <option value="" disabled selected>Choose a distributor...</option>
+                        <option *ngFor="let dist of distributors" [value]="dist.id" [disabled]="dist.status === 'Inactive'">
+                            {{ dist.name }} {{ dist.status === 'Inactive' ? '(Inactive)' : '' }}
+                        </option>
+                    </select>
+                </div>
 
-        <thead>
-            <tr>
-                <th>Transaction ID</th>
-                <th>Distributor</th>
-                <th>Recharge Amount</th>
-                <th>Admin Earnings</th>
-                <th>Payment Method</th>
-                <th>Date</th>
-                <th>Status</th>
-            </tr>
-        </thead>
+                <div class="form-group">
+                    <label for="amount">Recharge Amount (INR) <span class="required">*</span></label>
+                    <input type="number" id="amount" [(ngModel)]="rechargeModel.amount" name="amount" placeholder="Enter amount (e.g. 5000)" min="1" required>
+                </div>
 
-        <tbody>
+                <div class="form-group">
+                    <label for="paymentMethod">Payment Method</label>
+                    <select id="paymentMethod" [(ngModel)]="rechargeModel.paymentMethod" name="paymentMethod">
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Card">Card Payment</option>
+                        <option value="Cash">Cash Deposit</option>
+                    </select>
+                </div>
 
-            <tr *ngFor="let payment of payments">
+                <div class="form-group">
+                    <label for="reference">Transaction Reference ID</label>
+                    <input type="text" id="reference" [(ngModel)]="rechargeModel.referenceId" name="referenceId" placeholder="e.g. Ref #1029482">
+                </div>
+            </div>
 
-                <td>{{ payment.transactionId }}</td>
-                <td>{{ payment.distributor }}</td>
-                <td>₹{{ payment.rechargeAmount }}</td>
-                <td>₹{{ payment.adminCommission }}</td>
-                <td>{{ payment.paymentMethod }}</td>
-                <td>{{ payment.date }}</td>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" (click)="changeTab('wallet')">Cancel</button>
+                <button type="submit" class="btn-submit" [disabled]="!rechargeForm.form.valid">
+                    <i class="fas fa-check-circle"></i> Complete Recharge
+                </button>
+            </div>
+        </form>
+    </div>
 
-                <td>
-                    <span
-                        class="badge"
-                        [class.success]="payment.status === 'Success'"
-                        [class.failed]="payment.status === 'Failed'">
+    <!-- TAB 3: Transactions Log -->
+    <div class="table-card" *ngIf="activeTab === 'transactions'">
+        <div class="card-header">
+            <h3>Wallet Transactions Log</h3>
+            <p class="card-subtitle">History of all credit and recharge transactions across distributors</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Distributor</th>
+                    <th>Recharge Amount</th>
+                    <th>Payment Method</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let payment of payments">
+                    <td class="txn-cell">{{ payment.transactionId }}</td>
+                    <td class="name-cell">{{ payment.distributor }}</td>
+                    <td class="amount-cell">₹{{ payment.rechargeAmount.toLocaleString('en-IN') }}</td>
+                    <td>
+                        <span class="method-badge">{{ payment.paymentMethod }}</span>
+                    </td>
+                    <td class="date-cell">{{ payment.date }}</td>
+                    <td>
+                        <span class="badge status-badge"
+                            [class.success]="payment.status === 'Success'"
+                            [class.failed]="payment.status === 'Failed'">
+                            {{ payment.status }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                        {{ payment.status }}
+    <!-- TAB 4: Commission -->
+    <div class="table-card" *ngIf="activeTab === 'commission'">
+        <div class="card-header">
+            <h3>Commission & Admin Earnings</h3>
+            <p class="card-subtitle">Overview of platform commissions earned from distributor operations</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Distributor</th>
+                    <th>Recharge Amount</th>
+                    <th>Commission Rate</th>
+                    <th>Commission Earned</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let payment of payments">
+                    <ng-container *ngIf="payment.status === 'Success'">
+                        <td class="txn-cell">{{ payment.transactionId }}</td>
+                        <td class="name-cell">{{ payment.distributor }}</td>
+                        <td>₹{{ payment.rechargeAmount.toLocaleString('en-IN') }}</td>
+                        <td class="rate-cell">5.0%</td>
+                        <td class="earning-cell">₹{{ payment.adminCommission.toLocaleString('en-IN') }}</td>
+                        <td class="date-cell">{{ payment.date }}</td>
+                    </ng-container>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                    </span>
-                </td>
+    <!-- TAB 5: Refunds -->
+    <div class="table-card" *ngIf="activeTab === 'refunds'">
+        <div class="card-header">
+            <h3>Refund Settlements</h3>
+            <p class="card-subtitle">Log of returned/refunded transactions to distributor wallets</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Refund ID</th>
+                    <th>Distributor</th>
+                    <th>Original Txn</th>
+                    <th>Refund Amount</th>
+                    <th>Reason</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let refund of refunds">
+                    <td class="txn-cell">{{ refund.refundId }}</td>
+                    <td class="name-cell">{{ refund.distributor }}</td>
+                    <td class="txn-ref-cell">{{ refund.originalTxn }}</td>
+                    <td class="refund-cell">₹{{ refund.amount.toLocaleString('en-IN') }}</td>
+                    <td class="reason-cell">{{ refund.reason }}</td>
+                    <td class="date-cell">{{ refund.date }}</td>
+                    <td>
+                        <span class="badge status-badge"
+                            [class.success]="refund.status === 'Processed'"
+                            [class.pending]="refund.status === 'Pending'">
+                            {{ refund.status }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-            </tr>
-
-        </tbody>
-
-    </table>
-
+    <!-- TAB 6: Recharge Requests -->
+    <div class="table-card" *ngIf="activeTab === 'requests'">
+        <div class="card-header">
+            <h3>Distributor Recharge Requests</h3>
+            <p class="card-subtitle">Pending wallet recharge requests submitted by distributors</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Distributor</th>
+                    <th>Amount Requested</th>
+                    <th>Payment Method</th>
+                    <th>Reference ID</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let req of rechargeRequests">
+                    <td class="txn-cell">{{ req.requestId }}</td>
+                    <td class="name-cell">{{ req.distributorName }}</td>
+                    <td class="amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
+                    <td><span class="method-badge">{{ req.method }}</span></td>
+                    <td class="txn-ref-cell">{{ req.reference }}</td>
+                    <td class="date-cell">{{ req.date }}</td>
+                    <td>
+                       <span class="badge status-badge"
+                           [class.success]="req.status === 'Approved'"
+                           [class.pending]="req.status === 'Pending'"
+                           [class.failed]="req.status === 'Rejected'">
+                           {{ req.status }}
+                       </span>
+                    </td>
+                    <td class="text-right">
+                        <div class="action-buttons-group" *ngIf="req.status === 'Pending'">
+                            <button class="btn-action-primary" (click)="approveRequest(req)">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn-action-danger" (click)="rejectRequest(req)">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                        <span class="action-disabled-text" *ngIf="req.status !== 'Pending'">Processed</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -64,11 +64,9 @@
 
     border-radius: 20px;
 
-    background: linear-gradient(
-        135deg,
-        #2563eb,
-        #4f46e5
-    );
+    background: linear-gradient(135deg,
+            #2563eb,
+            #4f46e5);
 
     color: white;
 
@@ -426,4 +424,218 @@ select[readonly] {
     border-color: transparent !important;
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+/* Statistics Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.stat-number {
+    margin: 4px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Custom Colors for Stat Cards Icon Backgrounds */
+.total-orders .stat-icon {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.delivered-orders .stat-icon {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.transit-orders .stat-icon {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.cancelled-orders .stat-icon {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.reverse-pickups .stat-icon {
+    background: #faf5ff;
+    color: #8b5cf6;
+}
+
+.weight-disputes .stat-icon {
+    background: #f0fdfa;
+    color: #0d9488;
+}
+
+/* Tracking Styles */
+.tracking-section-container {
+    margin-top: 10px;
+}
+
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.table-card th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: left;
+    padding: 14px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table-card td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: #334155;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.awb-cell {
+    font-weight: 600;
+    color: #2563eb !important;
+}
+
+.courier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Tracking Badges */
+.tracking-badge.in-transit {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.tracking-badge.delivered {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.tracking-badge.pending {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.tracking-badge.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Delivery Badges */
+.delivery-badge.delivery-out {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.delivery-badge.delivery-done {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.delivery-badge.delivery-pending {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.delivery-badge.delivery-failed {
+    background: #fff5f5;
+    color: #c53030;
+}
+
+/* Input Action Link Styles */
+.input-with-action {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-with-action input {
+    padding-right: 48px !important;
+}
+
+.btn-input-action {
+    position: absolute;
+    right: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-input-action:hover {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    transform: scale(1.05);
 }

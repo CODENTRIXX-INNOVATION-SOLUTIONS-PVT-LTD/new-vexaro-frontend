@@ -1,4 +1,23 @@
+<<<<<<< Updated upstream
 <div class="dashboard-container">
+=======
+<div class="dashboard">
+    <!-- Onboarding Approval Request Banners -->
+    <div class="approval-banner pending" *ngIf="status === 'Pending' && !requestSent">
+        <div class="banner-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Your distributor account is currently pending activation. Click to request approval.</span>
+        </div>
+        <button class="banner-btn" (click)="requestApproval()">Send Approval Request</button>
+    </div>
+    <div class="approval-banner success" *ngIf="status === 'Pending' && requestSent">
+        <div class="banner-content">
+            <i class="fas fa-check-circle"></i>
+            <span>Approval request has been sent to the Super Admin. Please wait for activation.</span>
+        </div>
+    </div>
+
+>>>>>>> Stashed changes
     <app-dashboard-header
         role="Distributor"
         [userName]="user.name"

@@ -2,10 +2,12 @@ import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AddDistributorModal } from '../../../../models/add-distributor-modal/add-distributor-modal';
 import { DistributorCreatedSuccess } from '../../../../models/distributor-created-success/distributor-created-success';
+import { CommonModule } from '@angular/common';
+import { FinancialStore } from '../../../../shared/financial-store';
 
 @Component({
   selector: 'app-distributor-list',
-  imports: [RouterLink, AddDistributorModal, DistributorCreatedSuccess],
+  imports: [RouterLink, AddDistributorModal, DistributorCreatedSuccess, CommonModule],
   templateUrl: './distributor-list.html',
   styleUrl: './distributor-list.css'
 })
@@ -104,5 +106,26 @@ export class DistributorList {
 
   viewDistributor(id: number): void {
     this.router.navigate(['/super-admin/distributors/profile', id]);
+  }
+
+  get allDistributors() {
+    const mappedRequests = FinancialStore.onboardingRequests.map((req, index) => ({
+      id: 10 + index,
+      name: req.distributorName,
+      region: req.region,
+      contactPerson: 'Ketan Meena',
+      phone: req.phone,
+      activeShipments: 0,
+      status: req.status
+    }));
+    return [...this.distributors, ...mappedRequests];
+  }
+
+  approveDistributor(name: string) {
+    const req = FinancialStore.onboardingRequests.find(r => r.distributorName === name);
+    if (req) {
+      req.status = 'Active';
+      alert(`Distributor account for "${name}" approved successfully!`);
+    }
   }
 }

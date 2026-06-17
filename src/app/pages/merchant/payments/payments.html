@@ -1,1 +1,420 @@
-<p>payments works!</p>
+<div class="wallet-page">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-wallet"></i> Wallet</h2>
+            <div class="breadcrumb">
+                <a href="/merchant/dashboard">Dashboard</a>
+                <span>›</span>
+                <span class="active">Wallet</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="wallet-tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'balance'" (click)="changeTab('balance')">
+            <i class="fas fa-coins"></i> Current Balance
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="changeTab('transactions')">
+            <i class="fas fa-exchange-alt"></i> Transaction History
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'requests'" (click)="changeTab('requests')">
+            <i class="fas fa-paper-plane"></i> Recharge Requests
+            @if (pendingRequestsCount > 0) {
+                <span class="tab-badge">{{ pendingRequestsCount }}</span>
+            }
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'refunds'" (click)="changeTab('refunds')">
+            <i class="fas fa-undo-alt"></i> Refund History
+            @if (pendingRefundsCount > 0) {
+                <span class="tab-badge">{{ pendingRefundsCount }}</span>
+            }
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="changeTab('disputes')">
+            <i class="fas fa-weight-hanging"></i> Weight Disputes
+        </button>
+    </div>
+
+    <div class="tab-body">
+
+        <!-- ====================== TAB 1: CURRENT BALANCE ====================== -->
+        @if (activeTab === 'balance') {
+
+        <!-- Hero Balance Card -->
+        <div class="balance-hero">
+            <div class="balance-left">
+                <div class="balance-icon-wrap"><i class="fas fa-wallet"></i></div>
+                <div class="balance-info">
+                    <span class="balance-label">Available Balance</span>
+                    <span class="balance-amount">₹{{ balance.toLocaleString('en-IN') }}</span>
+                    <span class="balance-distributor"><i class="fas fa-link"></i> {{ distributorName }}</span>
+                </div>
+            </div>
+            <button class="hero-topup-btn" (click)="changeTab('requests')">
+                <i class="fas fa-plus"></i> Request Top-up
+            </button>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="s-icon red"><i class="fas fa-arrow-up"></i></div>
+                <div class="s-info">
+                    <div class="s-val">₹{{ totalSpent.toLocaleString('en-IN') }}</div>
+                    <div class="s-label">Total Spent</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="s-icon amber"><i class="fas fa-clock"></i></div>
+                <div class="s-info">
+                    <div class="s-val">{{ pendingRequestsCount }}</div>
+                    <div class="s-label">Pending Recharges</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="s-icon green"><i class="fas fa-undo-alt"></i></div>
+                <div class="s-info">
+                    <div class="s-val">{{ pendingRefundsCount }}</div>
+                    <div class="s-label">Pending Refunds</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="s-icon purple"><i class="fas fa-weight-hanging"></i></div>
+                <div class="s-info">
+                    <div class="s-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</div>
+                    <div class="s-label">Dispute Deductions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Top-up Request Form -->
+        <div class="form-card">
+            <div class="card-header">
+                <h3>Request Wallet Top-up</h3>
+                <p class="card-sub">Choose an amount and send a request to your distributor (<strong>{{ distributorName }}</strong>)</p>
+            </div>
+
+            <label class="form-label">Select Amount</label>
+            <div class="packages-grid">
+                @for (pkg of packages; track pkg) {
+                <button class="pkg-chip" [class.selected]="selectedPackage === pkg" (click)="selectPackage(pkg)">
+                    ₹{{ pkg.toLocaleString('en-IN') }}
+                </button>
+                }
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <select [(ngModel)]="topUpMethod" name="method">
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Card">Card Payment</option>
+                        <option value="Cash">Cash</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Note (optional)</label>
+                    <input type="text" [(ngModel)]="topUpNote" placeholder="e.g. Bulk shipment prepay" />
+                </div>
+            </div>
+
+            @if (selectedPackage) {
+            <div class="selected-preview">
+                <i class="fas fa-circle-check"></i>
+                Requesting <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via <strong>{{ topUpMethod }}</strong>
+            </div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-submit" (click)="submitTopUp()" [disabled]="!selectedPackage">
+                    <i class="fas fa-paper-plane"></i> Send Request to Distributor
+                </button>
+            </div>
+        </div>
+
+        }
+
+        <!-- ====================== TAB 2: TRANSACTION HISTORY ====================== -->
+        @if (activeTab === 'transactions') {
+        <div class="table-card">
+            <div class="card-header">
+                <h3>Transaction History</h3>
+                <p class="card-sub">Complete log of all credits and debits on your wallet</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Txn ID</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Reference</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (txn of transactions; track txn.id) {
+                    <tr>
+                        <td class="id-cell">{{ txn.id }}</td>
+                        <td class="date-cell">{{ txn.date }}</td>
+                        <td>{{ txn.description }}</td>
+                        <td>
+                            <span class="type-badge" [class.credit]="txn.type === 'credit'" [class.debit]="txn.type === 'debit'">
+                                <i class="fas" [class.fa-arrow-down]="txn.type === 'credit'" [class.fa-arrow-up]="txn.type === 'debit'"></i>
+                                {{ txn.type === 'credit' ? 'Credit' : 'Debit' }}
+                            </span>
+                        </td>
+                        <td [class.credit-amt]="txn.type === 'credit'" [class.debit-amt]="txn.type === 'debit'" class="amount-cell">
+                            {{ txn.type === 'credit' ? '+' : '-' }}₹{{ txn.amount.toLocaleString('en-IN') }}
+                        </td>
+                        <td class="id-cell">{{ txn.reference }}</td>
+                        <td>
+                            <span class="status-badge" [class.success]="txn.status === 'Success'" [class.pending]="txn.status === 'Pending'" [class.failed]="txn.status === 'Failed'">
+                                {{ txn.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <!-- ====================== TAB 3: RECHARGE REQUESTS ====================== -->
+        @if (activeTab === 'requests') {
+        <div class="table-card">
+            <div class="card-header-row">
+                <div>
+                    <h3>Recharge Requests</h3>
+                    <p class="card-sub">Top-up requests sent to your distributor</p>
+                </div>
+                <button class="add-btn" (click)="changeTab('balance')">
+                    <i class="fas fa-plus"></i> New Request
+                </button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Note</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (req of topUpRequests; track req.id) {
+                    <tr>
+                        <td class="id-cell">{{ req.id }}</td>
+                        <td class="date-cell">{{ req.date }}</td>
+                        <td class="credit-amt amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
+                        <td><span class="method-badge">{{ req.method }}</span></td>
+                        <td class="note-cell">{{ req.note }}</td>
+                        <td>
+                            <span class="status-badge"
+                                [class.success]="req.status === 'Approved'"
+                                [class.pending]="req.status === 'Pending'"
+                                [class.failed]="req.status === 'Rejected'">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <!-- ====================== TAB 4: REFUND HISTORY ====================== -->
+        @if (activeTab === 'refunds') {
+        <div class="table-card">
+            <div class="card-header">
+                <h3>Refund History</h3>
+                <p class="card-sub">Refunds credited back to your wallet</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Refund ID</th>
+                        <th>Date</th>
+                        <th>AWB Number</th>
+                        <th>Reason</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (r of refunds; track r.id) {
+                    <tr>
+                        <td class="id-cell">{{ r.id }}</td>
+                        <td class="date-cell">{{ r.date }}</td>
+                        <td class="awb-cell">{{ r.awb }}</td>
+                        <td>{{ r.reason }}</td>
+                        <td class="credit-amt amount-cell">₹{{ r.amount.toLocaleString('en-IN') }}</td>
+                        <td>
+                            <span class="status-badge"
+                                [class.success]="r.status === 'Processed'"
+                                [class.pending]="r.status === 'Pending'"
+                                [class.failed]="r.status === 'Rejected'">
+                                {{ r.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <!-- ====================== TAB 5: WEIGHT DISPUTE DEDUCTIONS ====================== -->
+        @if (activeTab === 'disputes') {
+
+        <div class="info-notice">
+            <i class="fas fa-info-circle"></i>
+            <span>Weight dispute deductions are applied when the actual shipment weight differs from the declared weight. <strong>Disputed</strong> entries can be raised as a support ticket.</span>
+        </div>
+
+        <div class="table-card">
+            <div class="card-header-row">
+                <div>
+                    <h3>Weight Dispute Deductions</h3>
+                    <p class="card-sub">Charges applied due to weight discrepancies on your shipments</p>
+                </div>
+                <div class="dispute-summary">
+                    <span class="dispute-total-label">Total Deducted</span>
+                    <span class="dispute-total-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</span>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dispute ID</th>
+                        <th>Date</th>
+                        <th>AWB Number</th>
+                        <th>Billed Weight</th>
+                        <th>Actual Weight</th>
+                        <th>Difference</th>
+                        <th>Deduction</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (d of disputes; track d.id) {
+                    <tr>
+                        <td class="id-cell">{{ d.id }}</td>
+                        <td class="date-cell">{{ d.date }}</td>
+                        <td class="awb-cell">{{ d.awb }}</td>
+                        <td>{{ d.billedWeight }} kg</td>
+                        <td>{{ d.actualWeight }} kg</td>
+                        <td class="diff-cell">+{{ d.difference }} kg</td>
+                        <td class="debit-amt amount-cell">-₹{{ d.deduction.toLocaleString('en-IN') }}</td>
+                        <td>
+                            <span class="status-badge"
+                                [class.applied]="d.status === 'Applied'"
+                                [class.pending]="d.status === 'Disputed'"
+                                [class.success]="d.status === 'Resolved'">
+                                {{ d.status }}
+                            </span>
+                        </td>
+                        <td>
+                            @if (d.status === 'Applied') {
+                            <button class="contest-btn" (click)="openContest(d)">
+                                <i class="fas fa-flag"></i> Contest
+                            </button>
+                            } @else if (d.status === 'Disputed') {
+                            <span class="disputed-tag"><i class="fas fa-clock"></i> Under Review</span>
+                            } @else {
+                            <span class="resolved-tag"><i class="fas fa-circle-check"></i> Resolved</span>
+                            }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+    </div>
+</div>
+
+<!-- ====================== CONTEST DISPUTE MODAL ====================== -->
+@if (showContestModal && contestingDispute) {
+<div class="modal-overlay" (click)="closeContest()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <div class="modal-icon"><i class="fas fa-flag"></i></div>
+                <div>
+                    <h3>Contest Weight Dispute</h3>
+                    <p class="modal-sub">AWB: <strong>{{ contestingDispute.awb }}</strong> &nbsp;|&nbsp; Deduction: <strong class="red-text">-₹{{ contestingDispute.deduction }}</strong></p>
+                </div>
+            </div>
+            <button class="modal-close-btn" (click)="closeContest()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="modal-body">
+
+            <!-- Dispute Details Summary -->
+            <div class="dispute-detail-row">
+                <div class="detail-chip">
+                    <span class="chip-label">Billed Weight</span>
+                    <span class="chip-val">{{ contestingDispute.billedWeight }} kg</span>
+                </div>
+                <i class="fas fa-arrow-right chip-arrow"></i>
+                <div class="detail-chip red">
+                    <span class="chip-label">Actual (Charged)</span>
+                    <span class="chip-val">{{ contestingDispute.actualWeight }} kg</span>
+                </div>
+                <div class="detail-chip amber">
+                    <span class="chip-label">Difference</span>
+                    <span class="chip-val">+{{ contestingDispute.difference }} kg</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="modal-field">
+                <label>Describe the Issue <span class="req">*</span></label>
+                <textarea
+                    [(ngModel)]="contestNote"
+                    name="contestNote"
+                    rows="4"
+                    placeholder="e.g. The actual package weight was 0.5 kg as stated. Please refer to the attached photos of the parcel label and weighing scale.">
+                </textarea>
+            </div>
+
+            <!-- File Upload -->
+            <div class="modal-field">
+                <label>Attach Evidence <span class="label-hint">(photos, invoice, scale screenshot)</span></label>
+                <div class="upload-zone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Drag &amp; drop files or <label class="upload-link">browse<input type="file" multiple accept="image/*,.pdf" (change)="onFileChange($event)" hidden /></label></span>
+                    <span class="upload-hint">Supported: JPG, PNG, PDF &mdash; Max 5MB each</span>
+                </div>
+                @if (selectedFileNames.length > 0) {
+                <ul class="file-list">
+                    @for (name of selectedFileNames; track name) {
+                    <li><i class="fas fa-file-image"></i> {{ name }}</li>
+                    }
+                </ul>
+                }
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeContest()">Cancel</button>
+            <button class="btn-submit" (click)="submitContest()" [disabled]="!contestNote.trim()">
+                <i class="fas fa-paper-plane"></i> Submit Dispute to Distributor
+            </button>
+        </div>
+
+    </div>
+</div>
+}

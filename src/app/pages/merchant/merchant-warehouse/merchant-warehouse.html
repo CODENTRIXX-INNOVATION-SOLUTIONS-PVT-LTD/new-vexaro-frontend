@@ -1,0 +1,531 @@
+<div class="warehouse-container">
+
+    <!-- Top Toast Notification -->
+    <div class="toast-notification" [class.show]="saveSuccess">
+        <i class="fas fa-circle-check"></i>
+        <span>Warehouse settings updated successfully!</span>
+    </div>
+
+    <!-- Page Title Header -->
+    <div class="page-title-header">
+        <div class="title-left">
+            <h2>Warehouse Management</h2>
+            <p>Configure pickup addresses, timings, documents, and view performance metrics</p>
+        </div>
+        <div class="status-indicator">
+            <span class="active-pulse"></span>
+            <span>All systems operational</span>
+        </div>
+    </div>
+
+    <!-- Main Workspace Layout -->
+    <div class="warehouse-workspace">
+        
+        <!-- Left Sidebar Sub-Navigation -->
+        <div class="warehouse-sidebar">
+            <div class="warehouse-profile-brief">
+                <div class="brief-icon"><i class="fas fa-warehouse"></i></div>
+                <div class="brief-details">
+                    <h3>{{ warehouse.warehouseName }}</h3>
+                    <span>ID: {{ warehouse.warehouseId }}</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                @for (t of tabs; track t.id) {
+                <button class="nav-tab-btn" 
+                        [class.active]="activeTab === t.id"
+                        (click)="selectTab(t.id)">
+                    <i [class]="t.icon"></i>
+                    <span>{{ t.label }}</span>
+                </button>
+                }
+            </nav>
+
+            <div class="sidebar-footer-notice">
+                <i class="fas fa-circle-info"></i>
+                <p>Need support? Contact your regional distributor.</p>
+            </div>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="warehouse-content-panel">
+
+            <!-- 1. WAREHOUSE OVERVIEW -->
+            @if (activeTab === 'overview') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Warehouse Overview</h3>
+                    <p>General information and current status of your warehouse assignment</p>
+                </div>
+
+                <div class="overview-hero">
+                    <div class="hero-details">
+                        <div class="hero-header-row">
+                            <span class="wh-id-tag">{{ warehouse.warehouseId }}</span>
+                            <span class="wh-status-badge"><span class="pulse-dot"></span> {{ warehouse.status }}</span>
+                        </div>
+                        <h2>{{ warehouse.warehouseName }}</h2>
+                        <p class="hero-location-text">
+                            <i class="fas fa-location-dot"></i> {{ warehouse.city }}, {{ warehouse.state }} &mdash; {{ warehouse.pincode }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="overview-info-grid">
+                    <div class="info-card-block">
+                        <h4>Contact Details</h4>
+                        <div class="info-data-list">
+                            <div class="info-data-row">
+                                <span class="data-label">Contact Person</span>
+                                <span class="data-value">{{ warehouse.contactPerson }}</span>
+                            </div>
+                            <div class="info-data-row">
+                                <span class="data-label">Phone Number</span>
+                                <span class="data-value"><a href="tel:{{ warehouse.contactPhone }}">{{ warehouse.contactPhone }}</a></span>
+                            </div>
+                            <div class="info-data-row">
+                                <span class="data-label">Email Address</span>
+                                <span class="data-value"><a href="mailto:{{ warehouse.contactEmail }}">{{ warehouse.contactEmail }}</a></span>
+                            </div>
+                            <div class="info-data-row">
+                                <span class="data-label">Operating Hours</span>
+                                <span class="data-value">{{ warehouse.operatingHours }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card-block">
+                        <h4>Distributor Assignment</h4>
+                        <div class="info-data-list">
+                            <div class="info-data-row">
+                                <span class="data-label">Assigned By</span>
+                                <span class="data-value">{{ warehouse.assignedBy }}</span>
+                            </div>
+                            <div class="info-data-row">
+                                <span class="data-label">Distributor Hotline</span>
+                                <span class="data-value"><a href="tel:{{ warehouse.distributorPhone }}">{{ warehouse.distributorPhone }}</a></span>
+                            </div>
+                            <div class="info-data-row">
+                                <span class="data-label">Assigned On</span>
+                                <span class="data-value">{{ warehouse.assignedDate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Locked settings info banner -->
+                <div class="distributor-lock-banner">
+                    <i class="fas fa-lock"></i>
+                    <div class="banner-text">
+                        <h5>Managed by Distributor</h5>
+                        <p>Core warehouse configurations are set by <strong>{{ warehouse.assignedBy }}</strong>. If you notice any incorrect assignment details, please contact customer support or submit an edit request.</p>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- 2. PICKUP ADDRESS -->
+            @if (activeTab === 'address') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Pickup Address</h3>
+                    <p>The registered physical location where courier riders collect shipments</p>
+                </div>
+
+                <div class="address-display-card">
+                    <div class="card-left">
+                        <div class="verification-badge">
+                            <i class="fas fa-circle-check"></i> Verified Pickup Node
+                        </div>
+                        <p class="address-text">{{ warehouse.pickupAddress }}</p>
+                        <div class="address-meta-chips">
+                            <span><i class="fas fa-city"></i> City: {{ warehouse.city }}</span>
+                            <span><i class="fas fa-map"></i> State: {{ warehouse.state }}</span>
+                            <span><i class="fas fa-envelope"></i> Pincode: {{ warehouse.pincode }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modern visual CSS-based Map Placeholder -->
+                <div class="map-container">
+                    <div class="map-header">
+                        <span><i class="fas fa-map-location-dot"></i> Geolocation Map View</span>
+                        <span class="lat-lng-badge">23.2599° N, 77.4126° E</span>
+                    </div>
+                    <div class="visual-map-grid">
+                        <div class="map-bg">
+                            <!-- CSS Grid simulating map roads and boundaries -->
+                            <div class="road horizontal road-1"></div>
+                            <div class="road horizontal road-2"></div>
+                            <div class="road vertical road-3"></div>
+                            <div class="road vertical road-4"></div>
+                            <div class="map-marker">
+                                <div class="marker-pulse"></div>
+                                <i class="fas fa-location-dot"></i>
+                                <span class="marker-tooltip">{{ warehouse.warehouseName }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-actions">
+                        <a href="https://maps.google.com/?q={{ warehouse.pickupAddress }},{{ warehouse.city }}" target="_blank" class="btn-map-link">
+                            <i class="fas fa-up-right-from-square"></i> Open in Google Maps
+                        </a>
+                        <span class="accuracy-text"><i class="fas fa-circle-check"></i> High accuracy verified (± 5 meters)</span>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- 3. WAREHOUSE STATISTICS -->
+            @if (activeTab === 'statistics') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Warehouse Statistics</h3>
+                    <p>KPIs and operational performance metrics for dispatch activities</p>
+                </div>
+
+                <!-- Mini Stats Cards Grid -->
+                <div class="stats-mini-grid">
+                    @for (s of stats; track s.label) {
+                    <div class="stat-mini-card">
+                        <div class="stat-icon-wrap" [class]="s.color">
+                            <i [class]="s.icon"></i>
+                        </div>
+                        <div class="stat-numbers">
+                            <span class="stat-label">{{ s.label }}</span>
+                            <span class="stat-value">{{ s.value }}</span>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <!-- Performance Breakdown & SLA meters -->
+                <div class="performance-charts-section">
+                    <div class="chart-card">
+                        <h4>SLA & Dispatch Performance</h4>
+                        <p class="chart-sub">Operational efficiency metrics calculated over the last 30 days</p>
+
+                        <div class="progress-meters-list">
+                            <div class="meter-item">
+                                <div class="meter-header">
+                                    <span>SLA Compliance (On-Time Dispatch)</span>
+                                    <span class="meter-val text-green">98.4%</span>
+                                </div>
+                                <div class="meter-track">
+                                    <div class="meter-fill bg-green" style="width: 98.4%"></div>
+                                </div>
+                            </div>
+
+                            <div class="meter-item">
+                                <div class="meter-header">
+                                    <span>Courier Handover Speed (Avg. minutes)</span>
+                                    <span class="meter-val text-blue">94.2% (12 min)</span>
+                                </div>
+                                <div class="meter-track">
+                                    <div class="meter-fill bg-blue" style="width: 94.2%"></div>
+                                </div>
+                            </div>
+
+                            <div class="meter-item">
+                                <div class="meter-header">
+                                    <span>Order Manifest Matching accuracy</span>
+                                    <span class="meter-val text-purple">99.8%</span>
+                                </div>
+                                <div class="meter-track">
+                                    <div class="meter-fill bg-purple" style="width: 99.8%"></div>
+                                </div>
+                            </div>
+
+                            <div class="meter-item">
+                                <div class="meter-header">
+                                    <span>RTO (Return to Origin) rate</span>
+                                    <span class="meter-val text-amber">1.8%</span>
+                                </div>
+                                <div class="meter-track">
+                                    <div class="meter-fill bg-amber" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="efficiency-insights-card">
+                        <h4>Insights Summary</h4>
+                        <div class="insight-bullet">
+                            <div class="bullet-icon bg-green-light"><i class="fas fa-arrow-trend-up text-green"></i></div>
+                            <div class="bullet-desc">
+                                <strong>Excellent SLA Compliance</strong>
+                                <p>Your warehouse holds a top-tier rating for dispatch schedules this week.</p>
+                            </div>
+                        </div>
+                        <div class="insight-bullet">
+                            <div class="bullet-icon bg-blue-light"><i class="fas fa-bolt text-blue"></i></div>
+                            <div class="bullet-desc">
+                                <strong>Fast Rider Handover</strong>
+                                <p>Riders report a fast checkout experience, averaging under 15 minutes of wait time.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <!-- 4. PICKUP TIMINGS -->
+            @if (activeTab === 'timings') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Pickup Timings</h3>
+                    <p>Operating timings, pickup slots, cut-off schedules, and next pickup countdown</p>
+                </div>
+
+                <div class="timing-top-row">
+                    <div class="next-pickup-countdown">
+                        <span class="countdown-label">NEXT SCHEDULED PICKUP</span>
+                        <h3>{{ timings.nextScheduledPickup.time }}</h3>
+                        <p class="countdown-sub">{{ timings.nextScheduledPickup.date }} &bull; Rider: {{ timings.nextScheduledPickup.rider }}</p>
+                    </div>
+                    <div class="cutoff-notice-card">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        <div>
+                            <strong>Daily Cut-off Time</strong>
+                            <p>Manifest shipments before <strong>{{ timings.cutoffTime }}</strong> for same-day collection. Late orders default to the morning slot of the next working day.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slots-list-block">
+                    <h4>Assigned Daily Pickup Slots</h4>
+                    <div class="slots-grid">
+                        @for (s of timings.slots; track s.id) {
+                        <div class="slot-item-card" [class.inactive]="!s.active">
+                            <div class="slot-info">
+                                <span class="slot-type-badge" [class.primary]="s.type === 'Primary'" [class.secondary]="s.type === 'Secondary'">
+                                    {{ s.type }}
+                                </span>
+                                <h5>{{ s.name }}</h5>
+                                <p class="slot-time"><i class="fas fa-clock"></i> {{ s.range }}</p>
+                            </div>
+                            <div class="slot-status">
+                                <span class="status-toggle-mock" [class.active]="s.active">
+                                    {{ s.active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="operational-days-card">
+                    <h4>Operational Days</h4>
+                    <div class="days-chips">
+                        <span class="day-chip active">Mon</span>
+                        <span class="day-chip active">Tue</span>
+                        <span class="day-chip active">Wed</span>
+                        <span class="day-chip active">Thu</span>
+                        <span class="day-chip active">Fri</span>
+                        <span class="day-chip active">Sat</span>
+                        <span class="day-chip inactive">Sun</span>
+                    </div>
+                    <p class="days-info-text"><i class="fas fa-circle-check"></i> Warehouse operates six days a week. Sunday pickups must be requested ad-hoc via distributor helpline.</p>
+                </div>
+            </div>
+            }
+
+            <!-- 5. COURIER PARTNERS -->
+            @if (activeTab === 'couriers') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Courier Partners</h3>
+                    <p>Assigned courier service partners integrated with your warehouse</p>
+                </div>
+
+                <div class="couriers-grid">
+                    @for (c of couriers; track c.code) {
+                    <div class="courier-partner-card" [class.inactive]="c.status === 'Inactive'">
+                        <div class="partner-head">
+                            <div class="partner-avatar"><i class="fas fa-truck-fast"></i></div>
+                            <div class="partner-title">
+                                <h5>{{ c.name }}</h5>
+                                <span class="partner-badge-type">{{ c.type }}</span>
+                            </div>
+                        </div>
+                        <div class="partner-body">
+                            <div class="partner-meta-row">
+                                <span>Code:</span>
+                                <strong>{{ c.code }}</strong>
+                            </div>
+                            <div class="partner-meta-row">
+                                <span>Priority Weight:</span>
+                                <strong>#{{ c.priority }} priority</strong>
+                            </div>
+                            <div class="partner-meta-row">
+                                <span>Status:</span>
+                                <span class="status-indicator-pill" [class.active]="c.status === 'Active'">
+                                    {{ c.status }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <div class="courier-mapping-notice">
+                    <i class="fas fa-circle-info"></i>
+                    <p>Courier partner priority is dynamically optimized by Vexaro Routing algorithms. If you want to disable specific courier options, contact your regional distributor to update routing rules.</p>
+                </div>
+            </div>
+            }
+
+            <!-- 6. RECENT SHIPMENTS -->
+            @if (activeTab === 'shipments') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Recent Shipments</h3>
+                    <p>List of recent orders dispatched or prepared for dispatch at this warehouse location</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="shipments-table">
+                        <thead>
+                            <tr>
+                                <th>AWB Number</th>
+                                <th>Date</th>
+                                <th>Destination</th>
+                                <th>Courier</th>
+                                <th>Weight</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (sh of recentShipments; track sh.awb) {
+                            <tr>
+                                <td class="awb-col"><strong>{{ sh.awb }}</strong></td>
+                                <td>{{ sh.date }}</td>
+                                <td>{{ sh.destination }}</td>
+                                <td>{{ sh.courier }}</td>
+                                <td>{{ sh.weight }}</td>
+                                <td>
+                                    <span class="status-badge" 
+                                          [class.transit]="sh.status === 'In Transit'"
+                                          [class.dispatch]="sh.status === 'Dispatched'"
+                                          [class.delivered]="sh.status === 'Delivered'"
+                                          [class.rto]="sh.status === 'RTO Pending'">
+                                        {{ sh.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            }
+
+            <!-- 7. DOCUMENTS -->
+            @if (activeTab === 'documents') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Documents</h3>
+                    <p>Verification papers, address proof, agreements, and legal records of the warehouse</p>
+                </div>
+
+                <div class="documents-list-grid">
+                    @for (doc of documents; track doc.name) {
+                    <div class="document-item-card">
+                        <div class="doc-file-icon">
+                            @if (doc.type === 'PDF') {
+                                <i class="fas fa-file-pdf pdf-type"></i>
+                            } @else {
+                                <i class="fas fa-file-image img-type"></i>
+                            }
+                        </div>
+                        <div class="doc-body-details">
+                            <h5>{{ doc.name }}</h5>
+                            <p class="doc-meta-text">{{ doc.type }} &bull; {{ doc.size }} &bull; Uploaded on {{ doc.uploadDate }}</p>
+                            <span class="doc-status-badge" 
+                                  [class.verified]="doc.status === 'Verified'"
+                                  [class.review]="doc.status === 'Under Review'">
+                                {{ doc.status }}
+                            </span>
+                        </div>
+                        <div class="doc-actions-buttons">
+                            <button class="btn-doc-action" title="Download Document"><i class="fas fa-download"></i></button>
+                            <button class="btn-doc-action" title="View Preview"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <!-- Add new document section mockup -->
+                <div class="upload-new-document-box">
+                    <div class="upload-icon-circle"><i class="fas fa-cloud-arrow-up"></i></div>
+                    <h4>Upload New Verification Document</h4>
+                    <p>Support PDF, JPG, PNG formats up to 10MB (GST registration, rental agreement, or trade license)</p>
+                    <button class="btn-upload-trigger">Select Document File</button>
+                </div>
+            </div>
+            }
+
+            <!-- 8. EDIT WAREHOUSE -->
+            @if (activeTab === 'edit') {
+            <div class="content-section fade-in">
+                <div class="section-title">
+                    <h3>Edit Warehouse Details</h3>
+                    <p>Update operating contact numbers, operating hours, and instructions</p>
+                </div>
+
+                <div class="edit-form-wrapper">
+                    <div class="form-grid-layout">
+                        
+                        <div class="form-input-group">
+                            <label>Warehouse Name (Read-Only)</label>
+                            <input type="text" [value]="warehouse.warehouseName" disabled class="input-disabled" />
+                            <span class="input-note"><i class="fas fa-circle-info"></i> Warehouse name changes require administrator approval.</span>
+                        </div>
+
+                        <div class="form-input-group">
+                            <label>Assigned Distributor (Read-Only)</label>
+                            <input type="text" [value]="warehouse.assignedBy" disabled class="input-disabled" />
+                        </div>
+
+                        <div class="form-input-group">
+                            <label>Contact Person <span class="required-star">*</span></label>
+                            <input type="text" [(ngModel)]="editForm.contactPerson" placeholder="Full name of contact person" class="form-control-input" />
+                        </div>
+
+                        <div class="form-input-group">
+                            <label>Contact Phone <span class="required-star">*</span></label>
+                            <input type="tel" [(ngModel)]="editForm.contactPhone" placeholder="10-digit mobile number" maxlength="10" class="form-control-input" />
+                        </div>
+
+                        <div class="form-input-group">
+                            <label>Contact Email <span class="required-star">*</span></label>
+                            <input type="email" [(ngModel)]="editForm.contactEmail" placeholder="Email address" class="form-control-input" />
+                        </div>
+
+                        <div class="form-input-group">
+                            <label>Operating Hours <span class="required-star">*</span></label>
+                            <input type="text" [(ngModel)]="editForm.operatingHours" placeholder="e.g. Mon – Sat, 9:00 AM – 7:00 PM" class="form-control-input" />
+                        </div>
+
+                        <div class="form-input-group span-full-row">
+                            <label>Special Pickup Instructions / Notes</label>
+                            <textarea rows="4" [(ngModel)]="editForm.specialInstructions" placeholder="Any specific details for courier riders (e.g. door codes, loading dock details)" class="form-control-textarea"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-bar">
+                        <button type="button" class="btn-form-save" (click)="saveWarehouse()">
+                            <i class="fas fa-floppy-disk"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn-form-cancel" (click)="selectTab('overview')">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            }
+
+        </div>
+    </div>
+</div>

@@ -10,6 +10,7 @@ import { RouterOutlet } from '@angular/router';
 })
 export class DistributorDashboard {
   menuItems = [
+<<<<<<< Updated upstream
     { label: 'Dashboard', route: '/distributor/dashboard', icon: 'fa-chart-pie' },
     {
       label: 'Merchants',
@@ -110,5 +111,18 @@ export class DistributorDashboard {
         { label: 'API Settings', route: '/distributor/settings/api-settings' }
       ]
     }
+=======
+    { label: 'Dashboard', route: '/distributor/dashboard' },
+    { label: 'Deliveries', route: '/distributor/deliveries' },
+    { label: 'Assign Delivery', route: '/distributor/assign-delivery' },
+    { label: 'Pickups', route: '/distributor/pickups' },
+    { label: 'Shipments', route: '/distributor/shipments' },
+    { label: 'Tracking', route: '/distributor/tracking' },
+    { label: 'Wallet', route: '/distributor/wallet' },
+    { label: 'Failed Deliveries', route: '/distributor/failed-deliveries' },
+    { label: 'Reports', route: '/distributor/reports' },
+    { label: 'Drivers', route: '/distributor/drivers' },
+    { label: 'Support', route: '/distributor/support' },
+>>>>>>> Stashed changes
   ];
 }

@@ -1,0 +1,687 @@
+.page-container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ================= HEADER ================= */
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h2 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.breadcrumb a {
+    text-decoration: none;
+    color: #64748b;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.breadcrumb a:hover {
+    color: #2563eb;
+}
+
+.breadcrumb span {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.breadcrumb .active {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* ================= WIZARD LAYOUT ================= */
+.wizard-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ================= SIDEBAR STEPS ================= */
+.steps-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.step-item:hover {
+    background: #f8fafc;
+}
+
+.step-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #64748b;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.step-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+/* Step Active State */
+.step-item.active {
+    background: #f0f6ff;
+}
+
+.step-item.active .step-badge {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.step-item.active .step-title {
+    color: #2563eb;
+}
+
+/* Step Completed State */
+.step-item.completed .step-badge {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: white;
+}
+
+.step-item.completed .step-badge i {
+    font-size: 14px;
+}
+
+.step-item.completed .step-title {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* ================= FORM CARD ================= */
+.form-card {
+    background: white;
+    border-radius: 18px;
+    padding: 32px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.03);
+    min-height: 480px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+}
+
+.header-icon {
+    font-size: 22px;
+}
+
+.blue-icon { color: #2563eb; }
+.orange-icon { color: #ea580c; }
+.purple-icon { color: #7c3aed; }
+.green-icon { color: #16a34a; }
+
+.section-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* ================= FORM CONTROLS ================= */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    outline: none;
+    transition: all 0.2s ease;
+    background: #fff;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+select.form-control {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+/* ================= INPUT GROUP WITH SUFFIX ================= */
+.input-group {
+    display: flex;
+    position: relative;
+    align-items: center;
+}
+
+.input-group .form-control {
+    padding-right: 60px;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 16px;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ================= DASHED BUTTON ================= */
+.dashed-btn {
+    border: 1.5px dashed #cbd5e1;
+    background: transparent;
+    padding: 14px;
+    border-radius: 10px;
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.dashed-btn:hover {
+    border-color: #2563eb;
+    background: #f0f6ff;
+}
+
+/* ================= CHECKBOX ================= */
+.checkbox-group {
+    margin-top: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
+    cursor: pointer;
+}
+
+/* ================= FORM ACTIONS ================= */
+.form-actions {
+    display: flex;
+    align-items: center;
+    margin-top: 24px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 24px;
+}
+
+.form-actions.right-align {
+    justify-content: flex-end;
+}
+
+.form-actions.justify-between {
+    justify-content: space-between;
+}
+
+.form-actions.justify-start {
+    justify-content: flex-start;
+}
+
+/* ================= BUTTONS ================= */
+.primary-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.primary-btn:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
+}
+
+.secondary-btn {
+    background: white;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+    background: #f8fafc;
+    color: #1e293b;
+    border-color: #94a3b8;
+}
+
+/* ================= STEP 4 SUMMARY & RATE ================= */
+.summary-details-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.summary-details-card h4 {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-item.full-width {
+    grid-column: span 3;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.summary-item.full-width i {
+    margin-top: 3px;
+    font-size: 15px;
+}
+
+.summary-item.full-width .from-icon {
+    color: #2563eb;
+}
+
+.summary-item.full-width .to-icon {
+    color: #ea580c;
+}
+
+.summary-item .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-item .value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Courier Selection Section */
+.couriers-section h4 {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.courier-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.courier-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.courier-item:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.courier-item.selected {
+    border-color: #2563eb;
+    background: #f0f6ff;
+    box-shadow: 0 0 0 1px #2563eb;
+}
+
+.courier-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.courier-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.courier-name {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.courier-type {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.courier-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.courier-rate {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.radio-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    background: white;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.courier-item:hover .radio-circle {
+    border-color: #94a3b8;
+}
+
+.courier-item.selected .radio-circle {
+    border-color: #2563eb;
+    background: #2563eb;
+}
+
+.courier-item.selected .radio-circle::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Total Bar */
+.total-bar {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+.total-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.total-price {
+    margin: 4px 0 0 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.create-shipment-btn {
+    padding: 14px 28px;
+    font-size: 15px;
+}
+
+/* ================= TRUST BADGES ================= */
+.trust-badges {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 32px;
+}
+
+.badge-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.badge-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #f0f6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.badge-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.badge-text strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.badge-text span {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* ================= ANIMATIONS ================= */
+.animate-fade-in {
+    animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 992px) {
+    .wizard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .steps-card {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .step-item {
+        padding: 8px;
+        flex-shrink: 0;
+    }
+    
+    .step-title {
+        display: none; /* Hide titles on smaller tablets/mobiles to fit row */
+    }
+
+    .form-card {
+        padding: 24px;
+    }
+
+    .trust-badges {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-item.full-width {
+        grid-column: span 1;
+    }
+
+    .total-bar {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .trust-badges {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,228 @@
+<div class="support-container">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon-row">
+                <div class="header-icon">
+                    <span>🎧</span>
+                </div>
+                <h1>Merchant Support</h1>
+            </div>
+            <p>Get help with orders, shipments, payments, returns and more.</p>
+        </div>
+        <div class="header-stats">
+            <div class="header-stat">
+                <span class="header-stat-num">24/7</span>
+                <span class="header-stat-label">Support</span>
+            </div>
+            <div class="header-stat">
+                <span class="header-stat-num">4 min</span>
+                <span class="header-stat-label">Avg. response</span>
+            </div>
+        </div>
+    </div>
+
+    <app-stats-cards [cards]="stats"></app-stats-cards>
+
+    <!-- Sections -->
+    <div class="sections">
+
+        <!-- Create Ticket -->
+        <div class="section" id="create-ticket-section">
+            <div class="sec-header" (click)="toggleSection('create-ticket')">
+                <div class="sec-title">
+                    <span class="icon">🎫</span> Create ticket
+                </div>
+                <span class="chevron" [class.open]="isOpen('create-ticket')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('create-ticket')">
+                <div class="ticket-form">
+                    <div class="form-group">
+                        <label>Issue category</label>
+                        <select [(ngModel)]="selectedCategory" name="category">
+                            <option *ngFor="let cat of ticketCategories" [value]="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" [(ngModel)]="ticketSubject" placeholder="Enter subject">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea rows="4" [(ngModel)]="ticketDescription" placeholder="Describe your issue"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select [(ngModel)]="selectedPriority" name="priority">
+                            <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
+                        </select>
+                    </div>
+                    <button type="button" class="submit-btn" (click)="submitTicket()">Submit ticket</button>
+                    <div class="success-msg" *ngIf="ticketSubmitted">✔ Ticket submitted successfully!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Tickets -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('my-tickets')">
+                <div class="sec-title">
+                    <span class="icon">📋</span> My tickets
+                </div>
+                <span class="chevron" [class.open]="isOpen('my-tickets')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('my-tickets')">
+                <div class="table-wrapper">
+                    <table class="tickets-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Category</th>
+                                <th>Subject</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let ticket of tickets">
+                                <td>{{ ticket.ticketId }}</td>
+                                <td>{{ ticket.category }}</td>
+                                <td>{{ ticket.subject }}</td>
+                                <td>{{ ticket.priority }}</td>
+                                <td><span [class]="getStatusClass(ticket.status)">{{ ticket.status }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Support -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('order')">
+                <div class="sec-title">
+                    <span class="icon">🛒</span> Order support
+                </div>
+                <span class="chevron" [class.open]="isOpen('order')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('order')">
+                <div class="support-note">Need help with an order issue? Our support team is available 24/7.</div>
+                <div class="cards-grid">
+                    <div class="issue-card" *ngFor="let issue of orderIssues">
+                        <h3>{{ issue.title }}</h3>
+                        <p>{{ issue.description }}</p>
+                        <button type="button" class="raise-btn" (click)="raiseTicket('Order Issue', issue.title)">Raise
+                            ticket ↗</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment Support -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('shipment')">
+                <div class="sec-title">
+                    <span class="icon">🚚</span> Shipment support
+                </div>
+                <span class="chevron" [class.open]="isOpen('shipment')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('shipment')">
+                <div class="support-note">Our dedicated support team assists with tracking, carrier delays, and delivery
+                    issues.</div>
+                <div class="cards-grid">
+                    <div class="issue-card" *ngFor="let issue of shipmentIssues">
+                        <h3>{{ issue.title }}</h3>
+                        <p>{{ issue.description }}</p>
+                        <button type="button" class="raise-btn"
+                            (click)="raiseTicket('Shipment Issue', issue.title)">Raise ticket ↗</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Support -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('payment')">
+                <div class="sec-title">
+                    <span class="icon">💳</span> Payment support
+                </div>
+                <span class="chevron" [class.open]="isOpen('payment')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('payment')">
+                <div class="support-note">Payment support team will help resolve your issue quickly.</div>
+                <div class="cards-grid">
+                    <div class="issue-card" *ngFor="let issue of paymentIssues">
+                        <h3>{{ issue.title }}</h3>
+                        <p>{{ issue.description }}</p>
+                        <button type="button" class="raise-btn"
+                            (click)="raiseTicket('Payment Issue', issue.title)">Raise ticket ↗</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Support -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('return')">
+                <div class="sec-title">
+                    <span class="icon">↩️</span> Return support
+                </div>
+                <span class="chevron" [class.open]="isOpen('return')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('return')">
+                <div class="support-note">Available 24/7 to assist with return requests, refunds, reverse logistics, and
+                    damaged items.</div>
+                <div class="cards-grid">
+                    <div class="issue-card" *ngFor="let reason of returnReasons">
+                        <h3>{{ reason.title }}</h3>
+                        <p>{{ reason.description }}</p>
+                        <button type="button" class="raise-btn"
+                            (click)="raiseTicket('Return Issue', reason.title)">Raise ticket ↗</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Support -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('product')">
+                <div class="sec-title">
+                    <span class="icon">📦</span> Product support
+                </div>
+                <span class="chevron" [class.open]="isOpen('product')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('product')">
+                <div class="support-note">Product experts will help you resolve listing and inventory issues quickly.
+                </div>
+                <div class="cards-grid">
+                    <div class="issue-card" *ngFor="let issue of productIssues">
+                        <h3>{{ issue.title }}</h3>
+                        <p>{{ issue.description }}</p>
+                        <button type="button" class="raise-btn"
+                            (click)="raiseTicket('Product Issue', issue.title)">Raise ticket ↗</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="section">
+            <div class="sec-header" (click)="toggleSection('faq')">
+                <div class="sec-title">
+                    <span class="icon">❓</span> FAQ
+                </div>
+                <span class="chevron" [class.open]="isOpen('faq')">▾</span>
+            </div>
+            <div class="sec-body" [class.open]="isOpen('faq')">
+                <div class="faq-list">
+                    <div class="faq-item" *ngFor="let faq of faqs">
+                        <span class="faq-dot">●</span>
+                        {{ faq }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

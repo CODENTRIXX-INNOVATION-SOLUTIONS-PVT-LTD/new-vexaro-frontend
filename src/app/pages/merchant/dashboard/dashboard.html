@@ -1,11 +1,7 @@
 <div class="dashboard">
-    <app-dashboard-header
-        role="Merchande"
-        userName="Sahil Gour"
-        email="sahil@gmail.com"
-        profileImage="https://i.pravatar.cc/150?img=12"
-    ></app-dashboard-header>
-    
+    <app-dashboard-header role="Merchande" userName="Sahil Gour" email="sahil@gmail.com"
+        profileImage="https://i.pravatar.cc/150?img=12"></app-dashboard-header>
+
     <app-stats-cards [cards]="cards"></app-stats-cards>
 
     <div class="two-section">
@@ -30,6 +26,7 @@
             </button>
         </div>
     </div>
+
     <div class="chart-section">
         <app-shipment-overview></app-shipment-overview>
         <app-top-destinations></app-top-destinations>

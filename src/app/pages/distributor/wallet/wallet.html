@@ -1,0 +1,116 @@
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2>My Wallet</h2>
+            <div class="breadcrumb">
+                <span>Distributor</span>
+                <span>›</span>
+                <span class="active">Wallet</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance & Quick Overview -->
+    <div class="wallet-overview">
+        <div class="card balance-card">
+            <div class="card-icon"><i class="fas fa-wallet"></i></div>
+            <div class="card-info">
+                <span class="card-label">Current Wallet Balance</span>
+                <h2 class="card-value">₹{{ balance.toLocaleString('en-IN') }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="wallet-grid">
+        <!-- Recharge Request Form -->
+        <div class="card form-card">
+            <div class="card-title">
+                <div class="icon-circle blue">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <span>Request Wallet Recharge</span>
+            </div>
+
+            <form (ngSubmit)="submitRequest()" #rechargeForm="ngForm">
+                <!-- Package Chips Selector -->
+                <div class="form-group">
+                    <label>Select Recharge Amount <span class="required">*</span></label>
+                    <div class="package-chips">
+                        <button type="button" 
+                            *ngFor="let amt of packages" 
+                            class="chip-btn" 
+                            [class.selected]="selectedPackage === amt" 
+                            (click)="selectPackage(amt)">
+                            ₹{{ amt.toLocaleString('en-IN') }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paymentMethod">Payment Method</label>
+                        <select id="paymentMethod" [(ngModel)]="paymentMethod" name="paymentMethod">
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Card">Card</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="referenceId">Payment Reference ID</label>
+                        <input type="text" id="referenceId" [(ngModel)]="referenceId" name="referenceId" placeholder="e.g. UPI Ref ID">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" [disabled]="!selectedPackage">
+                    <i class="fas fa-paper-plane"></i> Submit Request
+                </button>
+            </form>
+        </div>
+
+        <!-- Request History Table -->
+        <div class="card table-card">
+            <div class="card-title">
+                <div class="icon-circle green">
+                    <i class="fas fa-history"></i>
+                </div>
+                <span>Request History</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let req of myRequests">
+                            <td class="req-id">{{ req.requestId }}</td>
+                            <td class="date-cell">{{ req.date }}</td>
+                            <td class="amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
+                            <td><span class="method-badge">{{ req.method }}</span></td>
+                            <td class="ref-cell">{{ req.reference }}</td>
+                            <td>
+                                <span class="badge" 
+                                    [class.success]="req.status === 'Approved'"
+                                    [class.pending]="req.status === 'Pending'"
+                                    [class.failed]="req.status === 'Rejected'">
+                                    {{ req.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr *ngIf="myRequests.length === 0">
+                            <td colspan="6" class="empty-state">No requests found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

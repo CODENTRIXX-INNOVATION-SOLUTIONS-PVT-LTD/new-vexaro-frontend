@@ -29,6 +29,7 @@ import { Support } from './pages/warehouse/support/support';
 import { WarehouseDashboardPage } from './pages/warehouse/dashboard/dashboard';
 
 //  DISTRIBUTOR
+<<<<<<< Updated upstream
 import { AllShipments } from './pages/distributor/all-shipments/all-shipments';
 import { CodManagement } from './pages/distributor/finance/cod-management/cod-management';
 import { Wallet } from './pages/distributor/finance/wallet/wallet';
@@ -64,6 +65,15 @@ import { DistrubuterDashboardPage } from './pages/distributor/dashboard/Distrubu
 import { LiveTracking } from './pages/distributor/tracking/live-tracking/live-tracking';
 import { TrackingHistory } from './pages/distributor/tracking/tracking-history/tracking-history';
 import { AwbSearch } from './pages/distributor/tracking/awb-search/awb-search';
+=======
+import { Deliveries } from './pages/distributor/deliveries/deliveries';
+import { DAssignDelivery } from './pages/distributor/assign-delivery/assign-delivery';
+import { Pickups } from './pages/distributor/pickups/pickups';
+import { FailedDeliveries } from './pages/distributor/failed-deliveries/failed-deliveries';
+import { Drivers } from './pages/distributor/drivers/drivers';
+import { DistrubuterDashboardPage } from './pages/distributor/dashboard/DistrubuterDashboardPage';
+import { DistributorWallet } from './pages/distributor/wallet/wallet';
+>>>>>>> Stashed changes
 
 // MARCHAND
 import { BulkUpload } from './pages/merchant/bulk-upload/bulk-upload';
@@ -74,7 +84,15 @@ import { DistributorProfile } from './pages/super-admin/distributor/distributor-
 import { Reports } from './pages/merchant/reports/reports';
 import { MerchantProfile } from './pages/super-admin/merchant/merchant-profile/merchant-profile';
 import { MerchantTracking } from './pages/merchant/merchant-tracking/merchant-tracking';
+<<<<<<< Updated upstream
 
+=======
+import { DistributorShipment } from './pages/distributor/distributor-shipment/distributor-shipment';
+import { MerchantSupport } from './pages/merchant/merchant-support/merchant-support';
+import { MerchantShipments } from './pages/merchant/shipments/merchant-shipments';
+import { MerchantProfilePage } from './pages/merchant/merchant-profile-page/merchant-profile-page';
+import { MerchantWarehouse } from './pages/merchant/merchant-warehouse/merchant-warehouse';
+>>>>>>> Stashed changes
 
 
 export const routes: Routes = [
@@ -110,15 +128,22 @@ export const routes: Routes = [
     component: MerchantDashboard,
     children: [
       { path: 'dashboard', component: MarchandeDashboardPage },
+<<<<<<< Updated upstream
       { path: 'shipments', component: Shipments },
       // { path: 'tracking', component: Tracking },
       { path: 'create-shipment', component: CreateShipment },
+=======
+      { path: 'shipments', component: MerchantShipments },
+      { path: 'tracking', component: Tracking },
+>>>>>>> Stashed changes
       { path: 'bulk-upload', component: BulkUpload },
       { path: 'payments', component: Payments },
       { path: 'reports', component: Reports },
       { path: 'tracking', component: MerchantTracking },
       { path: 'address-book', component: AddressBook },
-      { path: 'support', component: Support },
+      { path: 'support', component: MerchantSupport },
+      { path: 'profile', component: MerchantProfilePage },
+      { path: 'warehouse', component: MerchantWarehouse },
       { path: 'merchants/profile/:id', component: MerchantProfile },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
@@ -129,11 +154,16 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DistrubuterDashboardPage },
 
+<<<<<<< Updated upstream
       // Merchants
       { path: 'merchants', component: DistributorMerchantList },
       { path: 'merchants/create', component: CreateMerchant },
       { path: 'merchants/:id', component: DistributorMerchantProfile },
       // Note: merchants/:id/wallet and merchants/:id/shipments can use the MerchantProfile component with activeTab set
+=======
+      { path: 'tracking', component: Tracking },
+      { path: 'wallet', component: DistributorWallet },
+>>>>>>> Stashed changes
 
       // Operations
       { path: 'operations/shipments', component: AllShipments },

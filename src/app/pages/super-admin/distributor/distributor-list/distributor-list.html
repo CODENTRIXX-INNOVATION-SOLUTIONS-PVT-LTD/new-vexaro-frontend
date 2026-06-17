@@ -45,7 +45,7 @@
 
             <tbody>
 
-                @for(distributor of distributors; track distributor.id){
+                @for(distributor of allDistributors; track distributor.id){
 
                 <tr>
 
@@ -58,7 +58,8 @@
 
                     <td>
                         <span class="status" [class.active-status]="distributor.status === 'Active'"
-                            [class.inactive-status]="distributor.status === 'Inactive'">
+                            [class.inactive-status]="distributor.status === 'Inactive'"
+                            [class.pending-status]="distributor.status === 'Pending'">
 
                             {{ distributor.status }}
 
@@ -82,6 +83,13 @@
                                     <i class="fa-solid fa-circle-info"></i>
                                     <span>Distributor Details</span>
                                 </button>
+
+                                @if (distributor.status === 'Pending') {
+                                <button (click)="approveDistributor(distributor.name)">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>Approve Request</span>
+                                </button>
+                                }
 
                             </div>
 

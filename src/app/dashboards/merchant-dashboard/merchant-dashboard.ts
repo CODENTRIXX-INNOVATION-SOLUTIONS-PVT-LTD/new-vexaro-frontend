@@ -11,12 +11,13 @@ export class MerchantDashboard {
   menuItems = [
     { label: 'Dashboard', route: '/merchant/dashboard' },
     { label: 'Shipments', route: '/merchant/shipments' },
-    { label: 'Tracking', route: '/merchant/tracking' },
-    { label: 'Create Shipment', route: '/merchant/create-shipment' },
-    { label: 'Bulk Upload', route: '/merchant/bulk-upload' },
-    { label: 'Payments', route: '/merchant/payments' },
+    // { label: 'Tracking', route: '/merchant/tracking' },
+    // { label: 'Bulk Upload', route: '/merchant/bulk-upload' },
+    { label: 'Wallet', route: '/merchant/payments' },
     { label: 'Reports', route: '/merchant/reports' },
-    { label: 'Address Book', route: '/merchant/address-book' },
-    { label: 'Support', route: '/merchant/support' }
+    // { label: 'Address Book', route: '/merchant/address-book' },
+    { label: 'Support', route: '/merchant/support' },
+    { label: 'Warehouse', route: '/merchant/warehouse' },
+    { label: 'My Profile', route: '/merchant/profile' }
   ];
 }

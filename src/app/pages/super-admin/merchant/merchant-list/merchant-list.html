@@ -1,4 +1,5 @@
 <div class="page-container">
+    <!-- Header -->
     <div class="page-header">
         <div>
             <h2>Merchants</h2>
@@ -10,92 +11,137 @@
         </div>
     </div>
 
-    <div class="table-card">
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search merchant...">
+    <!-- Metrics Bar -->
+    <div class="metrics-grid">
+        <div class="metric-card total">
+            <div class="metric-icon"><i class="fa-solid fa-building"></i></div>
+            <div class="metric-info">
+                <h3>Total Merchants</h3>
+                <p>{{ totalMerchants }}</p>
+            </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Company Name</th>
-                    <th>Contact Person</th>
-                    <th>Mobile</th>
-                    <th>Email</th>
-                    <th>GST Number</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @for(merchant of merchants; track merchant.id){
-
-                <tr>
-
-                    <td>#{{ merchant.id }}</td>
-                    <td>{{ merchant.companyName }}</td>
-                    <td>{{ merchant.contactPerson }}</td>
-                    <td>{{ merchant.mobile }}</td>
-                    <td>{{ merchant.email }}</td>
-                    <td>{{ merchant.gst }}</td>
-
-                    <td>
-
-                        <span class="status" [class.active-status]="merchant.status === 'Active'"
-                            [class.inactive-status]="merchant.status === 'Inactive'">
-
-                            {{ merchant.status }}
-
-                        </span>
-
-                    </td>
-
-                    <td class="action-cell">
-
-                        <div class="action-menu">
-
-                            <button class="menu-btn" (click)="toggleMenu(merchant.id); $event.stopPropagation()">
-
-                                <i class="fa-solid fa-ellipsis"></i>
-
-                            </button>
-
-                            @if(activeMenu === merchant.id){
-
-                            <div class="dropdown-menu">
-
-                                <button (click)="viewMerchant(merchant.id)">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                    <span>View Details</span>
-                                </button>
-
-                    
-
-                            </div>
-
-                            }
-
-                        </div>
-
-                    </td>
-
-                </tr>
-
-                }
-
-            </tbody>
-
-        </table>
-
-        <div class="table-footer">
-            Showing 1 to {{ merchants.length }} entries
+        <div class="metric-card active">
+            <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="metric-info">
+                <h3>Active Merchants</h3>
+                <p>{{ activeMerchants }}</p>
+            </div>
         </div>
-
+        <div class="metric-card inactive">
+            <div class="metric-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+            <div class="metric-info">
+                <h3>Inactive Merchants</h3>
+                <p>{{ inactiveMerchants }}</p>
+            </div>
+        </div>
     </div>
 
+    <!-- Table Card Container -->
+    <div class="table-card">
+        <!-- Controls Row -->
+        <div class="controls-row">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" [(ngModel)]="searchQuery" placeholder="Search by company, contact, email or distributor...">
+            </div>
+            
+            <div class="filter-box">
+                <div class="select-wrapper">
+                    <i class="fa-solid fa-filter"></i>
+                    <select [(ngModel)]="statusFilter">
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active Only</option>
+                        <option value="Inactive">Inactive Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Merchant / Company</th>
+                        <th>Contact Details</th>
+                        <th>Email Address</th>
+                        <th>Assigned Distributor</th>
+                        <th>Status</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (merchant of filteredMerchants; track merchant.id) {
+                    <tr>
+                        <td class="id-cell">#{{ merchant.id }}</td>
+                        <td>
+                            <div class="company-cell">
+                                <div class="company-avatar" [class.avatar-inactive]="merchant.status === 'Inactive'">
+                                    {{ getInitials(merchant.companyName) }}
+                                </div>
+                                <div class="company-details">
+                                    <span class="company-name">{{ merchant.companyName }}</span>
+                                    <span class="company-gst">GST: {{ merchant.gst }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="contact-details">
+                                <span class="contact-name">{{ merchant.contactPerson }}</span>
+                                <span class="contact-phone"><i class="fa-solid fa-phone"></i> {{ merchant.mobile }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="email-cell">{{ merchant.email }}</span>
+                        </td>
+                        <td>
+                            <a [routerLink]="['/super-admin/distributors/profile', merchant.distributorId]" class="distributor-link">
+                                <div class="distributor-badge">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                    {{ merchant.distributorName }}
+                                </div>
+                            </a>
+                        </td>
+                        <td>
+                            <span class="status" [class.active-status]="merchant.status === 'Active'"
+                                [class.inactive-status]="merchant.status === 'Inactive'">
+                                <i class="fa-solid fa-circle"></i>
+                                {{ merchant.status }}
+                            </span>
+                        </td>
+                        <td class="action-cell text-right">
+                            <div class="action-menu">
+                                <button class="menu-btn" (click)="toggleMenu(merchant.id); $event.stopPropagation()">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+
+                                @if (activeMenu === merchant.id) {
+                                <div class="dropdown-menu">
+                                    <button (click)="viewMerchant(merchant.id)">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        <span>View Details</span>
+                                    </button>
+                                </div>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <p>No merchants found matching your filters.</p>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            Showing {{ filteredMerchants.length }} of {{ merchants.length }} entries
+        </div>
+    </div>
 </div>
