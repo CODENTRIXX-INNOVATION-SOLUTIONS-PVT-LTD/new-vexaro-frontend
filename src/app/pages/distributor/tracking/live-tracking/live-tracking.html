@@ -1,0 +1,56 @@
+<div class="shipment-card">
+    <div class="header mb-0">
+        <div class="d-flex align-center gap-15">
+            <button class="back-btn" (click)="goBack()"><i class="fas fa-arrow-left"></i></button>
+            <div>
+                <h2 style="margin: 0; font-size: 20px;">Live Tracking: {{awb}}</h2>
+                <span class="status transit" style="margin-top: 5px;">Out for Delivery</span>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="view-btn"><i class="fas fa-phone"></i> Contact Driver</button>
+        </div>
+    </div>
+
+    <div class="tracking-layout mt-4">
+        <!-- Map Placeholder -->
+        <div class="map-container">
+            <div class="mock-map">
+                <i class="fas fa-map-marked-alt map-icon"></i>
+                <h3>Mapbox / Google Maps Integration</h3>
+                <p>Live coordinates stream via WebSocket</p>
+            </div>
+            
+            <div class="telemetry-strip">
+                <div class="telemetry-item">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                        <span>Driver</span>
+                        <strong>Ramesh Singh</strong>
+                    </div>
+                </div>
+                <div class="telemetry-item">
+                    <i class="fas fa-truck"></i>
+                    <div>
+                        <span>Vehicle</span>
+                        <strong>MH02 AB 1234</strong>
+                    </div>
+                </div>
+                <div class="telemetry-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <div>
+                        <span>Speed</span>
+                        <strong>{{speed}}</strong>
+                    </div>
+                </div>
+                <div class="telemetry-item">
+                    <i class="fas fa-signal"></i>
+                    <div>
+                        <span>Last Ping</span>
+                        <strong style="color: #16a34a;">{{lastPing}}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

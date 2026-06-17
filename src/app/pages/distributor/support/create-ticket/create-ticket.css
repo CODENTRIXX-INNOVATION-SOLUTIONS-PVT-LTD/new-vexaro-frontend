@@ -1,0 +1,40 @@
+.header-section { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 20px; }
+.header-section h2 { margin: 0; font-size: 24px; color: #111827; }
+
+.action-btn { padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; border: none; }
+.action-btn.secondary { background: #f1f5f9; color: #475569; }
+.action-btn.secondary:hover { background: #e2e8f0; }
+
+.shipment-card { background: #fff; border-radius: 18px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 800px; margin: 0 auto; }
+.mt-4 { margin-top: 24px; }
+
+.form-container { display: flex; flex-direction: column; gap: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group label { font-size: 14px; font-weight: 600; color: #374151; }
+.required { color: #ef4444; }
+
+.form-control { padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; background: #fff; }
+.form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+textarea.form-control { resize: vertical; }
+
+.file-input { padding: 8px 12px; }
+
+.form-actions { display: flex; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+.submit-btn { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.submit-btn:hover:not(:disabled) { background: #1d4ed8; }
+.submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+@media(max-width: 1023px) {
+    .header, .header-section, .section-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .stats-container { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media(max-width: 767px) {
+    .form-row { flex-direction: column; gap: 12px; }
+    .search-input, .status-select, .form-control { width: 100%; min-width: 100%; box-sizing: border-box; }
+    .shipment-card { padding: 16px; }
+    .stats-container { grid-template-columns: 1fr; }
+}

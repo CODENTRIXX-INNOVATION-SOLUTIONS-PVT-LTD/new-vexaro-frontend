@@ -1,0 +1,99 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title"><i class="fas fa-chart-line"></i> Profit Analysis</h1>
+    <p class="page-subtitle">Track your franchise margin profits across merchants and couriers</p>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading profit data...</p></div>
+  }
+
+  @if (!isLoading) {
+    <div class="stats-row">
+      <div class="stat-card">
+        <i class="fas fa-money-bill-wave stat-icon green"></i>
+        <div>
+          <div class="stat-value">₹{{ profitSummary.totalRevenue | number }}</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-file-invoice-dollar stat-icon red"></i>
+        <div>
+          <div class="stat-value">₹{{ profitSummary.totalCost | number }}</div>
+          <div class="stat-label">Total Cost</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-coins stat-icon purple"></i>
+        <div>
+          <div class="stat-value">₹{{ profitSummary.totalProfit | number }}</div>
+          <div class="stat-label">Net Margin Profit</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-percentage stat-icon blue"></i>
+        <div>
+          <div class="stat-value">{{ profitSummary.marginPercentage | number:'1.2-2' }}%</div>
+          <div class="stat-label">Avg. Margin Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Courier Profit Table -->
+      <div class="card">
+        <h3 class="card-title">Profit by Courier</h3>
+        @if (courierProfits.length === 0) {
+          <div class="empty-state-small">No data available</div>
+        } @else {
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>Courier</th>
+                <th>Shipments</th>
+                <th>Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of courierProfits; track c.courier) {
+                <tr>
+                  <td><strong>{{ c.courier }}</strong></td>
+                  <td>{{ c.count }}</td>
+                  <td class="profit">₹{{ c.profit | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- Merchant Profit Table -->
+      <div class="card">
+        <h3 class="card-title">Top Merchants by Profit</h3>
+        @if (merchantProfits.length === 0) {
+          <div class="empty-state-small">No data available</div>
+        } @else {
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>Merchant</th>
+                <th>Shipments</th>
+                <th>Profit Generated</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of merchantProfits; track m.merchantId) {
+                <tr>
+                  <td><strong>{{ m.businessName }}</strong></td>
+                  <td>{{ m.count }}</td>
+                  <td class="profit">₹{{ m.profit | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  }
+</div>

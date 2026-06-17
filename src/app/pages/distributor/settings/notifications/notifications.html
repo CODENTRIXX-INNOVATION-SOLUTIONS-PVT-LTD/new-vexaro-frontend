@@ -1,0 +1,102 @@
+<div class="header-section">
+    <h2>Notification Preferences</h2>
+    <p class="subtitle">Choose what you want to be notified about</p>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="form-container">
+        <!-- Email Settings -->
+        <div class="settings-group">
+            <div class="section-title">
+                <h4><i class="fas fa-envelope"></i> Email Notifications</h4>
+            </div>
+            
+            <label class="toggle-row">
+                <div class="text-block">
+                    <span class="label-title">New Merchant Onboarded</span>
+                    <span class="label-desc">Receive an email when a new merchant completes verification.</span>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="notifs.email.newMerchant">
+                    <span class="slider"></span>
+                </div>
+            </label>
+
+            <label class="toggle-row">
+                <div class="text-block">
+                    <span class="label-title">Daily Summary Reports</span>
+                    <span class="label-desc">Get a daily digest of all deliveries, margins, and COD collected.</span>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="notifs.email.dailyReport">
+                    <span class="slider"></span>
+                </div>
+            </label>
+
+            <label class="toggle-row">
+                <div class="text-block">
+                    <span class="label-title">Settlement Alerts</span>
+                    <span class="label-desc">Notify me when payouts to my master wallet are processed.</span>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="notifs.email.settlementAlert">
+                    <span class="slider"></span>
+                </div>
+            </label>
+        </div>
+
+        <!-- SMS Settings -->
+        <div class="settings-group mt-4">
+            <div class="section-title">
+                <h4><i class="fas fa-sms"></i> SMS Alerts</h4>
+            </div>
+            
+            <label class="toggle-row">
+                <div class="text-block">
+                    <span class="label-title">Low Wallet Balance</span>
+                    <span class="label-desc">Instant SMS when master wallet balance falls below ₹5000.</span>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="notifs.sms.walletLow">
+                    <span class="slider"></span>
+                </div>
+            </label>
+
+            <label class="toggle-row">
+                <div class="text-block">
+                    <span class="label-title">Weight Disputes Raised</span>
+                    <span class="label-desc">Immediate alert when a merchant challenges a shipment weight.</span>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="notifs.sms.disputeRaised">
+                    <span class="slider"></span>
+                </div>
+            </label>
+        </div>
+
+        <!-- Push Settings -->
+        <div class="settings-group mt-4">
+            <div class="section-title">
+                <h4><i class="fas fa-bell"></i> Push Notifications (Web App)</h4>
+            </div>
+            
+            <label class="toggle-row">
+                <div class="text-block">
+                    <span class="label-title">Support Ticket Updates</span>
+                    <span class="label-desc">Get notified directly in the dashboard when support replies.</span>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="notifs.push.ticketUpdate">
+                    <span class="slider"></span>
+                </div>
+            </label>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button class="submit-btn" [disabled]="isSaving" (click)="saveSettings()">
+                <i class="fas" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-save]="!isSaving"></i> 
+                {{ isSaving ? 'Saving...' : 'Save Preferences' }}
+            </button>
+        </div>
+    </div>
+</div>

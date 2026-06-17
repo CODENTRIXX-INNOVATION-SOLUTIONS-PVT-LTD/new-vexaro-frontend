@@ -1,0 +1,46 @@
+.header-section { margin-top: 20px; margin-bottom: 20px; }
+.header-section h2 { margin: 0; font-size: 24px; color: #111827; }
+
+.wallet-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+@media (max-width: 1023px) { .wallet-layout { grid-template-columns: 1fr; } }
+
+.balance-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 20px; padding: 30px; color: white; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.balance-info p { margin: 0 0 10px 0; color: #94a3b8; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.balance-info h1 { margin: 0 0 20px 0; font-size: 48px; font-weight: 700; color: #fff; }
+.locked-funds { background: rgba(255,255,255,0.1); display: inline-block; padding: 8px 16px; border-radius: 8px; font-size: 14px; color: #cbd5e1; }
+.locked-funds i { margin-right: 8px; }
+
+.wallet-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 40px; }
+.action-btn { border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
+.action-btn.primary { background: #3b82f6; color: white; }
+.action-btn.primary:hover { background: #2563eb; }
+.action-btn.secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+.action-btn.secondary:hover { background: rgba(255,255,255,0.2); }
+
+.shipment-card { background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+.view-btn { border: none; background: #f1f5f9; color: #475569; padding: 10px 18px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.view-btn:hover { background: #e2e8f0; }
+
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead { background: #f8fafc; }
+th { text-align: left; padding: 16px; color: #6b7280; font-size: 14px; font-weight: 600; }
+td { padding: 16px; border-top: 1px solid #e5e7eb; color: #374151; font-size: 14px; vertical-align: middle; }
+
+.status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+.credit { background: #dcfce7; color: #15803d; }
+.debit { background: #fee2e2; color: #dc2626; }
+
+@media(max-width: 1023px) {
+    .header, .header-section, .section-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .stats-container { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media(max-width: 767px) {
+    .form-row { flex-direction: column; gap: 12px; }
+    .search-input, .status-select, .form-control { width: 100%; min-width: 100%; box-sizing: border-box; }
+    .shipment-card { padding: 16px; }
+    .stats-container { grid-template-columns: 1fr; }
+}

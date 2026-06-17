@@ -1,0 +1,165 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <div class="icon-box"><i class="fas fa-store"></i></div>
+        Manage Merchants
+      </h1>
+      <p class="page-subtitle">View and manage all merchants under your franchise network.</p>
+    </div>
+    <div class="header-actions">
+      <div class="view-toggle">
+        <button class="toggle-btn" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')">
+          <i class="fas fa-grid-2"></i> Grid
+        </button>
+        <button class="toggle-btn" [class.active]="viewMode === 'table'" (click)="setViewMode('table')">
+          <i class="fas fa-list"></i> Table
+        </button>
+      </div>
+      <button class="btn-primary" (click)="createMerchant()">
+        <i class="fas fa-plus"></i> Onboard Merchant
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar glass-panel">
+    <div class="search-box">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" placeholder="Search by business name, code, contact..." [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" />
+    </div>
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>Status</label>
+        <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+          <option value="All">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+          <option value="Suspended">Suspended</option>
+        </select>
+      </div>
+      <span class="result-count badge-count">{{ filteredMerchants.length }} Merchants Found</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading your merchants...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredMerchants.length === 0) {
+    <div class="empty-state glass-panel">
+      <div class="empty-icon"><i class="fas fa-store-slash"></i></div>
+      <h3>No Merchants Found</h3>
+      <p>We couldn't find any merchants matching your criteria. Try adjusting your filters or add a new merchant.</p>
+      <button class="btn-primary mt-4" (click)="createMerchant()">
+        <i class="fas fa-plus"></i> Onboard First Merchant
+      </button>
+    </div>
+  }
+
+  @if (!isLoading && filteredMerchants.length > 0) {
+    
+    <!-- GRID VIEW -->
+    @if (viewMode === 'grid') {
+      <div class="merchant-grid">
+        @for (m of filteredMerchants; track m.id) {
+          <div class="merchant-card glass-panel" (click)="viewMerchant(m.id)">
+            <div class="card-header">
+              <div class="merchant-info">
+                <div class="avatar">{{ m.businessName.charAt(0) }}</div>
+                <div>
+                  <h3 class="merchant-name">{{ m.businessName }}</h3>
+                  <p class="merchant-code">{{ m.merchantCode }}</p>
+                </div>
+              </div>
+              <span [class]="'status-pill ' + getStatusClass(m.status)">{{ m.status }}</span>
+            </div>
+            
+            <div class="card-body">
+              <div class="detail-row">
+                <i class="fas fa-user text-muted"></i>
+                <span>{{ m.contactPerson }}</span>
+              </div>
+              <div class="detail-row">
+                <i class="fas fa-phone text-muted"></i>
+                <span>{{ m.phone }}</span>
+              </div>
+              <div class="detail-row">
+                <i class="fas fa-map-marker-alt text-muted"></i>
+                <span>{{ m.city }}</span>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="stat-box">
+                <span class="stat-label">Wallet Balance</span>
+                <span class="stat-value" [class.text-danger]="m.walletBalance < 0">
+                  ₹{{ m.walletBalance | number }}
+                </span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Shipments</span>
+                <span class="stat-value">{{ m.totalShipments | number }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TABLE VIEW -->
+    @if (viewMode === 'table') {
+      <div class="table-card glass-panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Merchant</th>
+              <th>Contact Details</th>
+              <th>Location</th>
+              <th>Wallet Balance</th>
+              <th>Shipments</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of filteredMerchants; track m.id) {
+              <tr (click)="viewMerchant(m.id)" class="clickable-row">
+                <td>
+                  <div class="table-merchant">
+                    <div class="avatar-small">{{ m.businessName.charAt(0) }}</div>
+                    <div>
+                      <div class="merchant-name">{{ m.businessName }}</div>
+                      <div class="merchant-code">{{ m.merchantCode }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="contact-name">{{ m.contactPerson }}</div>
+                  <div class="contact-sub">{{ m.phone }} | {{ m.email }}</div>
+                </td>
+                <td>{{ m.city }}</td>
+                <td class="amount" [class.text-danger]="m.walletBalance < 0">₹{{ m.walletBalance | number }}</td>
+                <td class="fw-bold">{{ m.totalShipments | number }}</td>
+                <td>
+                  <span [class]="'status-pill ' + getStatusClass(m.status)">{{ m.status }}</span>
+                </td>
+                <td class="text-right">
+                  <button class="btn-icon" (click)="viewMerchant(m.id); $event.stopPropagation()" title="View Profile">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  }
+</div>

@@ -1,0 +1,51 @@
+<div class="header-section">
+    <h2>Help Center & FAQs</h2>
+    <div class="actions">
+        <button class="action-btn secondary" routerLink="../tickets">View My Tickets</button>
+        <button class="view-btn" routerLink="../create-ticket"><i class="fas fa-plus"></i> Contact Support</button>
+    </div>
+</div>
+
+<div class="faq-container mt-4">
+    <div class="search-hero">
+        <h3>How can we help you today?</h3>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Search for answers...">
+        </div>
+    </div>
+
+    <div class="faq-content mt-4">
+        <div class="sidebar-categories">
+            <h4>Categories</h4>
+            <ul>
+                @for(cat of categories; track cat) {
+                    <li [class.active]="activeCategory === cat" (click)="setCategory(cat)">
+                        {{cat}}
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="faq-list">
+            @for(faq of filteredFaqs; track faq.question) {
+                <div class="faq-item" [class.expanded]="faq.expanded" (click)="toggleFaq(faq)">
+                    <div class="faq-header">
+                        <h4>{{faq.question}}</h4>
+                        <i class="fas" [class.fa-chevron-down]="!faq.expanded" [class.fa-chevron-up]="faq.expanded"></i>
+                    </div>
+                    <div class="faq-body" *ngIf="faq.expanded">
+                        <p>{{faq.answer}}</p>
+                    </div>
+                </div>
+            }
+
+            @if(filteredFaqs.length === 0) {
+                <div class="no-results">
+                    <i class="fas fa-search" style="font-size: 32px; color: #cbd5e1; margin-bottom: 10px;"></i>
+                    <p>No FAQs found matching your search criteria.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

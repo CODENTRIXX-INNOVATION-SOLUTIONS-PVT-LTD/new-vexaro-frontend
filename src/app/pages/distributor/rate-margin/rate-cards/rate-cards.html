@@ -1,0 +1,62 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><i class="fas fa-tags"></i> Rate Cards</h1>
+      <p class="page-subtitle">View courier rates, your cost, and the margin applied to merchants</p>
+    </div>
+    <a class="btn-nav" routerLink="/distributor/rate-margin/margins"><i class="fas fa-sliders-h"></i> Configure Margins</a>
+  </div>
+
+  <div class="info-bar">
+    <i class="fas fa-shield-alt"></i>
+    <span>Velocity base rates are not visible to merchants. Merchants only see their final rate configured by you.</span>
+  </div>
+
+  <div class="filter-bar">
+    <label>Courier</label>
+    @for (c of ['All', ...couriers]; track c) {
+      <button class="courier-filter" [class.active]="courierFilter === c" (click)="courierFilter = c">{{ c }}</button>
+    }
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading rates...</p></div>
+  }
+
+  @if (!isLoading && filteredSlabs.length === 0) {
+    <div class="empty-state">
+      <i class="fas fa-tags"></i>
+      <h3>No Rate Cards Found</h3>
+      <p>Rate cards are assigned by your Super Admin. Contact them to set up courier rates for your franchise.</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredSlabs.length > 0) {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Courier</th>
+            <th>Weight Slab</th>
+            <th>Your Cost (Dist. Cost)</th>
+            <th>Your Margin</th>
+            <th>Merchant Rate</th>
+            <th>Your Profit / Shipment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredSlabs; track s.courier + s.weightFrom) {
+            <tr>
+              <td><span class="courier-badge">{{ s.courier }}</span></td>
+              <td>{{ s.weightFrom }}–{{ s.weightTo }} kg</td>
+              <td class="cost">₹{{ s.distributorCost }}</td>
+              <td class="margin">+₹{{ s.distributorMargin }}</td>
+              <td class="rate">₹{{ s.merchantRate }}</td>
+              <td class="profit">₹{{ s.distributorProfit }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

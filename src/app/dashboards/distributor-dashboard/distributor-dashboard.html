@@ -1,6 +1,16 @@
 <div class="layout">
 
-  <app-sidebar
+  <!-- Mobile Top Header (Visible only on <1024px) -->
+  <div class="mobile-header">
+    <div class="logo-container-mobile">
+      <img src="../../../assets/logo.png" alt="Vaxaro Logo">
+    </div>
+    <button type="button" class="mobile-menu-btn" (click)="sidebar.toggleDrawer()">
+      <span class="material-icons">menu</span>
+    </button>
+  </div>
+
+  <app-sidebar #sidebar
     title="Distributor"
     [menuItems]="menuItems">
   </app-sidebar>

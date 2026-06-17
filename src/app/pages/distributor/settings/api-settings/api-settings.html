@@ -1,0 +1,83 @@
+<div class="header-section">
+    <h2>API & Webhooks</h2>
+    <p class="subtitle">Manage integrations and developer access</p>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="form-container">
+        
+        <div class="section-header">
+            <div class="section-title">
+                <h4><i class="fas fa-key"></i> API Keys</h4>
+                <p>Use these keys to authenticate API requests from your backend.</p>
+            </div>
+            <button class="action-btn" (click)="generateNewKey()"><i class="fas fa-plus"></i> Generate Key</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key Name</th>
+                        <th>API Key</th>
+                        <th>Created On</th>
+                        <th>Last Used</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(k of apiKeys; track k.key) {
+                    <tr>
+                        <td><strong>{{k.name}}</strong></td>
+                        <td style="font-family: monospace; color: #475569;">
+                            {{k.key}} 
+                            <i class="far fa-copy copy-icon" title="Copy" (click)="copyToClipboard(k.key)"></i>
+                        </td>
+                        <td>{{k.created}}</td>
+                        <td>{{k.lastUsed}}</td>
+                        <td><span class="status active">{{k.status}}</span></td>
+                        <td>
+                            <button class="delete-btn" title="Revoke Key"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-header mt-5">
+            <div class="section-title">
+                <h4><i class="fas fa-network-wired"></i> Webhook Endpoints</h4>
+                <p>Receive real-time HTTP push notifications when events occur.</p>
+            </div>
+            <button class="action-btn" (click)="addWebhook()"><i class="fas fa-plus"></i> Add Webhook</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint URL</th>
+                        <th>Subscribed Events</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(w of webhooks; track w.url) {
+                    <tr>
+                        <td style="color: #2563eb;">{{w.url}}</td>
+                        <td>{{w.events}}</td>
+                        <td><span class="status active">{{w.status}}</span></td>
+                        <td>
+                            <button class="delete-btn" title="Delete Webhook"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

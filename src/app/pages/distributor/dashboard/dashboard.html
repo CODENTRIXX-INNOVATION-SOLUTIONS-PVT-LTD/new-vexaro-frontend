@@ -1,14 +1,91 @@
-<div class="dashboard">
+<div class="dashboard-container">
     <app-dashboard-header
         role="Distributor"
-        userName="Ketan Meena"
-        email="ketan@gmail.com"
-        profileImage="https://i.pravatar.cc/150?img=12"
+        [userName]="user.name"
+        [email]="user.email"
+        [profileImage]="user.profileImage"
     ></app-dashboard-header>
-    <app-stats-cards [cards]="cards"></app-stats-cards>
-    <div class="two-section">
-        <app-delivery-overview></app-delivery-overview>
-        <app-delivery-by-status></app-delivery-by-status>
+
+    <!-- Custom Glassmorphic KPI Cards -->
+    <div class="kpi-grid mt-4">
+        @for (card of cards; track card.title) {
+            <div class="kpi-card glass-panel">
+                <div class="kpi-icon-box" [style.background]="card.bgColor" [style.color]="card.iconColor">
+                    <i [class]="card.icon"></i>
+                </div>
+                <div class="kpi-content">
+                    <p class="kpi-title">{{ card.title }}</p>
+                    <h3 class="kpi-value">{{ card.value }}</h3>
+                </div>
+            </div>
+        }
     </div>
+
+    <!-- New Franchise Analytics Section -->
+    <div class="analytics-section mt-4">
+        <!-- Revenue vs Profit Line Chart Simulation -->
+        <div class="analytics-card glass-panel">
+            <div class="card-header">
+                <h3>Revenue vs. Profit Margin</h3>
+                <span class="badge text-success">+12.5% this month</span>
+            </div>
+            <div class="chart-placeholder">
+                <!-- Using CSS to mock a modern line chart visualization -->
+                <div class="mock-chart">
+                    <svg viewBox="0 0 500 150" preserveAspectRatio="none" class="mock-line-svg">
+                        <!-- Revenue Area -->
+                        <defs>
+                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="rgba(79, 70, 229, 0.2)" />
+                                <stop offset="100%" stop-color="rgba(79, 70, 229, 0)" />
+                            </linearGradient>
+                            <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="rgba(16, 185, 129, 0.2)" />
+                                <stop offset="100%" stop-color="rgba(16, 185, 129, 0)" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M0 130 C 50 120, 100 140, 150 90 C 200 40, 250 80, 300 50 C 350 20, 400 60, 500 10" fill="url(#revenueGrad)" />
+                        <path d="M0 130 C 50 120, 100 140, 150 90 C 200 40, 250 80, 300 50 C 350 20, 400 60, 500 10" fill="none" stroke="#4f46e5" stroke-width="3" />
+                        
+                        <!-- Profit Area -->
+                        <path d="M0 140 C 50 135, 100 145, 150 110 C 200 70, 250 100, 300 80 C 350 60, 400 90, 500 50" fill="url(#profitGrad)" />
+                        <path d="M0 140 C 50 135, 100 145, 150 110 C 200 70, 250 100, 300 80 C 350 60, 400 90, 500 50" fill="none" stroke="#10b981" stroke-width="3" />
+                    </svg>
+                    <div class="mock-legend">
+                        <div class="legend-item"><span class="dot" style="background: #4f46e5;"></span> Revenue</div>
+                        <div class="legend-item"><span class="dot" style="background: #10b981;"></span> Profit</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performing Merchants Bar Chart Simulation -->
+        <div class="analytics-card glass-panel">
+            <div class="card-header">
+                <h3>Top Performing Merchants</h3>
+                <button class="btn-text">View Report</button>
+            </div>
+            <div class="top-merchants-list">
+                <div class="merchant-bar-item">
+                    <div class="merchant-bar-info"><span>Fashion Hub</span> <strong>₹45,200</strong></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 85%; background: linear-gradient(90deg, #4f46e5, #8b5cf6);"></div></div>
+                </div>
+                <div class="merchant-bar-item">
+                    <div class="merchant-bar-info"><span>Tech Store</span> <strong>₹32,150</strong></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 65%; background: linear-gradient(90deg, #4f46e5, #8b5cf6);"></div></div>
+                </div>
+                <div class="merchant-bar-item">
+                    <div class="merchant-bar-info"><span>Grocery Mart</span> <strong>₹28,500</strong></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 55%; background: linear-gradient(90deg, #4f46e5, #8b5cf6);"></div></div>
+                </div>
+                <div class="merchant-bar-item">
+                    <div class="merchant-bar-info"><span>Sneaker World</span> <strong>₹15,400</strong></div>
+                    <div class="progress-track"><div class="progress-fill" style="width: 35%; background: linear-gradient(90deg, #4f46e5, #8b5cf6);"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section -->
     <app-distributor-dashboard-bottom></app-distributor-dashboard-bottom>
 </div>

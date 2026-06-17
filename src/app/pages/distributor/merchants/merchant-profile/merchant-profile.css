@@ -1,0 +1,34 @@
+.page-container { padding: 24px; }
+.page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.btn-back { background: none; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 8px; color: #64748b; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.btn-back:hover { background: #f8fafc; }
+.header-info { flex: 1; }
+.page-title { font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 4px; }
+.header-meta { display: flex; align-items: center; gap: 10px; }
+code { background: #ede9fe; padding: 2px 8px; border-radius: 4px; font-size: 12px; color: #6366f1; font-family: monospace; font-weight: 700; }
+.status-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-active { background: #dcfce7; color: #16a34a; }
+.status-suspended { background: #fee2e2; color: #dc2626; }
+.status-inactive { background: #f1f5f9; color: #64748b; }
+.header-actions { display: flex; gap: 10px; }
+.btn-topup { background: #6366f1; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.btn-danger { background: #fee2e2; color: #dc2626; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.btn-success { background: #dcfce7; color: #16a34a; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 14px; }
+.stat-icon { font-size: 22px; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-icon.blue { background: #dbeafe; color: #2563eb; }
+.stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+.stat-icon.green { background: #dcfce7; color: #16a34a; }
+.stat-icon.orange { background: #fef3c7; color: #d97706; }
+.stat-value { font-size: 18px; font-weight: 700; color: #1e293b; }
+.stat-label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+.tab-bar button { padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; }
+.tab-bar button.active { color: #6366f1; border-bottom-color: #6366f1; font-weight: 700; }
+.detail-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 24px; }
+.detail-title { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 16px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-row span { color: #64748b; }

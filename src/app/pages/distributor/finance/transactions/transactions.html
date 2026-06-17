@@ -1,0 +1,75 @@
+<div class="shipment-card">
+    <div class="header">
+        <h2>Transaction History</h2>
+        <div class="actions">
+            <button class="view-btn"><i class="fas fa-file-excel"></i> Export CSV</button>
+            <button class="view-btn" style="background: #10b981;"><i class="fas fa-file-pdf"></i> Statement</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="form-row">
+            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input" style="max-width: 200px;">
+            
+            <select [(ngModel)]="typeFilter" (change)="applyFilters()" class="status-select">
+                <option value="All">All Types</option>
+                <option value="Credit">Credit (+)</option>
+                <option value="Debit">Debit (-)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Transaction ID</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                </tr>
+            </thead>
+                <tbody>
+                    @if (isLoading) {
+                        <tr>
+                            <td colspan="7" class="text-center py-4" style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading transactions...</td>
+                        </tr>
+                    } @else if (filteredTransactions.length === 0) {
+                        <tr>
+                            <td colspan="7" class="text-center py-4" style="color: #94a3b8;">No transactions found.</td>
+                        </tr>
+                    } @else {
+                        @for(trx of filteredTransactions; track trx.id) {
+                        <tr>
+                            <td>{{trx.date}}</td>
+                            <td class="fw-bold" style="color: #6b7280;">{{trx.id}}</td>
+                            <td>
+                                <span class="status"
+                                    [class.credit]="trx.type === 'Credit'"
+                                    [class.debit]="trx.type === 'Debit'">
+                                    {{trx.type}}
+                                </span>
+                            </td>
+                            <td><strong>{{trx.category}}</strong></td>
+                            <td [style.color]="trx.type === 'Credit' ? '#16a34a' : '#dc2626'" style="font-weight: 600;">
+                                {{trx.type === 'Credit' ? '+' : '-'}}₹{{trx.amount | number}}
+                            </td>
+                            <td>
+                                <span class="status-badge"
+                                    [class.completed]="trx.status === 'Completed'"
+                                    [class.pending]="trx.status === 'Pending'"
+                                    [class.failed]="trx.status === 'Failed'">
+                                    {{trx.status}}
+                                </span>
+                            </td>
+                            <td style="font-size: 13px; color: #64748b;">{{trx.reference}}</td>
+                        </tr>
+                        }
+                    }
+                </tbody>
+        </table>
+    </div>
+</div>

@@ -8,37 +8,37 @@ import { Component } from '@angular/core';
   styleUrl: './distributor-dashboard-bottom.css',
 })
 export class DistributorDashboardBottom {
-
-  deliveries = [
+  merchantActivity = [
     {
-      trackingId: 'AWB123456',
-      merchant: 'Fashion Hub',
-      customer: 'Rahul Sharma',
-      area: 'Bhopal',
-      status: 'Delivered'
+      merchantId: 'MRC-001',
+      businessName: 'Fashion Hub',
+      action: 'Wallet Top-up',
+      amount: 15000,
+      date: 'Today, 10:30 AM',
+      status: 'Completed'
     },
     {
-      trackingId: 'AWB123457',
-      merchant: 'Tech Store',
-      customer: 'Amit Patel',
-      area: 'Indore',
-      status: 'Out for Delivery'
+      merchantId: 'MRC-002',
+      businessName: 'Tech Store',
+      action: 'Weight Dispute Raised',
+      awb: 'AWB123457',
+      date: 'Today, 09:15 AM',
+      status: 'Open'
     },
     {
-      trackingId: 'AWB123458',
-      merchant: 'Grocery Mart',
-      customer: 'Priya Singh',
-      area: 'Pune',
-      status: 'Pending'
+      merchantId: 'MRC-003',
+      businessName: 'Grocery Mart',
+      action: 'New Merchant Onboarded',
+      date: 'Yesterday, 04:45 PM',
+      status: 'Active'
     }
   ];
 
   summary = {
-    totalShipments: 245,
-    deliveredToday: 56,
-    pending: 24,
-    failed: 5,
-    codCollected: 28650
+    totalMerchants: 12,
+    activeMerchants: 10,
+    totalRevenue: 145000,
+    totalProfit: 12500,
+    openDisputes: 3
   };
-
 }
