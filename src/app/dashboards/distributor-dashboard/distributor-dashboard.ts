@@ -10,7 +10,6 @@ import { RouterOutlet } from '@angular/router';
 })
 export class DistributorDashboard {
   menuItems = [
-<<<<<<< Updated upstream
     { label: 'Dashboard', route: '/distributor/dashboard', icon: 'fa-chart-pie' },
     {
       label: 'Merchants',
@@ -21,16 +20,16 @@ export class DistributorDashboard {
         { label: 'Create Merchant', route: '/distributor/merchants/create' }
       ]
     },
-    { 
-      label: 'Operations', 
+    {
+      label: 'Operations',
       icon: 'fa-box-open',
       expanded: false,
       children: [
         { label: 'All Shipments', route: '/distributor/operations/shipments' }
       ]
     },
-    { 
-      label: 'Tracking', 
+    {
+      label: 'Tracking',
       icon: 'fa-map-marked-alt',
       expanded: false,
       children: [
@@ -49,8 +48,8 @@ export class DistributorDashboard {
         { label: 'Merchant Transactions', route: '/distributor/merchant-finance/transactions' }
       ]
     },
-    { 
-      label: 'My Finance', 
+    {
+      label: 'My Finance',
       icon: 'fa-wallet',
       expanded: false,
       children: [
@@ -77,8 +76,8 @@ export class DistributorDashboard {
         { label: 'All Disputes', route: '/distributor/disputes' }
       ]
     },
-    { 
-      label: 'Reports & Analytics', 
+    {
+      label: 'Reports & Analytics',
       icon: 'fa-chart-line',
       expanded: false,
       children: [
@@ -89,8 +88,8 @@ export class DistributorDashboard {
         { label: 'Business Analytics', route: '/distributor/reports/performance-analytics' }
       ]
     },
-    { 
-      label: 'Support Center', 
+    {
+      label: 'Support Center',
       icon: 'fa-headset',
       expanded: false,
       children: [
@@ -99,8 +98,8 @@ export class DistributorDashboard {
         { label: 'FAQs', route: '/distributor/support/faqs' }
       ]
     },
-    { 
-      label: 'Settings', 
+    {
+      label: 'Settings',
       icon: 'fa-cog',
       expanded: false,
       children: [
@@ -110,19 +109,7 @@ export class DistributorDashboard {
         { label: 'Security', route: '/distributor/settings/security' },
         { label: 'API Settings', route: '/distributor/settings/api-settings' }
       ]
-    }
-=======
-    { label: 'Dashboard', route: '/distributor/dashboard' },
-    { label: 'Deliveries', route: '/distributor/deliveries' },
-    { label: 'Assign Delivery', route: '/distributor/assign-delivery' },
-    { label: 'Pickups', route: '/distributor/pickups' },
-    { label: 'Shipments', route: '/distributor/shipments' },
-    { label: 'Tracking', route: '/distributor/tracking' },
-    { label: 'Wallet', route: '/distributor/wallet' },
-    { label: 'Failed Deliveries', route: '/distributor/failed-deliveries' },
-    { label: 'Reports', route: '/distributor/reports' },
-    { label: 'Drivers', route: '/distributor/drivers' },
-    { label: 'Support', route: '/distributor/support' },
->>>>>>> Stashed changes
+    },
+
   ];
 }

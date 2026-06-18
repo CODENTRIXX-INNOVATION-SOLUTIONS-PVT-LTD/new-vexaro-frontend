@@ -1,16 +1,17 @@
 import { Component, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CommonModule, DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-create-shipment',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, CommonModule, DecimalPipe],
   templateUrl: './create-shipment.html',
-  styleUrl: './create-shipment.css',
+  styleUrls: ['./create-shipment.css'],
 })
 export class CreateShipment {
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   currentStep = signal(1);
 
@@ -19,7 +20,7 @@ export class CreateShipment {
   pickupContact = 'Rahul Sharma';
   pickupPhone = '9876543210';
   pickupEmail = 'rahul@vasamostore.com';
-  
+
   addresses = [
     'Vasamo Store, 123, Sector 5, Noida, Uttar Pradesh - 201301',
     'Warehouse Alpha, Plot 45, Udyog Vihar, Gurugram, Haryana - 122008',
