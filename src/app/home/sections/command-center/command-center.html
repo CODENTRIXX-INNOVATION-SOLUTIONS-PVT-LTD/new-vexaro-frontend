@@ -1,0 +1,115 @@
+<section id="showcase" class="py-24 lg:py-32">
+  <div class="container-custom">
+    <div class="max-w-2xl mb-12" appReveal>
+      <span
+        class="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-accent"
+      >
+        <span class="h-px w-6 bg-accent"></span> Vexaro's Growth
+      </span>
+      <h2
+        class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight"
+      >
+        Scaling logistics across the nation with
+        <span class="font-display italic font-medium text-accent"
+          >unmatched momentum.</span
+        >
+      </h2>
+    </div>
+
+    <div class="grid lg:grid-cols-[1fr_1.2fr] gap-5">
+      <!-- Live operations quote card -->
+      <div
+        appReveal
+        class="rounded-3xl bg-gradient-to-br from-[#0c1b2a] via-[#0f2c44] to-[#0b4a6f] text-white p-8 lg:p-10 flex flex-col"
+      >
+        <span
+          class="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-white/60"
+        >
+          <span class="h-px w-6 bg-white/40"></span> Growth Momentum
+        </span>
+
+        <p class="mt-6 font-display italic text-2xl lg:text-3xl leading-snug">
+          &ldquo;Expanding our reach, strengthening our network, and delivering
+          growth at scale.&rdquo;
+        </p>
+
+        <p class="mt-4 text-sm text-white/60 leading-relaxed">
+          From new serviceable pin codes to a growing network of hubs and
+          partners, Vexaro continues to expand its logistics footprint across
+          India, enabling faster deliveries and greater business opportunities
+          every day.
+        </p>
+
+        <div class="mt-auto pt-8 grid grid-cols-3 gap-3">
+          @for (stat of opsStats; track stat.label) {
+          <div class="rounded-2xl bg-white/10 p-4">
+            <p
+              class="text-[10px] font-semibold tracking-widest uppercase text-white/50"
+            >
+              {{ stat.label }}
+            </p>
+            <p class="mt-1 text-lg lg:text-xl font-extrabold">
+              {{ stat.value }}
+            </p>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Shipment intelligence dashboard -->
+      <div
+        appReveal
+        [revealDelay]="1"
+        class="rounded-3xl border border-ink/10 bg-white p-8 lg:p-10 flex flex-col"
+      >
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg lg:text-xl font-bold">Growth Metrics</h3>
+          <span
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600"
+          >
+            <span class="relative flex h-2 w-2">
+              <span
+                class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"
+              ></span>
+              <span
+                class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"
+              ></span>
+            </span>
+            Live
+          </span>
+        </div>
+
+        <div
+          class="mt-6 h-44 rounded-2xl bg-ink/[0.03] flex items-end gap-2 px-5 py-5"
+        >
+          @for (h of chart; track $index) {
+          <div
+            class="chart-bar flex-1 rounded-t-md bg-gradient-to-t from-accent/70 to-accent"
+            [style.height.%]="h"
+            [style.--d]="($index * 0.05) + 's'"
+          ></div>
+          }
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          @for (stat of liveStats; track stat.label) {
+          <div class="rounded-2xl bg-ink/[0.03] p-4">
+            <p
+              class="text-[10px] font-semibold tracking-widest uppercase text-ink/40"
+            >
+              {{ stat.label }}
+            </p>
+            <p class="mt-1 text-lg lg:text-xl font-extrabold tabular-nums">
+              <span
+                appCountUp
+                [countTo]="stat.value"
+                [countDuration]="1400"
+              ></span>
+            </p>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

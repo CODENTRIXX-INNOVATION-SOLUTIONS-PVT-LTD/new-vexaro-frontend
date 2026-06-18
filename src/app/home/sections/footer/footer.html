@@ -1,0 +1,142 @@
+<footer class="bg-black text-white pt-16 pb-8 overflow-hidden">
+  <div class="container-custom">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] gap-10">
+      <div>
+        <a routerLink="/" class="flex items-center">
+          <img
+            src="assets/logo.png"
+            alt="Vexaro Logo"
+            class="h-10 w-auto"
+            style="height: 40px; width: auto"
+          />
+        </a>
+        <div
+          class="mt-4 text-sm text-white/70 leading-relaxed max-w-xs font-medium"
+        >
+          <p>CIN: U53200MP2026PTC084168</p>
+          <p>Registration Number: 084168</p>
+        </div>
+        <div class="mt-6 flex items-center gap-5">
+          <a
+            href="https://www.instagram.com/vexaro_courier1?igsh=c2ZtNmFqZTFqODNi&utm_source=qr"
+            target="_blank"
+            rel="noopener"
+            class="text-white/70 hover:text-accent transition-colors"
+          >
+            <i class="fab fa-instagram text-xl"></i>
+          </a>
+          <a
+            href="https://wa.me/919183888181"
+            target="_blank"
+            rel="noopener"
+            class="text-white/70 hover:text-accent transition-colors"
+          >
+            <i class="fab fa-whatsapp text-xl"></i>
+          </a>
+          <a
+            href="mailto:info@vexarocouriersolutions.com"
+            class="text-white/70 hover:text-accent transition-colors"
+          >
+            <i class="fas fa-envelope text-xl"></i>
+          </a>
+          <a href="#" class="text-white/70 hover:text-accent transition-colors">
+            <i class="fab fa-linkedin text-xl"></i>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-xs font-bold tracking-[0.2em] uppercase text-white/40">
+          Quick Links
+        </p>
+        <ul class="mt-4 space-y-3">
+          <li>
+            <a
+              href="https://vexarocouriersolutions.com/"
+              class="text-sm text-white/70 hover:text-accent transition-colors"
+              >Platform</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://vexarocouriersolutions.com/pricing"
+              class="text-sm text-white/70 hover:text-accent transition-colors"
+              >Pricing</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-xs font-bold tracking-[0.2em] uppercase text-white/40">
+          Resources
+        </p>
+        <ul class="mt-4 space-y-3">
+          <li>
+            <a
+              href="https://vexarocouriersolutions.com/about"
+              class="text-sm text-white/70 hover:text-accent transition-colors"
+              >About</a
+            >
+          </li>
+          <li>
+            <a
+              routerLink="/terms"
+              class="text-sm text-white/70 hover:text-accent transition-colors"
+              >Terms & Conditions</a
+            >
+          </li>
+          <li>
+            <a
+              routerLink="/privacy"
+              class="text-sm text-white/70 hover:text-accent transition-colors"
+              >Privacy Policy</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-xs font-bold tracking-[0.2em] uppercase text-white/40">
+          Contact Us
+        </p>
+        <ul class="mt-4 space-y-3 text-sm text-white/70 leading-relaxed">
+          <li>{{ contact.address }}</li>
+          <li>
+            <span class="text-white/40">Email:</span>
+            <a
+              href="mailto:{{ contact.email }}"
+              class="hover:text-accent transition-colors ml-1"
+              >{{ contact.email }}</a
+            >
+          </li>
+          <li>
+            <span class="text-white/40">Phone:</span>
+            <a
+              href="tel:{{ contact.phone }}"
+              class="hover:text-accent transition-colors ml-1"
+              >{{ contact.phone }}</a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-16 select-none leading-none">
+      <p
+        class="font-extrabold tracking-tight text-zinc-800 text-[18vw] sm:text-[15vw] lg:text-[10vw]"
+      >
+        VEXARO
+      </p>
+    </div>
+
+    <div
+      class="mt-4 pt-6 border-t border-white/10 flex flex-col gap-3 text-xs text-white/40"
+    >
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p>&copy; 2026 Vexaro Courier Solutions Private Limited</p>
+        <p>Powered by Codentrixx Innovation Solutions Pvt. Ltd.</p>
+      </div>
+    </div>
+  </div>
+</footer>
