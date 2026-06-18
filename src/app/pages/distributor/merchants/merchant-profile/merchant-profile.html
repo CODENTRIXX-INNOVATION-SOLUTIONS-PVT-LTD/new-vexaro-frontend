@@ -1,0 +1,82 @@
+<div class="page-container">
+  <div class="page-header">
+    <button class="btn-back" (click)="goBack()"><i class="fas fa-arrow-left"></i> Merchants</button>
+    <div class="header-info">
+      <h1 class="page-title">{{ merchant.businessName || 'Merchant Profile' }}</h1>
+      <div class="header-meta">
+        <code>{{ merchant.merchantCode }}</code>
+        <span class="status-badge" [class.status-active]="merchant.status === 'Active'"
+              [class.status-suspended]="merchant.status === 'Suspended'"
+              [class.status-inactive]="merchant.status === 'Inactive'">
+          {{ merchant.status }}
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-topup" (click)="topupWallet()"><i class="fas fa-plus-circle"></i> Fund Wallet</button>
+      @if (merchant.status === 'Active') {
+        <button class="btn-danger" (click)="suspendMerchant()"><i class="fas fa-ban"></i> Suspend</button>
+      } @else {
+        <button class="btn-success" (click)="activateMerchant()"><i class="fas fa-check-circle"></i> Activate</button>
+      }
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <i class="fas fa-wallet stat-icon blue"></i>
+      <div>
+        <div class="stat-value">₹{{ merchant.walletBalance | number }}</div>
+        <div class="stat-label">Wallet Balance</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-box stat-icon purple"></i>
+      <div>
+        <div class="stat-value">{{ merchant.totalShipments }}</div>
+        <div class="stat-label">Total Shipments</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-warehouse stat-icon green"></i>
+      <div>
+        <div class="stat-value"><code>{{ merchant.warehouseId || '—' }}</code></div>
+        <div class="stat-label">Warehouse ID</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-credit-card stat-icon orange"></i>
+      <div>
+        <div class="stat-value">{{ merchant.paymentTerms || 'Prepaid' }}</div>
+        <div class="stat-label">Payment Terms</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button [class.active]="activeTab === 'overview'" (click)="changeTab('overview')">Overview</button>
+    <button [class.active]="activeTab === 'shipments'" (click)="viewMerchantShipments()">Shipments</button>
+    <button [class.active]="activeTab === 'wallet'" (click)="viewMerchantWallet()">Wallet & Finance</button>
+  </div>
+
+  <!-- Overview Tab -->
+  @if (activeTab === 'overview') {
+    <div class="detail-card">
+      <h3 class="detail-title">Business Details</h3>
+      <div class="detail-grid">
+        <div class="detail-row"><span>Business Name</span><strong>{{ merchant.businessName || '—' }}</strong></div>
+        <div class="detail-row"><span>Display Name</span><strong>{{ merchant.displayName || '—' }}</strong></div>
+        <div class="detail-row"><span>GSTIN</span><strong><code>{{ merchant.gstin || '—' }}</code></strong></div>
+        <div class="detail-row"><span>PAN</span><strong><code>{{ merchant.pan || '—' }}</code></strong></div>
+        <div class="detail-row"><span>Contact Person</span><strong>{{ merchant.contactPerson || '—' }}</strong></div>
+        <div class="detail-row"><span>Phone</span><strong>{{ merchant.phone || '—' }}</strong></div>
+        <div class="detail-row"><span>Email</span><strong>{{ merchant.email || '—' }}</strong></div>
+        <div class="detail-row"><span>City</span><strong>{{ merchant.city || '—' }}, {{ merchant.state }}</strong></div>
+        <div class="detail-row"><span>Pincode</span><strong>{{ merchant.pincode || '—' }}</strong></div>
+        <div class="detail-row"><span>Credit Limit</span><strong>₹{{ merchant.creditLimit | number }}</strong></div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,69 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><i class="fas fa-wallet"></i> Merchant Wallets</h1>
+      <p class="page-subtitle">View and manage wallet balances for all your merchants</p>
+    </div>
+    <button class="btn-primary" [routerLink]="['/distributor/merchant-finance/topup']">
+      <i class="fas fa-plus-circle"></i> Fund a Merchant
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Search merchant..." [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading wallets...</p></div>
+  }
+
+  @if (!isLoading && filteredWallets.length === 0) {
+    <div class="empty-state">
+      <i class="fas fa-wallet"></i>
+      <h3>No Merchant Wallets</h3>
+      <p>Merchant wallets will appear here once you have onboarded merchants.</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredWallets.length > 0) {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Merchant</th>
+            <th>Code</th>
+            <th>Wallet Balance</th>
+            <th>Last Top-up</th>
+            <th>Last Top-up Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (w of filteredWallets; track w.merchantId) {
+            <tr>
+              <td>
+                <div class="merchant-name" (click)="viewMerchant(w.merchantId)">{{ w.businessName }}</div>
+                <div class="merchant-sub">{{ w.city }}</div>
+              </td>
+              <td><code>{{ w.merchantCode }}</code></td>
+              <td class="amount">₹{{ w.balance | number }}</td>
+              <td>{{ w.lastTopupDate || '—' }}</td>
+              <td>{{ w.lastTopupAmount ? '₹' + (w.lastTopupAmount | number) : '—' }}</td>
+              <td><span class="status-badge" [class.status-low]="w.balance < 1000" [class.status-ok]="w.balance >= 1000">
+                {{ w.balance < 1000 ? 'Low Balance' : 'Healthy' }}
+              </span></td>
+              <td class="action-cell">
+                <button class="btn-topup" (click)="topupMerchant(w.merchantId)"><i class="fas fa-plus"></i> Fund</button>
+                <button class="btn-icon" (click)="viewTransactions(w.merchantId)"><i class="fas fa-list"></i></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

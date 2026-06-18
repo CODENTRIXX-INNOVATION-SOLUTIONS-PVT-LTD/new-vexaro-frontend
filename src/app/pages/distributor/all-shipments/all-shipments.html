@@ -1,0 +1,81 @@
+<div class="shipment-card">
+    <div class="header">
+        <h2>All Shipments</h2>
+        <div class="actions">
+            <button class="view-btn"><i class="fas fa-file-export"></i> Export CSV</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="form-row">
+            <input type="text" placeholder="Search AWB or Merchant..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input">
+            <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+                <option value="All">All Statuses</option>
+                <option value="Manifested">Manifested</option>
+                <option value="Received at Hub">Received at Hub</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Failed Attempt">Failed Attempt</option>
+                <option value="RTO">RTO</option>
+            </select>
+        </div>
+    </div>
+
+    @if (isLoading) {
+        <div class="text-center py-4" style="color: #94a3b8; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Loading shipments...</div>
+    } @else {
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>AWB</th>
+                    <th>Merchant</th>
+                    <th>Dest. Pincode</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>COD Amount</th>
+                    <th>Last Updated</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(shipment of filteredShipments; track shipment.awb) {
+                <tr>
+                    <td class="fw-bold">{{shipment.awb}}</td>
+                    <td>{{shipment.merchantName}}</td>
+                    <td>{{shipment.destPincode}}</td>
+                    <td>
+                        <span class="status"
+                            [class.delivered]="shipment.status === 'Delivered'"
+                            [class.transit]="shipment.status === 'Out for Delivery'"
+                            [class.pending]="shipment.status === 'Received at Hub' || shipment.status === 'Manifested'"
+                            [class.failed]="shipment.status === 'Failed Attempt' || shipment.status === 'RTO'">
+                            {{shipment.status}}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="payment-badge" [class.cod]="shipment.paymentType === 'COD'" [class.prepaid]="shipment.paymentType === 'Prepaid'">
+                            {{shipment.paymentType}}
+                        </span>
+                    </td>
+                    <td>{{ shipment.paymentType === 'COD' ? ('₹' + shipment.codAmount) : '-' }}</td>
+                    <td>{{shipment.lastUpdated}}</td>
+                    <td>
+                        <button class="action-btn" (click)="viewTimeline(shipment.awb)" title="View Timeline">
+                            <i class="fas fa-history"></i>
+                        </button>
+                    </td>
+                </tr>
+                }
+                
+                @if(filteredShipments.length === 0) {
+                <tr>
+                    <td colspan="8" class="text-center py-4">No shipments found matching your criteria.</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+</div>

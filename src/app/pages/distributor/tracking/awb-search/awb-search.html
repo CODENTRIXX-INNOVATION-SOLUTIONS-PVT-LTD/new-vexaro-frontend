@@ -1,0 +1,75 @@
+<div class="shipment-card">
+    <div class="header">
+        <h2>AWB Search</h2>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="large-search" placeholder="Enter AWB, Order ID, or Phone Number..." [(ngModel)]="searchQuery" (keyup.enter)="search()">
+        <button class="view-btn search-btn" (click)="search()">
+            <i class="fas fa-search"></i> Track
+        </button>
+    </div>
+
+    @if(hasSearched) {
+        @if(shipment) {
+        <div class="results-grid">
+            <div class="summary-panel">
+                <div class="status-banner" [class.transit]="shipment.status === 'Out for Delivery'" [class.delivered]="shipment.status === 'Delivered'">
+                    <h3>{{shipment.status}}</h3>
+                    <p>AWB: {{shipment.awb}}</p>
+                </div>
+                
+                <div class="details-list">
+                    <div class="detail-item">
+                        <span>Customer</span>
+                        <strong>{{shipment.customerName}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Destination</span>
+                        <strong>{{shipment.pincode}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Payment</span>
+                        <strong>{{shipment.paymentType}} <span *ngIf="shipment.amount > 0">(₹{{shipment.amount}})</span></strong>
+                    </div>
+                </div>
+
+                <div class="quick-links mt-4">
+                    <button class="action-btn-outline w-100 mb-2" (click)="viewLive()"><i class="fas fa-map-marker-alt"></i> View Live Tracking</button>
+                    <button class="action-btn-outline w-100" (click)="viewHistory()"><i class="fas fa-list-ul"></i> View Full Event Log</button>
+                </div>
+            </div>
+
+            <div class="timeline-panel">
+                <h4 class="mb-3">Tracking Timeline</h4>
+                <div class="timeline">
+                    @for(event of timeline; track event.time) {
+                    <div class="timeline-item" [class.current]="event.isCurrent">
+                        <div class="timeline-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="time-block">
+                                <strong>{{event.date}}</strong>
+                                <span>{{event.time}}</span>
+                            </div>
+                            <div class="info-block">
+                                <strong>{{event.status}}</strong>
+                                <span class="location"><i class="fas fa-map-pin"></i> {{event.location}}</span>
+                                <p>{{event.description}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        } @else {
+        <div class="empty-state">
+            <i class="fas fa-box-open empty-icon"></i>
+            <h3>No Shipment Found</h3>
+            <p>We couldn't find any records matching "{{searchQuery}}".</p>
+        </div>
+        }
+    }
+</div>

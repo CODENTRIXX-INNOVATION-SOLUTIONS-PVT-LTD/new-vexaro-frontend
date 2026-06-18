@@ -154,6 +154,18 @@ tbody tr:hover {
     color: #dc2626;
 }
 
+.pending-status {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+    animation: pulse-badge 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 146, 60, 0); }
+    50%       { box-shadow: 0 0 0 4px rgba(251, 146, 60, 0.25); }
+}
+
 /* ================= ACTION MENU ================= */
 
 .action-cell {

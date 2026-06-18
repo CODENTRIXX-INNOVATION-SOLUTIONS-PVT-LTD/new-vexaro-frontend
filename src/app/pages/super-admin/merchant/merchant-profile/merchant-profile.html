@@ -70,19 +70,16 @@
                 Documents
             </button>
 
-            <button class="btn-outline" [class.active-tab]="activeTab === 'invoices'" (click)="changeTab('invoices')">
-                <i class="fas fa-file-invoice"></i>
-                Invoices
-            </button>
 
-            <button class="btn-outline" [class.active-tab]="activeTab === 'payments'" (click)="changeTab('payments')">
-                <i class="fas fa-money-bill-wave"></i>
-                Payments
-            </button>
 
             <button class="btn-outline" [class.active-tab]="activeTab === 'shipments'" (click)="changeTab('shipments')">
                 <i class="fas fa-truck"></i>
                 Shipments
+            </button>
+
+            <button class="btn-outline" [class.active-tab]="activeTab === 'tracking'" (click)="changeTab('tracking')">
+                <i class="fas fa-map-marker-alt"></i>
+                Tracking
             </button>
 
             <button class="btn-status" [class.active-btn]="merchant.status !== 'Active'"
@@ -91,6 +88,7 @@
                 <i class="fas fa-power-off"></i>
 
                 {{
+
                 merchant.status === 'Active'
                 ? 'Deactivate'
                 : 'Activate'
@@ -103,6 +101,64 @@
     </div>
 
     <div class="distriburo-profile-section" *ngIf="activeTab === 'profile'">
+
+        <!-- Statistics Cards Grid -->
+        <div class="stats-grid">
+            <div class="stat-card total-orders">
+                <div class="stat-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Total Orders</h3>
+                    <p class="stat-number">{{ stats.totalOrders }}</p>
+                </div>
+            </div>
+            <div class="stat-card delivered-orders">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Delivered</h3>
+                    <p class="stat-number">{{ stats.deliveredOrders }}</p>
+                </div>
+            </div>
+            <div class="stat-card transit-orders">
+                <div class="stat-icon">
+                    <i class="fas fa-truck-loading"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>In Transit</h3>
+                    <p class="stat-number">{{ stats.inTransitOrders }}</p>
+                </div>
+            </div>
+            <div class="stat-card cancelled-orders">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Cancelled</h3>
+                    <p class="stat-number">{{ stats.cancelledOrders }}</p>
+                </div>
+            </div>
+            <div class="stat-card reverse-pickups">
+                <div class="stat-icon">
+                    <i class="fas fa-reply"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Reverse Pickups</h3>
+                    <p class="stat-number">{{ stats.reversePickups }}</p>
+                </div>
+            </div>
+            <div class="stat-card weight-disputes">
+                <div class="stat-icon">
+                    <i class="fas fa-balance-scale-right"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Weight Disputes</h3>
+                    <p class="stat-number">{{ stats.weightDisputes }}</p>
+                </div>
+            </div>
+        </div>
 
         <div class="content-grid">
 
@@ -119,6 +175,11 @@
                 </div>
 
                 <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Merchant ID</label>
+                        <input type="text" [value]="'#' + merchant.id" readonly>
+                    </div>
 
                     <div class="form-group">
                         <label>Merchant Name</label>
@@ -138,6 +199,26 @@
                     <div class="form-group">
                         <label>Phone</label>
                         <input type="text" [(ngModel)]="merchant.phone" name="phone" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Registration Date</label>
+                        <input type="text" [(ngModel)]="merchant.registrationDate" name="registrationDate" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assigned Distributor</label>
+                        <div class="input-with-action">
+                            <input type="text" [(ngModel)]="merchant.distributorName" name="distributorName" readonly>
+                            <a [routerLink]="['/super-admin/distributors/profile', merchant.distributorId]" class="btn-input-action" title="View Distributor Profile">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assigned Warehouse</label>
+                        <input type="text" [(ngModel)]="merchant.warehouseDetails" name="warehouseDetails" readonly>
                     </div>
 
                     <div class="form-group full-width">
@@ -277,4 +358,64 @@
 
     <app-merchant-shipments *ngIf="activeTab === 'shipments'">
     </app-merchant-shipments>
+
+    <!-- Merchant Tracking -->
+    <div class="tracking-section-container" *ngIf="activeTab === 'tracking'">
+        <div class="card">
+            <div class="card-title">
+                <div class="icon-circle blue">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <span>Merchant Tracking Monitor</span>
+            </div>
+            
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>AWB Number</th>
+                            <th>Courier Partner</th>
+                            <th>Destination</th>
+                            <th>Date</th>
+                            <th>Tracking Status</th>
+                            <th>Delivery Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (tracking of trackingData; track tracking.awbNumber) {
+                        <tr>
+                            <td class="awb-cell">{{ tracking.awbNumber }}</td>
+                            <td>
+                                <div class="courier-badge">
+                                    <i class="fas fa-shipping-fast"></i>
+                                    {{ tracking.courierPartner }}
+                                </div>
+                            </td>
+                            <td>{{ tracking.destination }}</td>
+                            <td>{{ tracking.date }}</td>
+                            <td>
+                                <span class="badge tracking-badge" 
+                                    [class.in-transit]="tracking.trackingStatus === 'In Transit'"
+                                    [class.delivered]="tracking.trackingStatus === 'Delivered'"
+                                    [class.pending]="tracking.trackingStatus === 'Pending'"
+                                    [class.cancelled]="tracking.trackingStatus === 'Cancelled'">
+                                    {{ tracking.trackingStatus }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge delivery-badge"
+                                    [class.delivery-out]="tracking.deliveryStatus === 'Out for Delivery'"
+                                    [class.delivery-done]="tracking.deliveryStatus === 'Delivered'"
+                                    [class.delivery-pending]="tracking.deliveryStatus === 'Pickup Scheduled'"
+                                    [class.delivery-failed]="tracking.deliveryStatus === 'Returned to Origin'">
+                                    {{ tracking.deliveryStatus }}
+                                </span>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>

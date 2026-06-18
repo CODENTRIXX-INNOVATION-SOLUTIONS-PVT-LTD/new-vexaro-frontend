@@ -1,1 +1,365 @@
-<p>create-shipment works!</p>
+<div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h2>Create Shipment</h2>
+            <div class="breadcrumb">
+                <a routerLink="/merchant/dashboard">Dashboard</a>
+                <span>›</span>
+                <a routerLink="/merchant/shipments">Shipments</a>
+                <span>›</span>
+                <span class="active">Create</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Wizard Grid -->
+    <div class="wizard-grid">
+        <!-- Sidebar Steps -->
+        <div class="steps-card">
+            <div class="step-item" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1" (click)="selectStep(1)">
+                <div class="step-badge">
+                    @if(currentStep() > 1){
+                        <i class="fa-solid fa-check"></i>
+                    } @else {
+                        <span>1</span>
+                    }
+                </div>
+                <div class="step-info">
+                    <span class="step-title">Pickup Details</span>
+                </div>
+            </div>
+
+            <div class="step-item" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2" (click)="selectStep(2)">
+                <div class="step-badge">
+                    @if(currentStep() > 2){
+                        <i class="fa-solid fa-check"></i>
+                    } @else {
+                        <span>2</span>
+                    }
+                </div>
+                <div class="step-info">
+                    <span class="step-title">Receiver Details</span>
+                </div>
+            </div>
+
+            <div class="step-item" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3" (click)="selectStep(3)">
+                <div class="step-badge">
+                    @if(currentStep() > 3){
+                        <i class="fa-solid fa-check"></i>
+                    } @else {
+                        <span>3</span>
+                    }
+                </div>
+                <div class="step-info">
+                    <span class="step-title">Package Details</span>
+                </div>
+            </div>
+
+            <div class="step-item" [class.active]="currentStep() === 4" [class.completed]="currentStep() > 4" (click)="selectStep(4)">
+                <div class="step-badge">
+                    <span>4</span>
+                </div>
+                <div class="step-info">
+                    <span class="step-title">Summary & Rate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Panel -->
+        <div class="form-card">
+            
+            <!-- STEP 1: PICKUP DETAILS -->
+            @if(currentStep() === 1){
+                <div class="form-section animate-fade-in">
+                    <div class="section-header">
+                        <i class="fa-solid fa-truck-loading header-icon blue-icon"></i>
+                        <h3>Pickup Details</h3>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Address *</label>
+                        <select class="form-control" [(ngModel)]="pickupAddress">
+                            @for(addr of addresses; track addr){
+                                <option [value]="addr">{{ addr }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contact Person *</label>
+                        <input type="text" class="form-control" placeholder="Enter contact person name" [(ngModel)]="pickupContact">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Mobile Number *</label>
+                            <input type="text" class="form-control" placeholder="Enter mobile number" [(ngModel)]="pickupPhone">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Email (Optional)</label>
+                            <input type="email" class="form-control" placeholder="Enter email address" [(ngModel)]="pickupEmail">
+                        </div>
+                    </div>
+
+                    <button class="dashed-btn" (click)="addNewAddress()">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add New Address</span>
+                    </button>
+
+                    <div class="form-actions right-align">
+                        <button class="primary-btn btn-next" (click)="nextStep()">
+                            <span>Next</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- STEP 2: RECEIVER DETAILS -->
+            @if(currentStep() === 2){
+                <div class="form-section animate-fade-in">
+                    <div class="section-header">
+                        <i class="fa-solid fa-user-tag header-icon orange-icon"></i>
+                        <h3>Receiver Details</h3>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Receiver Name *</label>
+                        <input type="text" class="form-control" placeholder="Enter receiver name" [(ngModel)]="receiverName">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Mobile Number *</label>
+                            <input type="text" class="form-control" placeholder="Enter receiver mobile number" [(ngModel)]="receiverPhone">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Email (Optional)</label>
+                            <input type="email" class="form-control" placeholder="Enter receiver email address" [(ngModel)]="receiverEmail">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Delivery Address *</label>
+                        <textarea class="form-control" rows="3" placeholder="Enter complete delivery address" [(ngModel)]="receiverAddress"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Pincode *</label>
+                            <input type="text" class="form-control" placeholder="110001" [(ngModel)]="receiverPincode">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>City *</label>
+                            <input type="text" class="form-control" placeholder="Delhi" [(ngModel)]="receiverCity">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>State *</label>
+                            <input type="text" class="form-control" placeholder="Delhi" [(ngModel)]="receiverState">
+                        </div>
+                    </div>
+
+                    <div class="form-actions justify-between">
+                        <button class="secondary-btn" (click)="prevStep()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span>Back</span>
+                        </button>
+                        <button class="primary-btn btn-next" (click)="nextStep()">
+                            <span>Next</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- STEP 3: PACKAGE DETAILS -->
+            @if(currentStep() === 3){
+                <div class="form-section animate-fade-in">
+                    <div class="section-header">
+                        <i class="fa-solid fa-box-open header-icon purple-icon"></i>
+                        <h3>Package Details</h3>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Weight (Actual) *</label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" class="form-control" placeholder="2.5" [(ngModel)]="weight">
+                            <span class="input-suffix">kg</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Length *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" placeholder="20" [(ngModel)]="length">
+                                <span class="input-suffix">cm</span>
+                            </div>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Width *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" placeholder="15" [(ngModel)]="width">
+                                <span class="input-suffix">cm</span>
+                            </div>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Height *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" placeholder="10" [(ngModel)]="height">
+                                <span class="input-suffix">cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Item Type *</label>
+                        <select class="form-control" [(ngModel)]="itemType">
+                            @for(type of itemTypes; track type){
+                                <option [value]="type">{{ type }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" [(ngModel)]="isFragile">
+                            <span>Is this a fragile item?</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions justify-between">
+                        <button class="secondary-btn" (click)="prevStep()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span>Back</span>
+                        </button>
+                        <button class="primary-btn btn-next" (click)="nextStep()">
+                            <span>Next</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- STEP 4: SUMMARY & RATE -->
+            @if(currentStep() === 4){
+                <div class="form-section animate-fade-in">
+                    <div class="section-header">
+                        <i class="fa-solid fa-file-invoice header-icon green-icon"></i>
+                        <h3>Summary & Rate</h3>
+                    </div>
+
+                    <!-- Shipment Summary Card -->
+                    <div class="summary-details-card">
+                        <h4>Shipment Summary</h4>
+                        <div class="summary-grid">
+                            <div class="summary-item full-width">
+                                <i class="fa-solid fa-location-dot from-icon"></i>
+                                <div>
+                                    <span class="label">From</span>
+                                    <p class="value">{{ pickupAddress }}</p>
+                                </div>
+                            </div>
+                            <div class="summary-item full-width">
+                                <i class="fa-solid fa-map-pin to-icon"></i>
+                                <div>
+                                    <span class="label">To</span>
+                                    <p class="value">{{ receiverName }}, {{ receiverAddress }}, {{ receiverCity }} - {{ receiverPincode }}</p>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Weight</span>
+                                <p class="value">{{ weight }} kg</p>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Dimensions</span>
+                                <p class="value">{{ length }} x {{ width }} x {{ height }} cm</p>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Item Type</span>
+                                <p class="value">{{ itemType }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Courier Selection List -->
+                    <div class="couriers-section">
+                        <h4>Select Courier & Service</h4>
+                        <div class="courier-list">
+                            @for(courier of couriers; track courier.name; let idx = $index){
+                                <div class="courier-item" [class.selected]="selectedCourierIndex() === idx" (click)="selectedCourierIndex.set(idx)">
+                                    <div class="courier-left">
+                                        <div class="courier-icon-circle" [style.background-color]="courier.color + '12'" [style.color]="courier.color">
+                                            <i [class]="courier.logo"></i>
+                                        </div>
+                                        <div>
+                                            <p class="courier-name">{{ courier.name }}</p>
+                                            <span class="courier-type">{{ courier.type }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="courier-right">
+                                        <span class="courier-rate">₹{{ courier.rate | number:'1.2-2' }}</span>
+                                        <div class="radio-circle" [class.checked]="selectedCourierIndex() === idx"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Total Amount Display -->
+                    <div class="total-bar">
+                        <div>
+                            <span class="total-label">Total Amount</span>
+                            <h3 class="total-price">₹{{ totalAmount | number:'1.2-2' }}</h3>
+                        </div>
+                        <button class="primary-btn create-shipment-btn" (click)="createShipment()">
+                            <i class="fa-solid fa-square-check"></i>
+                            <span>Create Shipment</span>
+                        </button>
+                    </div>
+
+                    <div class="form-actions justify-start">
+                        <button class="secondary-btn" (click)="prevStep()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span>Back</span>
+                        </button>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <!-- Trust Badges Section -->
+    <div class="trust-badges">
+        <div class="badge-item">
+            <div class="badge-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="badge-text">
+                <strong>Secure & Reliable</strong>
+                <span>Your shipments are safe with us</span>
+            </div>
+        </div>
+        <div class="badge-item">
+            <div class="badge-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="badge-text">
+                <strong>Fast Delivery</strong>
+                <span>On-time delivery, every time</span>
+            </div>
+        </div>
+        <div class="badge-item">
+            <div class="badge-icon"><i class="fa-solid fa-headset"></i></div>
+            <div class="badge-text">
+                <strong>24/7 Support</strong>
+                <span>We're here to help you</span>
+            </div>
+        </div>
+        <div class="badge-item">
+            <div class="badge-icon"><i class="fa-solid fa-percent"></i></div>
+            <div class="badge-text">
+                <strong>Best Rates</strong>
+                <span>Compare & choose the best</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="page-container">
+  <div class="page-header">
+    <button class="btn-back" routerLink="/distributor/rate-margin/rate-cards"><i class="fas fa-arrow-left"></i> Rate Cards</button>
+    <div class="header-info">
+      <h1 class="page-title"><i class="fas fa-sliders-h"></i> Configure Margins</h1>
+      <p class="page-subtitle">Set your profit margin on top of your distributor cost</p>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <i class="fas fa-info-circle"></i>
+    <span>Merchants will be charged: <strong>(Your Cost) + (Your Margin) = Merchant Rate</strong>. Your margin directly determines your profit per shipment.</span>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading margin configurations...</p></div>
+  }
+
+  @if (!isLoading && slabs.length === 0) {
+    <div class="empty-state">
+      <i class="fas fa-tags"></i>
+      <h3>No Rate Cards Assigned</h3>
+      <p>Margins cannot be configured until your Super Admin assigns rate cards to your franchise.</p>
+    </div>
+  }
+
+  @if (!isLoading && slabs.length > 0) {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Courier</th>
+            <th>Weight Slab</th>
+            <th>Your Cost (Base)</th>
+            <th>Your Margin (Profit)</th>
+            <th>Final Merchant Rate</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of slabs; track s.id) {
+            <tr>
+              <td><span class="courier-badge">{{ s.courier }}</span></td>
+              <td>{{ s.weightFrom }}–{{ s.weightTo }} kg</td>
+              <td class="cost">₹{{ s.distributorCost }}</td>
+              <td>
+                @if (s.editing) {
+                  <div class="edit-margin-box">
+                    <span>+₹</span>
+                    <input type="number" [(ngModel)]="s.editMargin" min="0" step="1" />
+                  </div>
+                } @else {
+                  <span class="margin">+₹{{ s.currentMargin }}</span>
+                }
+              </td>
+              <td>
+                @if (s.editing) {
+                  <span class="rate">₹{{ s.distributorCost + s.editMargin }}</span>
+                } @else {
+                  <span class="rate">₹{{ s.merchantRate }}</span>
+                }
+              </td>
+              <td class="actions">
+                @if (s.editing) {
+                  <button class="btn-icon btn-save" (click)="saveMargin(s)" [disabled]="s.editMargin < 0 || isSaving"><i class="fas fa-check"></i></button>
+                  <button class="btn-icon btn-cancel" (click)="cancelEdit(s)"><i class="fas fa-times"></i></button>
+                } @else {
+                  <button class="btn-edit" (click)="startEdit(s)"><i class="fas fa-pen"></i> Edit Margin</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -1,0 +1,45 @@
+.header-section { margin-top: 20px; margin-bottom: 20px; }
+.header-section h2 { margin: 0; font-size: 24px; color: #111827; }
+.subtitle { margin: 5px 0 0; color: #6b7280; font-size: 14px; }
+
+.shipment-card { background: #fff; border-radius: 18px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+.mt-4 { margin-top: 24px; }
+.mt-5 { margin-top: 40px; }
+
+.form-container { display: flex; flex-direction: column; }
+
+.section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb; }
+.section-title h4 { margin: 0; font-size: 16px; color: #111827; display: flex; align-items: center; gap: 8px; }
+.section-title i { color: #3b82f6; width: 20px; text-align: center; }
+.section-title p { margin: 5px 0 0 0; font-size: 13px; color: #6b7280; }
+
+.action-btn { background: #fff; border: 1px solid #d1d5db; color: #374151; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.action-btn:hover { background: #f9fafb; border-color: #9ca3af; }
+
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead { background: #f8fafc; }
+th { text-align: left; padding: 12px 16px; color: #6b7280; font-size: 13px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
+td { padding: 16px; border-bottom: 1px solid #e5e7eb; color: #374151; font-size: 14px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+
+.copy-icon { margin-left: 8px; color: #9ca3af; cursor: pointer; transition: color 0.2s; }
+.copy-icon:hover { color: #2563eb; }
+
+.status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+.status.active { background: #dcfce7; color: #15803d; }
+
+.delete-btn { background: #fee2e2; border: none; color: #dc2626; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.delete-btn:hover { background: #fecaca; }
+
+@media(max-width: 1023px) {
+    .header, .header-section, .section-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .stats-container { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media(max-width: 767px) {
+    .form-row { flex-direction: column; gap: 12px; }
+    .search-input, .status-select, .form-control { width: 100%; min-width: 100%; box-sizing: border-box; }
+    .shipment-card { padding: 16px; }
+    .stats-container { grid-template-columns: 1fr; }
+}

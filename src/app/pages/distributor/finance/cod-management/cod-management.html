@@ -1,0 +1,103 @@
+<div class="header-section">
+    <h2>COD Remittances to Merchants</h2>
+</div>
+
+<div class="stats-container">
+    <div class="card pending-card">
+        <div class="card-header">
+            <h4>Pending Remittance</h4>
+            <i class="fas fa-clock"></i>
+        </div>
+        <h2>₹{{summary.pending}}</h2>
+        <p>Owed to Merchants</p>
+    </div>
+
+    <div class="card deposited-card">
+        <div class="card-header">
+            <h4>Remitted to Merchants</h4>
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>₹{{summary.remitted}}</h2>
+        <p>This Month</p>
+    </div>
+
+    <div class="card returned-card">
+        <div class="card-header">
+            <h4>Returned COD</h4>
+            <i class="fas fa-undo"></i>
+        </div>
+        <h2>₹{{summary.returned}}</h2>
+        <p>RTO / Failed</p>
+    </div>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="header">
+        <h2 style="font-size: 18px;">COD Transactions Log</h2>
+        <div class="actions">
+            <button class="view-btn"><i class="fas fa-file-export"></i> Export Report</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="form-row">
+            <input type="text" placeholder="Search AWB or Merchant..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input">
+            
+            <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+                <option value="All">All Statuses</option>
+                <option value="Pending Remittance">Pending Remittance</option>
+                <option value="Remitted">Remitted</option>
+                <option value="Returned">Returned</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>AWB</th>
+                    <th>Merchant</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading records...</td>
+                    </tr>
+                } @else if (filteredRecords.length === 0) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #94a3b8;">No records found matching criteria.</td>
+                    </tr>
+                } @else {
+                    @for(record of filteredRecords; track record.awb) {
+                    <tr>
+                        <td>{{record.date}}</td>
+                        <td class="fw-bold">{{record.awb}}</td>
+                        <td>{{record.merchantName}}</td>
+                        <td><strong style="color: #111827;">₹{{record.amount}}</strong></td>
+                        <td>
+                            <span class="status"
+                                [class.delivered]="record.status === 'Remitted'"
+                                [class.failed]="record.status === 'Returned'"
+                                [class.pending]="record.status === 'Pending Remittance'">
+                                {{record.status}}
+                            </span>
+                        </td>
+                        <td>
+                            <button *ngIf="record.status === 'Pending Remittance'" class="action-btn success-btn" (click)="markAsRemitted(record.awb)" title="Mark as Remitted">
+                                <i class="fas fa-check"></i> Remit to Merchant
+                            </button>
+                            <span *ngIf="record.status !== 'Pending Remittance'" style="font-size: 12px; color: #9ca3af;">Cleared</span>
+                        </td>
+                    </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

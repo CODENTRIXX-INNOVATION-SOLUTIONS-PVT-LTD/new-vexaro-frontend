@@ -1,0 +1,91 @@
+<div class="header-section">
+    <h2>Merchant Shipment Reports</h2>
+    <div class="actions">
+        <button class="view-btn" (click)="exportCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+        <button class="view-btn" style="background: #ef4444;" (click)="exportPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="form-row">
+        <select [(ngModel)]="dateRange" class="status-select">
+            <option>Today</option>
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>Last Month</option>
+        </select>
+        
+        <select [(ngModel)]="merchantFilter" class="status-select">
+            <option>All Merchants</option>
+            <option>Fashion Hub</option>
+            <option>Tech Store</option>
+            <option>Grocery Mart</option>
+        </select>
+    </div>
+</div>
+
+<div class="stats-container">
+    <div class="card bg-blue">
+        <h4>Total Shipments</h4>
+        <h2>{{summary.total | number}}</h2>
+    </div>
+    <div class="card bg-green">
+        <h4>Delivered</h4>
+        <h2>{{summary.delivered | number}}</h2>
+    </div>
+    <div class="card bg-orange">
+        <h4>Failed Attempts</h4>
+        <h2>{{summary.failed | number}}</h2>
+    </div>
+    <div class="card bg-red">
+        <h4>RTO Generated</h4>
+        <h2>{{summary.rto | number}}</h2>
+    </div>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="header">
+        <h2 style="font-size: 18px;">Merchant Breakdown</h2>
+    </div>
+
+    <div class="table-wrapper mt-4">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Merchant</th>
+                    <th>Total Shipments</th>
+                    <th>Delivered</th>
+                    <th>Failed</th>
+                    <th>RTO</th>
+                    <th>Success Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading) {
+                    <tr>
+                        <td colspan="7" class="text-center py-4" style="color: #94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading report data...</td>
+                    </tr>
+                } @else if (dataList.length === 0) {
+                    <tr>
+                        <td colspan="7" class="text-center py-4" style="color: #94a3b8;">No data found matching criteria.</td>
+                    </tr>
+                } @else {
+                    @for(row of dataList; track row.date + row.merchantName) {
+                    <tr>
+                        <td>{{row.date}}</td>
+                        <td><strong>{{row.merchantName}}</strong></td>
+                        <td class="fw-bold">{{row.total}}</td>
+                        <td style="color: #16a34a;">{{row.delivered}}</td>
+                        <td style="color: #ea580c;">{{row.failed}}</td>
+                        <td style="color: #dc2626;">{{row.rto}}</td>
+                        <td>
+                            <span class="status delivered">{{ (row.delivered / row.total * 100) | number:'1.1-1' }}%</span>
+                        </td>
+                    </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

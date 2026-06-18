@@ -1,33 +1,83 @@
 .page {
     padding: 24px;
+    background: #f8fafc;
+    min-height: 100vh;
 }
 
-/* Table Card */
-
-.table-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
+/* Financial Tabs Navigation Bar */
+.financial-tabs {
+    display: flex;
+    gap: 8px;
     margin-top: 24px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 2px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+    color: #2563eb;
+    background: #eff6ff;
+    border-radius: 8px 8px 0 0;
+}
+
+.tab-btn.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+}
+
+.tab-btn i {
+    font-size: 15px;
+}
+
+/* Card General layout */
+.tab-content-container {
+    margin-top: 10px;
+}
+
+.table-card, .form-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .card-header h3 {
     margin: 0;
     font-size: 20px;
     color: #0f172a;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-/* Table */
+.card-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: #64748b;
+}
 
+/* Tables */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -39,37 +89,114 @@ thead {
 
 th {
     text-align: left;
-    padding: 14px 16px;
-    font-size: 14px;
+    padding: 16px 20px;
+    font-size: 13px;
     font-weight: 600;
     color: #475569;
     border-bottom: 1px solid #e2e8f0;
 }
 
 td {
-    padding: 14px 16px;
+    padding: 16px 20px;
     color: #334155;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #edf2f7;
     font-size: 14px;
+    vertical-align: middle;
 }
 
 tbody tr {
-    transition: 0.3s;
+    transition: background-color 0.2s;
 }
 
 tbody tr:hover {
     background: #f8fafc;
 }
 
-/* Status Badge */
+.text-right {
+    text-align: right;
+}
 
+/* Specific Cells */
+.name-cell {
+    font-weight: 600;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.name-cell i {
+    color: #64748b;
+}
+
+.balance-cell {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.amount-badge {
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.date-cell {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.txn-cell {
+    font-family: monospace;
+    font-weight: 700;
+    color: #2563eb;
+    font-size: 14px;
+}
+
+.txn-ref-cell {
+    font-family: monospace;
+    color: #64748b;
+}
+
+.amount-cell {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.earning-cell {
+    font-weight: 700;
+    color: #16a34a;
+}
+
+.refund-cell {
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.rate-cell {
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.method-badge {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Badges */
 .badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 6px 12px;
     border-radius: 999px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -88,40 +215,187 @@ tbody tr:hover {
     color: #b45309;
 }
 
-/* Amount Styling */
-
-.amount {
+/* Buttons */
+.btn-action-primary {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
-    color: #0f172a;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
 }
 
-.earning {
+.btn-action-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.btn-action-primary:disabled {
+    background: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Form Styles */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
     font-weight: 600;
-    color: #16a34a;
+    color: #334155;
+}
+
+.form-group input, .form-group select {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #dbe2ea;
+    background: #f8fafc;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus {
+    background: white;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.required {
+    color: #dc2626;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 24px;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-submit:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+    background: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    background-image: none;
+}
+
+.btn-action-primary:disabled {
+    background: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    background: white;
+    color: #64748b;
+    border: 1px solid #dbe2ea;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f8fafc;
+    color: #334155;
 }
 
 /* Responsive */
-
 @media (max-width: 1024px) {
-
     .table-card {
         overflow-x: auto;
     }
-
     table {
         min-width: 900px;
     }
 }
 
 @media (max-width: 768px) {
-
     .page {
         padding: 16px;
     }
-
-    .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
+    .form-actions {
+        flex-direction: column;
+    }
+    .btn-submit, .btn-cancel {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Action button groupings and custom danger action */
+.action-buttons-group {
+    display: inline-flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.btn-action-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-action-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.action-disabled-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
 }

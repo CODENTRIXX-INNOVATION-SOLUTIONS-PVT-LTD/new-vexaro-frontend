@@ -1,0 +1,66 @@
+<div class="shipment-card">
+    <div class="header mb-0">
+        <div class="d-flex align-center gap-15">
+            <button class="back-btn" (click)="goBack()"><i class="fas fa-arrow-left"></i></button>
+            <div>
+                <h2 style="margin: 0; font-size: 20px;">Tracking History Log: {{awb}}</h2>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">Immutable Audit Ledger</p>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="view-btn"><i class="fas fa-download"></i> Download PDF Log</button>
+        </div>
+    </div>
+
+    <div class="filter-bar mt-4">
+        <div class="form-row">
+            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input" style="max-width: 200px;">
+            
+            <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+                <option value="All">All Statuses</option>
+                <option value="Manifested">Manifested</option>
+                <option value="Picked Up">Picked Up</option>
+                <option value="Received at Hub">Received at Hub</option>
+                <option value="Sorted">Sorted</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Coordinates</th>
+                    <th>Device / IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(log of filteredLogs; track log.id) {
+                <tr>
+                    <td class="fw-bold" style="color: #6b7280; font-size: 12px;">{{log.id}}</td>
+                    <td><strong style="color: #111827;">{{log.timestamp}}</strong></td>
+                    <td>
+                        {{log.action}}<br>
+                        <span style="font-size: 11px; color: #2563eb; font-weight: 600;">{{log.status | uppercase}}</span>
+                    </td>
+                    <td>{{log.actor}}</td>
+                    <td><i class="fas fa-map-marker-alt" style="color: #94a3b8; margin-right: 5px;"></i>{{log.coordinates}}</td>
+                    <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #475569;">{{log.deviceInfo}}</code></td>
+                </tr>
+                }
+                
+                @if(filteredLogs.length === 0) {
+                <tr>
+                    <td colspan="6" class="text-center py-4">No audit logs found for this criteria.</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

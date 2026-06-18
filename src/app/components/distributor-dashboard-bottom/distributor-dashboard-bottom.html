@@ -1,93 +1,71 @@
 <div class="bottom-section">
-
-    <!-- Today's Deliveries -->
-    <div class="deliveries-card">
-
-        <div class="card-header">
-            <h3>Today's Deliveries</h3>
-            <button>View All</button>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Tracking ID</th>
-                    <th>Merchant</th>
-                    <th>Customer</th>
-                    <th>Area</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                <tr *ngFor="let delivery of deliveries">
-
-                    <td>{{ delivery.trackingId }}</td>
-
-                    <td>{{ delivery.merchant }}</td>
-
-                    <td>{{ delivery.customer }}</td>
-
-                    <td>{{ delivery.area }}</td>
-
-                    <td>
-                        <span
-                            class="status"
-                            [ngClass]="{
-                                'delivered': delivery.status === 'Delivered',
-                                'transit': delivery.status === 'Out for Delivery',
-                                'pending': delivery.status === 'Pending'
-                            }">
-
-                            {{ delivery.status }}
-
-                        </span>
-                    </td>
-
-                    <td>
-                       <button class="update-btn">
-                <i class="fas fa-edit"></i>
-                  Update
-                  </button>
-                    </td>
-
-                </tr>
-            </tbody>
-        </table>
-
+    <!-- Recent Merchant Activity -->
+    <div class="activity-card glass-panel">
+      <div class="card-header">
+        <h3>Recent Merchant Activity</h3>
+        <button class="btn-text">View All</button>
+      </div>
+      <div class="activity-list">
+        @for (activity of merchantActivity; track activity.merchantId) {
+          <div class="activity-item">
+            <div class="activity-icon-container" [ngClass]="{
+              'icon-topup': activity.action === 'Wallet Top-up',
+              'icon-dispute': activity.action === 'Weight Dispute Raised',
+              'icon-new': activity.action === 'New Merchant Onboarded'
+            }">
+              <i class="fas" [ngClass]="{
+                'fa-wallet': activity.action === 'Wallet Top-up',
+                'fa-balance-scale': activity.action === 'Weight Dispute Raised',
+                'fa-store': activity.action === 'New Merchant Onboarded'
+              }"></i>
+            </div>
+            <div class="activity-details">
+              <h4>{{ activity.action }}</h4>
+              <p>
+                <strong>{{ activity.businessName }}</strong> 
+                @if (activity.amount) {
+                  - <span class="text-success fw-bold">₹{{ activity.amount }}</span>
+                }
+                @if (activity.awb) {
+                  - AWB: <span class="fw-bold">{{ activity.awb }}</span>
+                }
+              </p>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-time">{{ activity.date }}</span>
+              <span class="status-pill" [ngClass]="activity.status.toLowerCase()">{{ activity.status }}</span>
+            </div>
+          </div>
+        }
+      </div>
     </div>
-
-    <!-- Quick Summary -->
-    <div class="summary-card">
-
-        <h3>Quick Summary</h3>
-
+  
+    <!-- Summary -->
+    <div class="summary-card glass-panel">
+      <div class="card-header">
+        <h3>Franchise Summary</h3>
+      </div>
+      <div class="summary-grid">
         <div class="summary-item">
-            <span>Total Shipments</span>
-            <strong>{{ summary.totalShipments }}</strong>
+          <span class="label">Total Merchants</span>
+          <span class="value">{{ summary.totalMerchants }}</span>
         </div>
-
         <div class="summary-item">
-            <span>Delivered Today</span>
-            <strong>{{ summary.deliveredToday }}</strong>
+          <span class="label">Active Merchants</span>
+          <span class="value">{{ summary.activeMerchants }}</span>
         </div>
-
         <div class="summary-item">
-            <span>Pending</span>
-            <strong>{{ summary.pending }}</strong>
+          <span class="label">Total Revenue</span>
+          <span class="value text-primary">₹{{ summary.totalRevenue | number }}</span>
         </div>
-
         <div class="summary-item">
-            <span>Failed</span>
-            <strong>{{ summary.failed }}</strong>
+          <span class="label">Total Profit</span>
+          <span class="value text-success">₹{{ summary.totalProfit | number }}</span>
         </div>
-
-        <div class="summary-item">
-            <span>COD Collected</span>
-            <strong>₹{{ summary.codCollected | number }}</strong>
+        <div class="summary-item full-width">
+          <span class="label">Open Weight Disputes</span>
+          <span class="value text-danger">{{ summary.openDisputes }}</span>
         </div>
-
+      </div>
     </div>
-
-</div>
+  </div>

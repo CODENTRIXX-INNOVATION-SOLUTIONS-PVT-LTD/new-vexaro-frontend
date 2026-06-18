@@ -1,0 +1,110 @@
+<div class="page-container">
+  <div class="page-header">
+    <button class="btn-back" (click)="cancel()"><i class="fas fa-arrow-left"></i> Merchant Wallets</button>
+    <h1 class="page-title"><i class="fas fa-paper-plane"></i> Fund Merchant Wallet</h1>
+  </div>
+
+  <div class="topup-layout">
+    <!-- Form -->
+    <div class="form-card">
+      <h3 class="section-title">Transfer Details</h3>
+
+      <!-- Distributor Balance -->
+      <div class="balance-banner">
+        <i class="fas fa-wallet"></i>
+        <div>
+          <span class="balance-label">Your Available Balance</span>
+          <span class="balance-value">₹{{ distributorBalance | number }}</span>
+        </div>
+      </div>
+
+      <!-- Merchant Selector -->
+      <div class="form-group">
+        <label>Select Merchant <span class="required">*</span></label>
+        <select [(ngModel)]="selectedMerchantId" (ngModelChange)="onMerchantChange()">
+          <option value="">— Choose a Merchant —</option>
+          @for (m of merchants; track m.id) {
+            <option [value]="m.id">{{ m.businessName }} ({{ m.merchantCode }})</option>
+          }
+        </select>
+        @if (selectedMerchant) {
+          <div class="merchant-current-balance">
+            Current Wallet: <strong>₹{{ selectedMerchant.walletBalance | number }}</strong>
+          </div>
+        }
+      </div>
+
+      <!-- Quick Amount Buttons -->
+      <div class="form-group">
+        <label>Quick Amount</label>
+        <div class="quick-amounts">
+          @for (qa of quickAmounts; track qa) {
+            <button class="quick-btn" [class.selected]="amount === qa" (click)="setQuickAmount(qa)">₹{{ qa | number }}</button>
+          }
+        </div>
+      </div>
+
+      <!-- Custom Amount -->
+      <div class="form-group">
+        <label>Amount (₹) <span class="required">*</span></label>
+        <input type="number" [(ngModel)]="amount" placeholder="Enter amount" min="1" [class.error]="isInsufficient" />
+        @if (isInsufficient) {
+          <span class="error-msg"><i class="fas fa-exclamation-circle"></i> Insufficient balance in your wallet</span>
+        }
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label>Remarks (optional)</label>
+        <input type="text" [(ngModel)]="remarks" placeholder="e.g. Monthly recharge for June" />
+      </div>
+
+      <!-- Preview -->
+      @if (amount && amount > 0 && selectedMerchant) {
+        <div class="transfer-preview">
+          <div class="preview-row">
+            <span>From</span>
+            <strong>Your Wallet (₹{{ distributorBalance | number }})</strong>
+          </div>
+          <div class="preview-arrow"><i class="fas fa-arrow-down"></i></div>
+          <div class="preview-row">
+            <span>To</span>
+            <strong>{{ selectedMerchant.businessName }}</strong>
+          </div>
+          <div class="preview-row amount-row">
+            <span>Transfer Amount</span>
+            <strong class="amount">₹{{ amount | number }}</strong>
+          </div>
+          <div class="preview-row">
+            <span>Your Balance After</span>
+            <strong>₹{{ (distributorBalance - (amount || 0)) | number }}</strong>
+          </div>
+        </div>
+      }
+
+      <div class="form-footer">
+        <button class="btn-secondary" (click)="cancel()">Cancel</button>
+        <button class="btn-primary" [disabled]="!selectedMerchantId || !amount || amount <= 0 || isInsufficient || isSubmitting" (click)="submitTopup()">
+          @if (isSubmitting) { <i class="fas fa-spinner fa-spin"></i> Processing... }
+          @else { <i class="fas fa-paper-plane"></i> Transfer Funds }
+        </button>
+      </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+      <h3><i class="fas fa-info-circle"></i> How it Works</h3>
+      <ol class="info-list">
+        <li>Select the merchant you want to fund</li>
+        <li>Enter the amount to transfer</li>
+        <li>The amount is deducted from <strong>your wallet</strong></li>
+        <li>The merchant's wallet is credited <strong>instantly</strong></li>
+        <li>Both ledgers are updated with full audit trail</li>
+      </ol>
+      <div class="info-note">
+        <i class="fas fa-lock"></i>
+        All transfers are logged and cannot be reversed. Contact support for disputes.
+      </div>
+    </div>
+  </div>
+</div>

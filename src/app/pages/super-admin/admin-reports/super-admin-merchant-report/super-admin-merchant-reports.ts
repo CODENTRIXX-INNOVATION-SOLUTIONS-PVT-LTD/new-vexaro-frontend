@@ -39,13 +39,6 @@ export class SuperAdminMerchantReports implements AfterViewInit {
       icon: 'fas fa-user-plus',
       bgColor: '#FEF3C7',
       iconColor: '#D97706'
-    },
-    {
-      title: 'Avg Sales / Merchant',
-      value: '₹68K',
-      icon: 'fas fa-chart-line',
-      bgColor: '#F3E8FF',
-      iconColor: '#9333EA'
     }
   ];
 
@@ -70,36 +63,30 @@ export class SuperAdminMerchantReports implements AfterViewInit {
   topMerchants = [
     {
       merchantName: 'Fashion Hub',
-      orders: 850,
-      sales: '₹8.5L'
+      orders: 850
     },
     {
       merchantName: 'Urban Store',
-      orders: 720,
-      sales: '₹6.9L'
+      orders: 720
     },
     {
       merchantName: 'Style Point',
-      orders: 615,
-      sales: '₹5.8L'
+      orders: 615
     }
   ];
 
   merchantCategories = [
     {
       category: 'Fashion',
-      merchants: 42,
-      revenue: '₹18L'
+      merchants: 42
     },
     {
       category: 'Electronics',
-      merchants: 28,
-      revenue: '₹14L'
+      merchants: 28
     },
     {
       category: 'Home Decor',
-      merchants: 19,
-      revenue: '₹7L'
+      merchants: 19
     }
   ];
 

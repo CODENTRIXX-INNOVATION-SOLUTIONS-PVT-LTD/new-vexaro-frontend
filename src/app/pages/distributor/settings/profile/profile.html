@@ -1,0 +1,50 @@
+<div class="header-section">
+    <h2>My Profile</h2>
+    <p class="subtitle">Manage your personal account settings</p>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="profile-header">
+        <div class="avatar">
+            {{profileData.firstName.charAt(0)}}{{profileData.lastName.charAt(0)}}
+        </div>
+        <div class="info">
+            <h3>{{profileData.firstName}} {{profileData.lastName}}</h3>
+            <p>{{profileData.role}} &bull; Joined {{profileData.joiningDate}}</p>
+            <button class="upload-btn">Change Photo</button>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="form-container">
+        <div class="form-row">
+            <div class="form-group">
+                <label>First Name</label>
+                <input type="text" [(ngModel)]="profileData.firstName" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" [(ngModel)]="profileData.lastName" class="form-control">
+            </div>
+        </div>
+
+        <div class="form-row mt-4">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" [(ngModel)]="profileData.email" class="form-control" readonly style="background: #f8fafc; color: #6b7280; cursor: not-allowed;">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" [(ngModel)]="profileData.phone" class="form-control">
+            </div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button class="submit-btn" [disabled]="isSaving" (click)="saveProfile()">
+                <i class="fas" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-save]="!isSaving"></i> 
+                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+            </button>
+        </div>
+    </div>
+</div>

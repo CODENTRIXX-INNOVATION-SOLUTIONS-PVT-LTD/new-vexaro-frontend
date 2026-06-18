@@ -14,7 +14,7 @@ import { MerchantShipments } from '../merchant-shipments/merchant-shipments';
 @Component({
   selector: 'app-update-merchant',
   standalone: true,
-  imports: [   CommonModule,FormsModule, RouterLink, MerchantApiKeys, MerchantDocuments, MerchantInvoices, MerchantPayments, MerchantShipments],
+  imports: [CommonModule, FormsModule, RouterLink, MerchantApiKeys, MerchantDocuments, MerchantInvoices, MerchantPayments, MerchantShipments],
   templateUrl: './merchant-profile.html',
   styleUrl: './merchant-profile.css'
 })
@@ -28,6 +28,7 @@ export class MerchantProfile implements OnInit {
   merchantId!: number;
 
   merchant = {
+    id: 0,
     merchantName: '',
     displayName: '',
     email: '',
@@ -47,8 +48,56 @@ export class MerchantProfile implements OnInit {
     paymentTerms: '15 Days',
     creditLimit: 0,
 
-    status: 'Active'
+    status: 'Active',
+    distributorName: '',
+    distributorId: 0,
+    warehouseDetails: '',
+    registrationDate: ''
   };
+
+  stats = {
+    totalOrders: 1250,
+    deliveredOrders: 980,
+    cancelledOrders: 45,
+    inTransitOrders: 205,
+    reversePickups: 15,
+    weightDisputes: 5
+  };
+
+  trackingData = [
+    {
+      awbNumber: 'AWB-88291029',
+      courierPartner: 'Delhivery',
+      trackingStatus: 'In Transit',
+      deliveryStatus: 'Out for Delivery',
+      destination: 'Mumbai',
+      date: '17 Jun 2026'
+    },
+    {
+      awbNumber: 'AWB-77182910',
+      courierPartner: 'Blue Dart',
+      trackingStatus: 'Delivered',
+      deliveryStatus: 'Delivered',
+      destination: 'Delhi',
+      date: '16 Jun 2026'
+    },
+    {
+      awbNumber: 'AWB-66281920',
+      courierPartner: 'Xpressbees',
+      trackingStatus: 'Pending',
+      deliveryStatus: 'Pickup Scheduled',
+      destination: 'Bangalore',
+      date: '17 Jun 2026'
+    },
+    {
+      awbNumber: 'AWB-55172819',
+      courierPartner: 'Shadowfax',
+      trackingStatus: 'Cancelled',
+      deliveryStatus: 'Returned to Origin',
+      destination: 'Pune',
+      date: '15 Jun 2026'
+    }
+  ];
 
   assignWarehouse() {
     alert('Assign Warehouse feature coming soon');
@@ -88,6 +137,7 @@ export class MerchantProfile implements OnInit {
     // Dummy Data
 
     this.merchant = {
+      id: this.merchantId,
       merchantName: 'SpeedLink merchants',
       displayName: 'SpeedLink',
 
@@ -109,7 +159,11 @@ export class MerchantProfile implements OnInit {
       paymentTerms: '15 Days',
       creditLimit: 100000,
 
-      status: 'Active'
+      status: 'Active',
+      distributorName: 'Express Distributors Ltd',
+      distributorId: 1,
+      warehouseDetails: 'Central Warehouse - Hub A',
+      registrationDate: '12 Jan 2025'
     };
   }
 
