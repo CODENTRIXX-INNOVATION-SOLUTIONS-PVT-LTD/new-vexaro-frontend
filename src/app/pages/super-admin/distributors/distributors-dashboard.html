@@ -1,0 +1,107 @@
+<div class="page-container">
+
+    <div class="page-header">
+        <div>
+            <h2>Distributors Dashboard</h2>
+            <div class="breadcrumb">
+                <a routerLink="/super-admin/dashboard">Dashboard</a>
+                <span>›</span>
+                <span class="active">Distributors</span>
+            </div>
+        </div>
+        <button class="add-btn">
+            <i class="fa-solid fa-plus"></i>
+            Add Distributor
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon total">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Total Distributors</p>
+                <p class="stat-value">{{ stats.totalDistributors }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Active</p>
+                <p class="stat-value">{{ stats.activeDistributors }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon inactive">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Inactive</p>
+                <p class="stat-value">{{ stats.inactiveDistributors }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon shipments">
+                <i class="fa-solid fa-box"></i>
+            </div>
+            <div class="stat-content">
+                <p class="stat-label">Active Shipments</p>
+                <p class="stat-value">{{ stats.activeShipments }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <app-distributor-analytics></app-distributor-analytics>
+
+    <!-- Distributors List Card -->
+    <div class="table-card">
+        <div class="card-header">
+            <h3>Recent Distributors</h3>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search distributor...">
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Distributor Name</th>
+                    <th>Region</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Active Shipments</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(distributor of distributors; track distributor.id) {
+                <tr>
+                    <td>{{ distributor.id }}</td>
+                    <td>{{ distributor.name }}</td>
+                    <td>{{ distributor.region }}</td>
+                    <td>{{ distributor.contactPerson }}</td>
+                    <td>{{ distributor.phone }}</td>
+                    <td>{{ distributor.activeShipments }}</td>
+                    <td>
+                        <span class="status" [class.active-status]="distributor.status === 'Active'"
+                            [class.inactive-status]="distributor.status === 'Inactive'">
+                            {{ distributor.status }}
+                        </span>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

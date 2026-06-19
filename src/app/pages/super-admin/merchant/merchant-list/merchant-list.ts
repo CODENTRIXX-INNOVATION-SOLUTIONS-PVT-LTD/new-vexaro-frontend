@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class Merchant {
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   activeMenu: number | null = null;
   searchQuery: string = '';
@@ -50,15 +50,15 @@ export class Merchant {
   get filteredMerchants() {
     return this.merchants.filter(m => {
       const query = this.searchQuery.toLowerCase().trim();
-      const matchesSearch = !query || 
+      const matchesSearch = !query ||
         m.companyName.toLowerCase().includes(query) ||
         m.contactPerson.toLowerCase().includes(query) ||
         m.email.toLowerCase().includes(query) ||
         m.mobile.includes(query) ||
         m.distributorName.toLowerCase().includes(query);
-      
+
       const matchesStatus = this.statusFilter === 'All' || m.status === this.statusFilter;
-      
+
       return matchesSearch && matchesStatus;
     });
   }

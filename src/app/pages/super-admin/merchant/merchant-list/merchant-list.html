@@ -36,15 +36,17 @@
         </div>
     </div>
 
+
     <!-- Table Card Container -->
     <div class="table-card">
         <!-- Controls Row -->
         <div class="controls-row">
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" [(ngModel)]="searchQuery" placeholder="Search by company, contact, email or distributor...">
+                <input type="text" [(ngModel)]="searchQuery"
+                    placeholder="Search by company, contact, email or distributor...">
             </div>
-            
+
             <div class="filter-box">
                 <div class="select-wrapper">
                     <i class="fa-solid fa-filter"></i>
@@ -90,14 +92,16 @@
                         <td>
                             <div class="contact-details">
                                 <span class="contact-name">{{ merchant.contactPerson }}</span>
-                                <span class="contact-phone"><i class="fa-solid fa-phone"></i> {{ merchant.mobile }}</span>
+                                <span class="contact-phone"><i class="fa-solid fa-phone"></i> {{ merchant.mobile
+                                    }}</span>
                             </div>
                         </td>
                         <td>
                             <span class="email-cell">{{ merchant.email }}</span>
                         </td>
                         <td>
-                            <a [routerLink]="['/super-admin/distributors/profile', merchant.distributorId]" class="distributor-link">
+                            <a [routerLink]="['/super-admin/distributors/profile', merchant.distributorId]"
+                                class="distributor-link">
                                 <div class="distributor-badge">
                                     <i class="fa-solid fa-truck-ramp-box"></i>
                                     {{ merchant.distributorName }}
