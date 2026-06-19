@@ -61,8 +61,7 @@ export class LoginComponent {
         case "MERCHANT":
           this.router.navigate(["/merchant"]);
           break;
-        default:
-          this.router.navigate(["/login"]);
+        default: this.router.navigate(["/login"]);
       }
     }, 900);
   }

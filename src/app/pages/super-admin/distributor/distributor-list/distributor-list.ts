@@ -4,7 +4,6 @@ import { AddDistributorModal } from '../../../../models/add-distributor-modal/ad
 import { DistributorCreatedSuccess } from '../../../../models/distributor-created-success/distributor-created-success';
 import { CommonModule } from '@angular/common';
 import { FinancialStore } from '../../../../shared/financial-store';
-
 @Component({
   selector: 'app-distributor-list',
   imports: [RouterLink, AddDistributorModal, DistributorCreatedSuccess, CommonModule],
@@ -46,6 +45,21 @@ export class DistributorList {
     this.showSuccessModal = true;
   }
 
+  get totalDistributors() {
+    return this.allDistributors.length;
+  }
+
+  get activeDistributors() {
+    return this.allDistributors.filter(
+      d => d.status === 'Active'
+    ).length;
+  }
+
+  get inactiveDistributors() {
+    return this.allDistributors.filter(
+      d => d.status === 'Inactive'
+    ).length;
+  }
 
   distributors = [
     {
