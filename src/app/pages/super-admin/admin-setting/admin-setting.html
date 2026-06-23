@@ -82,7 +82,6 @@
                 <label>Platform Rate Markup (%)</label>
                 <div class="input-with-symbol">
                     <input type="number" [(ngModel)]="settings.platformRateConfig.markupPercentage" step="0.1">
-                    <span class="symbol">%</span>
                 </div>
             </div>
 
@@ -90,7 +89,6 @@
                 <label>Base Weight Limit (kg)</label>
                 <div class="input-with-symbol">
                     <input type="number" [(ngModel)]="settings.weightSlabManagement.baseWeightLimit" step="0.5">
-                    <span class="symbol">kg</span>
                 </div>
             </div>
 
@@ -98,23 +96,20 @@
                 <label>Extra Weight Step (kg)</label>
                 <div class="input-with-symbol">
                     <input type="number" [(ngModel)]="settings.weightSlabManagement.extraWeightStep" step="0.5">
-                    <span class="symbol">kg</span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Max Compensation Ceiling</label>
+                <label>Max Compensation Ceiling (₹)</label>
                 <div class="input-with-symbol">
                     <input type="number" [(ngModel)]="settings.compensationCeiling.defaultCapPerShipment">
-                    <span class="symbol">₹</span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Weight Dispute Window</label>
+                <label>Weight Dispute Window (days)</label>
                 <div class="input-with-symbol">
                     <input type="number" [(ngModel)]="settings.weightDisputeWindow.defaultDaysAllowed">
-                    <span class="symbol">days</span>
                 </div>
             </div>
         </div>
