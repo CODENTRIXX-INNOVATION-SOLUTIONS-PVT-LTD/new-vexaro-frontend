@@ -106,11 +106,18 @@
 }
 
 /* ================= TABLE ================= */
-table {
-    width: 100%;
-    border-collapse: collapse;
+.table-wrapper{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
 }
 
+table{
+    width:100%;
+    min-width:1000px;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
 thead {
     background: #f8fafc;
 }
@@ -154,6 +161,65 @@ tbody tr:hover {
 
 .courier-badge i {
     color: #94a3b8;
+}
+
+
+/* Column widths */
+
+th:nth-child(1),
+td:nth-child(1){
+    width:160px;
+}
+
+th:nth-child(2),
+td:nth-child(2){
+    width:180px;
+}
+
+th:nth-child(3),
+td:nth-child(3){
+    width:170px;
+}
+
+th:nth-child(4),
+td:nth-child(4){
+    width:140px;
+}
+
+th:nth-child(5),
+td:nth-child(5){
+    width:150px;
+}
+
+th:nth-child(6),
+td:nth-child(6){
+    width:130px;
+}
+
+th:nth-child(7),
+td:nth-child(7){
+    width:150px;
+}
+
+thead{
+    background:#f8fafc;
+}
+
+th,
+td{
+    padding:16px;
+    text-align:left;
+    vertical-align:middle;
+    box-sizing:border-box;
+    white-space:nowrap;
+}
+
+td{
+    border-top:1px solid #edf2f7;
+}
+
+tbody tr:hover{
+    background:#f8fafc;
 }
 
 /* ================= STATUS BADGES ================= */
@@ -854,11 +920,6 @@ textarea.form-control {
         max-width: 100%;
     }
 
-    table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
 
     /* Modal styles responsive */
     .wizard-grid {

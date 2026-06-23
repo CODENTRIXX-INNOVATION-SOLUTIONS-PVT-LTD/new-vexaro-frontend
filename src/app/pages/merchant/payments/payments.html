@@ -62,13 +62,13 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     </div>
                     <div class="balance-info" style="display: flex; flex-direction: column;">
-                        <span class="balance-label" style="font-size: 14px; opacity: 0.8;">COD Escrow (Pending)</span>
+                        <span class="balance-label" style=" opacity: 0.8;">COD Escrow (Pending)</span>
                         <span class="balance-amount" style="font-size: 32px; font-weight: bold; color: #ffffff;">₹{{ codEscrowBalance.toLocaleString('en-IN') }}</span>
                     </div>
                 </div>
             </div>
 
-            <div style="display: flex; align-items: center; margin-left: auto;">
+            <div style="display: flex; align-items: center; ">
                 <button class="hero-topup-btn" (click)="changeTab('requests')" style="background: rgba(255,255,255,0.18); color: white; border: 1.5px solid rgba(255,255,255,0.35); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Request Top-up
                 </button>

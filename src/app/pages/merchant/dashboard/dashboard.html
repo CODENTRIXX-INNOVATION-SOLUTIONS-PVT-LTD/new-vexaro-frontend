@@ -1,13 +1,22 @@
 <div class="dashboard">
-    <app-dashboard-header role="Merchant" userName="Sahil Gour" email="sahil@gmail.com"
-        profileImage="https://i.pravatar.cc/150?img=12"></app-dashboard-header>
+
+    <app-dashboard-header
+        role="Merchant"
+        userName="Sahil Gour"
+        email="sahil@gmail.com"
+        profileImage="https://i.pravatar.cc/150?img=12">
+    </app-dashboard-header>
 
     <app-stats-cards [cards]="cards"></app-stats-cards>
 
     <div class="two-section">
+
         <app-recent-shipments></app-recent-shipments>
+
         <div class="quick-section">
+
             <h3>Quick Actions</h3>
+
             <button class="action-btn primary">
                 <span class="material-icons">add</span>
                 Create Shipment
@@ -26,7 +35,6 @@
             </button>
         </div>
     </div>
-
     <div class="chart-section">
         <app-shipment-overview></app-shipment-overview>
         <app-top-destinations></app-top-destinations>
