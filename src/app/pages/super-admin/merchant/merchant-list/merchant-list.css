@@ -467,6 +467,7 @@ tbody tr:hover {
 /* Table Footer */
 .table-footer {
     margin-top: 20px;
+    margin-bottom: 16px;
     color: #64748b;
     font-size: 13px;
     font-weight: 500;

@@ -333,6 +333,7 @@ tbody tr:hover {
 
 .table-footer {
     margin-top: 20px;
+    margin-bottom: 16px;
     color: #64748b;
     font-size: 14px;
 }
@@ -341,6 +342,7 @@ tbody tr:hover {
 
 .info-box {
     margin-top: 24px;
+    margin-bottom: 24px;
     padding: 18px 20px;
 
     display: flex;
@@ -395,3 +397,148 @@ tbody tr:hover {
         overflow-x: auto;
     }
 }
+
+/* ================= LEDGER MODAL STYLES ================= */
+
+.ledger-modal {
+    width: 500px;
+    max-width: 95vw;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: modalAnimation 0.3s ease;
+    overflow: hidden;
+}
+
+.ledger-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ledger-modal .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(10, 10, 10);
+}
+
+.ledger-modal .close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: background 0.2s, color 0.2s;
+}
+
+.ledger-modal .close-btn:hover {
+    background: #e2e8f0;
+    color: rgb(10, 10, 10);
+}
+
+.ledger-modal .modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ledger-modal .modal-body p {
+    margin: 0;
+    font-size: 14px;
+    color: #475569;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+}
+
+.ledger-modal .modal-body p strong {
+    color: rgb(10, 10, 10);
+}
+
+.ledger-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ledger-modal .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.ledger-modal .form-group input,
+.ledger-modal .form-group select {
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ledger-modal .form-group input:focus,
+.ledger-modal .form-group select:focus {
+    border-color: rgb(11, 74, 111);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ledger-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ledger-modal .btn-cancel {
+    padding: 10px 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475569;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.ledger-modal .btn-cancel:hover {
+    background: #f1f5f9;
+    color: rgb(10, 10, 10);
+}
+
+.ledger-modal .btn-primary {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 10px;
+    background: rgb(11, 74, 111);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.ledger-modal .btn-primary:hover {
+    background: rgb(8, 58, 87);
+}
+
+.ledger-modal .btn-primary:active {
+    transform: scale(0.98);
+}

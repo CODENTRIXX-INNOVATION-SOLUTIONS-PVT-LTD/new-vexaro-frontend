@@ -10,23 +10,23 @@
         </button>
     </div>
     
-    <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-        <select [(ngModel)]="distributorFilter" class="large-search" style="padding: 10px; font-size: 14px; flex: unset; width: 200px;">
+    <div class="filter-bar">
+        <select [(ngModel)]="distributorFilter" class="large-search filter-select">
             <option>All Distributors</option>
             <option>SpeedX Logistics</option>
             <option>FastTrack Couriers</option>
         </select>
-        <select [(ngModel)]="dateFilter" class="large-search" style="padding: 10px; font-size: 14px; flex: unset; width: 200px;">
+        <select [(ngModel)]="dateFilter" class="large-search filter-select">
             <option>Any Date</option>
             <option>Today</option>
             <option>This Week</option>
         </select>
-        <select [(ngModel)]="statusFilter" class="large-search" style="padding: 10px; font-size: 14px; flex: unset; width: 200px;">
+        <select [(ngModel)]="statusFilter" class="large-search filter-select">
             <option>All Statuses</option>
             <option>Delivered</option>
             <option>In Transit</option>
         </select>
-        <select [(ngModel)]="carrierFilter" class="large-search" style="padding: 10px; font-size: 14px; flex: unset; width: 200px;">
+        <select [(ngModel)]="carrierFilter" class="large-search filter-select">
             <option>All Carriers</option>
             <option>Delhivery</option>
             <option>Bluedart</option>

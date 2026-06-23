@@ -343,3 +343,30 @@
     color: #6b7280;
     margin: 0;
 }
+
+/* ================= FILTER BAR & SELECTS RESPONSIVENESS ================= */
+
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 10px !important;
+    font-size: 14px !important;
+    flex: unset !important;
+    width: 200px !important;
+}
+
+@media (max-width: 767px) {
+    .filter-bar {
+        justify-content: center;
+    }
+    .filter-select {
+        width: 100% !important;
+        max-width: 320px !important;
+    }
+}
+

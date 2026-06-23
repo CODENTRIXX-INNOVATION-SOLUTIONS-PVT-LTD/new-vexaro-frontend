@@ -288,6 +288,9 @@
 
 /* Mobile Layout (< 768px) */
 @media(max-width: 767.98px) {
+    :host {
+        height: 0;
+    }
     .sidebar {
         position: fixed;
         left: -272px; /* Hide off-screen by default */

@@ -38,7 +38,7 @@ $font: "Plus Jakarta Sans", sans-serif;
 
 .left-panel-img {
   width: 100%;
-  height: 100%;
+  height: 100% !important;
 
   // CRITICAL: Tells the image to fill the 100vh panel completely
   object-fit: cover;
