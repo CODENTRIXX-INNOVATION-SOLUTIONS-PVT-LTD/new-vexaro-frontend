@@ -46,6 +46,22 @@ export class DisputeDetail implements OnInit {
   loadDisputeDetails() {
     this.isLoading = true;
     // TODO: GET /distributor/:id/disputes/:disputeId
+    this.dispute = {
+      id: this.disputeId || 'DIS1001',
+      awb: 'AWB554321',
+      merchantName: 'Global Traders',
+      merchantCode: 'MER002',
+      courier: 'Delhivery Standard',
+      status: 'Open',
+      appliedWeight: 0.5,
+      chargedWeight: 1.2,
+      weightDifference: 0.7,
+      extraChargeAmount: 150,
+      deadlineDate: '19 Jun 2026',
+      hoursLeft: 36,
+      productName: 'Gaming Mouse',
+      boxDimensions: '15 x 10 x 5 cm'
+    };
     this.isLoading = false;
   }
 

@@ -11,11 +11,11 @@
 
   <main class="right-panel">
     <div class="form-wrap">
-      <a routerLink="/" class="brand brand--mobile">
+      <div class="brand brand--mobile">
         <img src="assets/logo.png" alt="Vexaro Logo" class="brand-logo-img" />
-      </a>
+      </div>
 
-      @if (tokenValid() === null && token()) {
+      @if (isLoading() && tokenValid() === null) {
         <div class="state-card">
           <span class="spinner-lg"></span>
           <p>Verifying your invite link…</p>
@@ -95,14 +95,8 @@
             @if (inviteeName()) {
               <p class="greeting">Welcome, {{ inviteeName() }} 👋</p>
             }
-            <h1>Set your password</h1>
-            @if (inviteeEmail()) {
-              <p>
-                For <strong>{{ inviteeEmail() }}</strong>
-              </p>
-            } @else {
-              <p>Choose a strong password to activate your account</p>
-            }
+            <h1>Activate your account</h1>
+            <p>Set a strong password to complete your account activation.</p>
           </header>
 
           @if (errorMessage()) {
@@ -134,7 +128,76 @@
             </div>
           }
 
-          <form (ngSubmit)="onSubmit()" novalidate>
+          <form (ngSubmit)="onSubmit()" novalidate autocomplete="off">
+            <!-- READ-ONLY EMAIL FIELD -->
+            <div class="field">
+              <label for="email">Invited Email address</label>
+              <div class="input-wrap disabled">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <polyline
+                    points="22,6 12,13 2,6"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  [value]="inviteeEmail()"
+                  readonly
+                  disabled
+                />
+              </div>
+            </div>
+
+            <!-- READ-ONLY ROLE FIELD -->
+            <div class="field">
+              <label for="role">Assigned Role</label>
+              <div class="input-wrap disabled">
+                <svg
+                  class="field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="7"
+                    r="4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                </svg>
+                <input
+                  id="role"
+                  type="text"
+                  name="role"
+                  [value]="roleLabel"
+                  readonly
+                  disabled
+                />
+              </div>
+            </div>
+
+            <!-- PASSWORD FIELD -->
             <div class="field">
               <label for="password">New password</label>
               <div class="input-wrap">
@@ -174,6 +237,7 @@
                   type="button"
                   class="eye-btn"
                   (click)="togglePassword()"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
                 >
                   @if (showPassword()) {
                     <svg viewBox="0 0 24 24" fill="none">
@@ -231,6 +295,7 @@
               }
             </div>
 
+            <!-- CONFIRM PASSWORD FIELD -->
             <div class="field">
               <label for="confirm">Confirm password</label>
               <div
@@ -315,6 +380,7 @@
               }
             </div>
 
+            <!-- SUBMIT BUTTON -->
             <button type="submit" class="submit-btn" [disabled]="isLoading()">
               @if (isLoading()) {
                 <span class="spinner"></span> Activating account…

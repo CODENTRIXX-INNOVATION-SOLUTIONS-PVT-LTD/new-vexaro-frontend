@@ -34,6 +34,13 @@ export class TopupMerchantWallet implements OnInit {
   loadData() {
     // TODO: GET /distributor/:id/merchants (for dropdown)
     // TODO: GET /wallet/distributor/:id (for balance check)
+    this.distributorBalance = 850000;
+    this.merchants = [
+      { id: 'M1', businessName: 'ABC Electronics', merchantCode: 'MER001', balance: 12400 },
+      { id: 'M2', businessName: 'Global Traders', merchantCode: 'MER002', balance: 45000 },
+      { id: 'M3', businessName: 'Prime Retail', merchantCode: 'MER003', balance: 3500 },
+      { id: 'M4', businessName: 'Mega Store', merchantCode: 'MER004', balance: 0 }
+    ];
     if (this.selectedMerchantId) {
       this.onMerchantChange();
     }

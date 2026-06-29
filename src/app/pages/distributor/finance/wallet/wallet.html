@@ -1,4 +1,4 @@
-﻿<div class="header-section">
+<div class="header-section">
     <h2>My Franchise Wallet</h2>
     <p>Manage your master balance. This balance is used when your merchants book shipments.</p>
 </div>
@@ -102,8 +102,9 @@
 <!-- Topup Request Modal -->
 @if (isTopupModalOpen) {
 <div class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
+<<<<<<< HEAD
             <h3>Request Wallet Topup</h3>
             <button class="close-btn" (click)="closeTopupModal()"><svg xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -149,6 +150,101 @@
                 style="padding: 10px 16px; border: none; background: rgb(11, 74, 111); color: white; border-radius: 6px;">Submit
                 Request</button>
         </div>
+=======
+            <h3>Add Funds to Wallet</h3>
+            <button class="close-btn" (click)="closeTopupModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+
+        @if (onlineStep === 'input') {
+            <!-- Method Tabs -->
+            <div style="display: flex; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
+                <button (click)="setPaymentMethod('bank')" [style.border-bottom]="paymentMethod === 'bank' ? '2px solid rgb(11, 74, 111)' : 'none'" [style.color]="paymentMethod === 'bank' ? 'rgb(11, 74, 111)' : '#64748b'" style="flex: 1; padding: 10px; background: none; border: none; font-weight: 600; cursor: pointer; font-size: 14px; outline: none;">Bank Transfer (UTR)</button>
+                <button (click)="setPaymentMethod('razorpay')" [style.border-bottom]="paymentMethod === 'razorpay' ? '2px solid rgb(11, 74, 111)' : 'none'" [style.color]="paymentMethod === 'razorpay' ? 'rgb(11, 74, 111)' : '#64748b'" style="flex: 1; padding: 10px; background: none; border: none; font-weight: 600; cursor: pointer; font-size: 14px; outline: none;">Razorpay Online</button>
+            </div>
+
+            <div class="modal-body">
+                @if (paymentMethod === 'bank') {
+                    <div class="info-box mb-3" style="background: #f1f5f9; padding: 12px; border-radius: 8px; font-size: 13px; color: #475569; margin-bottom: 16px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-primary svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> <strong>Bank Details for NEFT/IMPS:</strong><br>
+                        Vexaro Logistics Pvt Ltd<br>
+                        A/C: 1234567890<br>
+                        IFSC: HDFC0001234
+                    </div>
+                    
+                    <div class="form-group mb-3" style="margin-bottom: 16px;">
+                        <label>Amount (₹)</label>
+                        <input type="number" class="form-control" [(ngModel)]="topupAmount" placeholder="Enter amount transferred" min="1000" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom: 16px;">
+                        <label>Transaction Reference No. (UTR)</label>
+                        <input type="text" class="form-control" [(ngModel)]="topupReference" placeholder="Enter 12-digit UTR number" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                } @else {
+                    <div class="info-box mb-3" style="background: #eff6ff; padding: 12px; border-radius: 8px; font-size: 13px; color: #1e3a8a; margin-bottom: 16px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle; margin-right: 4px;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <strong>Razorpay Online Recharge:</strong><br>
+                        Funds will be credited to your available balance instantly upon successful payment.
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom: 16px;">
+                        <label>Amount to Add (₹)</label>
+                        <input type="number" class="form-control" [(ngModel)]="topupAmount" placeholder="Min. ₹1,000" min="1000" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer" style="margin-top: 20px; text-align: right;">
+                <button class="btn-secondary" (click)="closeTopupModal()" style="padding: 10px 16px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; margin-right: 10px; cursor: pointer;">Cancel</button>
+                @if (paymentMethod === 'bank') {
+                    <button class="btn-primary" [disabled]="topupAmount <= 0 || !topupReference" (click)="submitTopupRequest()" style="padding: 10px 16px; border: none; background: rgb(11, 74, 111); color: white; border-radius: 6px; cursor: pointer;">Submit Request</button>
+                } @else {
+                    <button class="btn-primary" [disabled]="topupAmount < 1000" (click)="startRazorpayPayment()" style="padding: 10px 16px; border: none; background: rgb(11, 74, 111); color: white; border-radius: 6px; cursor: pointer;">Proceed to Pay</button>
+                }
+            </div>
+        }
+
+        @if (onlineStep === 'gateway') {
+            <!-- Simulated Razorpay Gateway Popup -->
+            <div style="background: #0f172a; color: white; border-radius: 8px; padding: 20px; text-align: center; font-family: sans-serif;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px;">
+                    <span style="font-weight: 700; font-size: 16px; color: #38bdf8;">Razorpay Secure Checkout</span>
+                    <span style="font-size: 13px; color: #94a3b8;">Order: order_VexWallet</span>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <span style="font-size: 14px; color: #94a3b8;">Amount Payable</span>
+                    <h2 style="margin: 5px 0 0; font-size: 28px; color: white;">₹{{topupAmount | number}}</h2>
+                </div>
+
+                <div style="background: #1e293b; border-radius: 6px; padding: 15px; margin-bottom: 20px; text-align: left;">
+                    <div style="font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 10px;">SELECT PAYMENT METHOD</div>
+                    
+                    <label style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; cursor: pointer; color: white; margin-bottom: 4px;">
+                        <input type="radio" name="paymentOption" [checked]="selectedOnlineMethod === 'upi'" (change)="selectOnlineMethod('upi')" style="margin-right: 10px;">
+                        <span>UPI / QR (Instant)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; cursor: pointer; color: white; margin-bottom: 4px;">
+                        <input type="radio" name="paymentOption" [checked]="selectedOnlineMethod === 'card'" (change)="selectOnlineMethod('card')" style="margin-right: 10px;">
+                        <span>Credit / Debit Card</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 8px 0; cursor: pointer; color: white;">
+                        <input type="radio" name="paymentOption" [checked]="selectedOnlineMethod === 'netbanking'" (change)="selectOnlineMethod('netbanking')" style="margin-right: 10px;">
+                        <span>Netbanking</span>
+                    </label>
+                </div>
+
+                <button (click)="completeRazorpayPayment()" style="width: 100%; padding: 12px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px;">Simulate Success Payment</button>
+                <div style="font-size: 12px; color: #64748b; margin-top: 15px;">This is a secure integration preview mode.</div>
+            </div>
+        }
+
+        @if (onlineStep === 'success') {
+            <!-- Simulated Processing / Success checkmark -->
+            <div style="text-align: center; padding: 40px 20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 80px; height: 80px; display: block; margin: 0 auto 20px; color: #16a34a;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <h3 style="font-size: 20px; color: #1e293b; margin: 0 0 10px;">Processing payment...</h3>
+                <p style="color: #64748b; font-size: 14px; margin: 0;">Do not refresh or close the page.</p>
+            </div>
+        }
+>>>>>>> aashutosh-shrivastava
     </div>
 </div>
 }

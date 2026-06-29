@@ -1,0 +1,352 @@
+<div class="disputes-container">
+  <!-- ========================================== -->
+  <!-- LIST VIEW -->
+  <!-- ========================================== -->
+  @if (viewMode() === 'list') {
+    <header class="section-header">
+      <div class="header-title">
+        <h1>Disputes & Claims</h1>
+        <p>Manage and challenge weight mismatches, package damage, or lost shipments.</p>
+      </div>
+      <button class="primary-btn" (click)="openCreateForm()">
+        <span class="material-icons">add</span>
+        Raise New Dispute
+      </button>
+    </header>
+
+    <!-- Filters Section -->
+    <div class="filters-card">
+      <div class="filters-left">
+        <!-- Status Tabs -->
+        <div class="status-tabs">
+          <button [class.active]="statusFilter() === 'ALL'" (click)="statusFilter.set('ALL')">All</button>
+          <button [class.active]="statusFilter() === 'OPEN'" (click)="statusFilter.set('OPEN')">
+            Open <span class="count-badge open"></span>
+          </button>
+          <button [class.active]="statusFilter() === 'IN_REVIEW'" (click)="statusFilter.set('IN_REVIEW')">
+            In Review <span class="count-badge review"></span>
+          </button>
+          <button [class.active]="statusFilter() === 'RESOLVED'" (click)="statusFilter.set('RESOLVED')">
+            Resolved <span class="count-badge resolved"></span>
+          </button>
+          <button [class.active]="statusFilter() === 'CLOSED'" (click)="statusFilter.set('CLOSED')">
+            Closed
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-right">
+        <!-- Category Filter -->
+        <div class="filter-group select-group">
+          <select [(ngModel)]="categoryFilter">
+            <option value="ALL">All Categories</option>
+            <option value="WEIGHT_DISPUTE">Weight Mismatch</option>
+            <option value="LOST">Package Lost</option>
+            <option value="DAMAGED">Damaged Package</option>
+            <option value="DELAY">Delivery Delay</option>
+            <option value="WRONG_DELIVERY">Incorrect Delivery</option>
+            <option value="COD_MISMATCH">COD Cash Mismatch</option>
+            <option value="OTHER">Other Issues</option>
+          </select>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="filter-group search-group">
+          <span class="material-icons search-icon">search</span>
+          <input
+            type="text"
+            placeholder="Search AWB or Dispute ID..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-card">
+      @if (getFilteredDisputes().length > 0) {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Dispute ID</th>
+                <th>AWB / Reference</th>
+                <th>Category</th>
+                <th>Raised Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (dispute of getFilteredDisputes(); track dispute.id) {
+                <tr class="dispute-row" (click)="selectDispute(dispute)">
+                  <td class="dispute-id">{{ dispute.id }}</td>
+                  <td class="awb-ref">
+                    <span class="awb-number">{{ dispute.awb }}</span>
+                  </td>
+                  <td class="category-col">
+                    <span class="cat-pill" [class]="dispute.category.toLowerCase()">
+                      {{ categoryLabels[dispute.category] }}
+                    </span>
+                  </td>
+                  <td class="date-col">{{ dispute.createdAt | date: 'dd MMM yyyy, h:mm a' }}</td>
+                  <td class="status-col">
+                    <span class="status-badge" [class]="dispute.status.toLowerCase()">
+                      {{ dispute.status }}
+                    </span>
+                  </td>
+                  <td class="action-col">
+                    <button class="icon-btn-view" (click)="$event.stopPropagation(); selectDispute(dispute)">
+                      <span class="material-icons">visibility</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <span class="material-icons empty-icon">gavel</span>
+          <h3>No Disputes Found</h3>
+          <p>No claims match your current filters. Tap "Raise New Dispute" to create a new ticket.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ========================================== -->
+  <!-- DETAIL VIEW -->
+  <!-- ========================================== -->
+  @if (viewMode() === 'detail' && selectedDispute()) {
+    <div class="detail-container">
+      <header class="detail-header">
+        <button class="back-btn" (click)="closeDetail()">
+          <span class="material-icons">arrow_back</span>
+          Back to list
+        </button>
+        <div class="detail-title-row">
+          <h2>Dispute Detail — {{ selectedDispute()?.id }}</h2>
+          <span class="status-badge" [class]="selectedDispute()?.status?.toLowerCase() || ''">
+            {{ selectedDispute()?.status }}
+          </span>
+        </div>
+      </header>
+
+      <div class="detail-grid">
+        <!-- Left Side: Metadata Card -->
+        <section class="metadata-card">
+          <div class="card-section">
+            <h3 class="section-title">Dispute Information</h3>
+            
+            <div class="info-row">
+              <span class="info-label">AWB Tracking ID</span>
+              <span class="info-value text-highlight">{{ selectedDispute()?.awb }}</span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Category</span>
+              <span class="info-value">
+                <span class="cat-pill" [class]="selectedDispute()?.category?.toLowerCase() || ''">
+                  {{ categoryLabels[selectedDispute()?.category || ''] }}
+                </span>
+              </span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Date Raised</span>
+              <span class="info-value">{{ selectedDispute()?.createdAt | date: 'medium' }}</span>
+            </div>
+          </div>
+
+          <!-- Weight Dispute Special Details -->
+          @if (selectedDispute()?.category === 'WEIGHT_DISPUTE') {
+            <div class="card-section weight-details">
+              <h4>Weight Adjustment Breakdown</h4>
+              <div class="weight-grid">
+                <div class="weight-box">
+                  <span class="weight-lbl">Manifested Weight</span>
+                  <span class="weight-val">{{ selectedDispute()?.originalWeight }} kg</span>
+                </div>
+                <div class="weight-box warning">
+                  <span class="weight-lbl">Audited Weight</span>
+                  <span class="weight-val">{{ selectedDispute()?.actualWeight }} kg</span>
+                </div>
+                <div class="weight-box charge">
+                  <span class="weight-lbl">Extra Wallet Debit</span>
+                  <span class="weight-val">₹{{ selectedDispute()?.extraCharge | number: '1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="card-section">
+            <h3 class="section-title">Description</h3>
+            <p class="description-text">{{ selectedDispute()?.description }}</p>
+          </div>
+
+          <!-- Uploaded Proofs Panel -->
+          <div class="card-section">
+            <h3 class="section-title">Image Proofs</h3>
+            
+            @if (selectedDispute()?.proofImages?.length || 0 > 0) {
+              <div class="image-gallery">
+                @for (img of selectedDispute()?.proofImages; track img) {
+                  <div class="gallery-thumb">
+                    <img [src]="img" alt="Uploaded Proof" />
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="no-proof-text">No image proof uploaded yet.</p>
+            }
+
+            <!-- Upload Area for Open Weight Disputes -->
+            @if (selectedDispute()?.category === 'WEIGHT_DISPUTE' && selectedDispute()?.status === 'OPEN') {
+              <div class="upload-area-box">
+                <h4>Upload Weight Verification Image</h4>
+                <p>Provide package photos showing the weight on scales alongside the AWB barcode label.</p>
+                
+                <div class="upload-dropzone" (click)="simulateFileSelect()">
+                  <span class="material-icons upload-icon">cloud_upload</span>
+                  <span>Click to select simulated image proof</span>
+                  @if (isUploadingSimulated()) {
+                    <span class="spinner-small"></span>
+                  }
+                </div>
+
+                @if (simulatedUploads().length > 0) {
+                  <div class="preview-thumbnails">
+                    @for (thumb of simulatedUploads(); track thumb; let idx = $index) {
+                      <div class="thumb-wrap">
+                        <img [src]="thumb" />
+                        <button class="remove-thumb-btn" (click)="removeSimulatedUpload(idx)">
+                          <span class="material-icons">close</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                  
+                  <button class="primary-btn submit-proof-btn" (click)="submitProof()">
+                    <span class="material-icons">send</span>
+                    Submit Proof to Admin
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- Right Side: Discussion Board -->
+        <section class="discussion-card">
+          <h3 class="section-title">Discussion & Activity</h3>
+          
+          <div class="comment-timeline">
+            @for (comment of selectedDispute()?.comments; track comment.date) {
+              <div class="comment-bubble-wrap" [class.self]="comment.sender === 'Merchant'">
+                <div class="comment-header">
+                  <span class="comment-author" [class.admin]="comment.sender === 'Super Admin'">
+                    {{ comment.sender }}
+                  </span>
+                  <span class="comment-time">{{ comment.date | date: 'dd MMM, h:mm a' }}</span>
+                </div>
+                <div class="comment-body">
+                  <p>{{ comment.text }}</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Post Comment Area -->
+          <div class="post-comment-section">
+            <textarea
+              placeholder="Type your message for support staff..."
+              [(ngModel)]="newCommentText"
+              rows="3"
+            ></textarea>
+            <div class="post-actions">
+              <button class="primary-btn comment-btn" [disabled]="!newCommentText.trim()" (click)="addComment()">
+                <span class="material-icons">send</span>
+                Post Message
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================== -->
+  <!-- CREATE VIEW -->
+  <!-- ========================================== -->
+  @if (viewMode() === 'create') {
+    <div class="create-container">
+      <header class="create-header">
+        <button class="back-btn" (click)="closeCreateForm()">
+          <span class="material-icons">arrow_back</span>
+          Back to list
+        </button>
+        <h2>Raise a New Dispute</h2>
+      </header>
+
+      <div class="form-card">
+        <form (ngSubmit)="createDispute()" #disputeForm="ngForm">
+          <!-- AWB INPUT -->
+          <div class="form-field">
+            <label for="awbInput">AWB / Tracking Number</label>
+            <div class="input-container">
+              <span class="material-icons field-prefix">local_shipping</span>
+              <input
+                id="awbInput"
+                type="text"
+                name="awb"
+                placeholder="e.g. VX-982341203"
+                [(ngModel)]="newAwb"
+                required
+              />
+            </div>
+            <p class="field-hint">Specify the AWB tracking ID of the shipment you want to claim.</p>
+          </div>
+
+          <!-- CATEGORY DROPDOWN -->
+          <div class="form-field">
+            <label for="catInput">Dispute Category</label>
+            <div class="input-container">
+              <span class="material-icons field-prefix">category</span>
+              <select id="catInput" name="category" [(ngModel)]="newCategory" required>
+                <option value="LOST">Package Lost (No movement / stalled)</option>
+                <option value="DAMAGED">Damaged Package (Broken / leaked cargo)</option>
+                <option value="DELAY">Delivery Delay (Overdue delivery date)</option>
+                <option value="WRONG_DELIVERY">Incorrect Delivery (Delivered to wrong person)</option>
+                <option value="COD_MISMATCH">COD Cash Mismatch (Incorrect cash collection)</option>
+                <option value="OTHER">Other Issue (General billing/support)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- DESCRIPTION TEXTAREA -->
+          <div class="form-field">
+            <label for="descInput">Dispute Details & Claim Reason</label>
+            <textarea
+              id="descInput"
+              name="description"
+              placeholder="Describe the issue in detail. If package is damaged, explain contents. If lost, detail tracking delay. Provide customer contact if relevant."
+              [(ngModel)]="newDescription"
+              rows="6"
+              required
+            ></textarea>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="form-buttons">
+            <button type="button" class="secondary-btn" (click)="closeCreateForm()">Cancel</button>
+            <button type="submit" class="primary-btn submit-dispute-btn" [disabled]="!disputeForm.form.valid">
+              Submit Dispute Claim
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -41,8 +41,8 @@ export class LoginComponent {
     setTimeout(() => {
       const user = this.fakeUsers.find(
         (u) =>
-          u.email === this.email.trim().toLowerCase() &&
-          u.password === this.password,
+            u.email === this.email.trim().toLowerCase() &&
+            u.password === this.password,
       );
       this.isLoading.set(false);
 
@@ -57,14 +57,30 @@ export class LoginComponent {
 
       switch (user.role) {
         case "SUPER_ADMIN":
-          this.router.navigate(["/super-admin"]);
+          const hasChanged = localStorage.getItem("superAdminCredentialsChanged") === "true";
+          if (!hasChanged) {
+            this.router.navigate(["/change-credentials"]);
+          } else {
+            this.router.navigate(["/super-admin"]);
+          }
           break;
         case "DISTRIBUTOR":
-          this.router.navigate(["/distributor"]);
+          const distChanged = localStorage.getItem("distributorCredentialsChanged") === "true";
+          if (!distChanged) {
+            this.router.navigate(["/set-password"], { queryParams: { token: "mockToken-dist" } });
+          } else {
+            this.router.navigate(["/distributor"]);
+          }
           break;
         case "MERCHANT":
-          this.router.navigate(["/merchant"]);
+          const merchChanged = localStorage.getItem("merchantCredentialsChanged") === "true";
+          if (!merchChanged) {
+            this.router.navigate(["/set-password"], { queryParams: { token: "mockToken-merchant" } });
+          } else {
+            this.router.navigate(["/merchant"]);
+          }
           break;
+
         default: this.router.navigate(["/login"]);
       }
     }, 900);

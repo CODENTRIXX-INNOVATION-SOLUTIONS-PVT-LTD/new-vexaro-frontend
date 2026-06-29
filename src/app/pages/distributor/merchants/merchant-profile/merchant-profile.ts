@@ -48,6 +48,27 @@ export class DistributorMerchantProfile implements OnInit {
   loadMerchant() {
     this.isLoading = true;
     // TODO: API Call → GET /distributor/:dId/merchants/:merchantId
+    this.merchant = {
+      merchantCode: this.merchantId || 'MER001',
+      businessName: 'ABC Electronics',
+      displayName: 'ABC Electro',
+      contactPerson: 'Rahul Sharma',
+      phone: '9876543210',
+      email: 'rahul@abcelectronics.com',
+      addressLine1: 'Phase 1, HSR Layout',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      pincode: '560102',
+      gstin: '23ABCDE1234F1Z5',
+      pan: 'ABCDE1234F',
+      warehouseId: 'WH66DU',
+      walletBalance: 12400,
+      creditLimit: 50000,
+      paymentTerms: 'Prepaid',
+      totalShipments: 1250,
+      deliveredShipments: 1100,
+      status: 'Active'
+    };
     this.isLoading = false;
   }
 

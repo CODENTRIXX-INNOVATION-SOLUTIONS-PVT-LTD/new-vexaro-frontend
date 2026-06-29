@@ -26,7 +26,7 @@ export class RecentRegistrations {
     {
       id: 'REG003',
       name: 'Amit Verma',
-      role: 'Warehouse',
+      role: 'Merchant',
       email: 'amit@gmail.com',
       date: '09 Jun 2026'
     },

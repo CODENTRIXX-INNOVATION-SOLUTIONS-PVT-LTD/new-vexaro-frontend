@@ -2,16 +2,15 @@ import { Routes } from "@angular/router";
 import { SuperAdminDashboard } from "./dashboards/super-admin-dashboard/super-admin-dashboard";
 import { MerchantDashboard } from "./dashboards/merchant-dashboard/merchant-dashboard";
 import { DistributorDashboard } from "./dashboards/distributor-dashboard/distributor-dashboard";
-import { WarehouseDashboard } from "./dashboards/warehouse-dashboard/warehouse-dashboard";
 import { LoginComponent } from "./login/login.component";
 import { RegisterComponent } from "./register/register.component";
 import { Home } from "./home/home";
+import { ChangeCredentialsComponent } from "./change-credentials/change-credentials.component";
 
 // SUPER-ADMIN
 import { SuperAdminDashboardPage } from "./pages/super-admin/dashboard/SuperAdminDashboardPage";
 import { Merchant } from "./pages/super-admin/merchant/merchant-list/merchant-list";
 import { DistributorList } from "./pages/super-admin/distributor/distributor-list/distributor-list";
-import { Warehouses } from "./pages/super-admin/warehouses/warehouses";
 import { Shipments } from "./pages/super-admin/shipments/shipments";
 import { Tracking } from "./pages/super-admin/tracking/tracking";
 import { RateManagement } from "./pages/super-admin/rate-management/rate-management";
@@ -20,15 +19,6 @@ import { UserManagement } from "./pages/super-admin/user-management/user-managem
 import { AdminSetting } from "./pages/super-admin/admin-setting/admin-setting";
 import { AdminPayment } from "./pages/super-admin/admin-payment/admin-payment";
 import { AdminDisputeList } from "./pages/super-admin/disputes/dispute-list/dispute-list";
-
-// WAREHOUSE
-import { InboundShipments } from "./pages/warehouse/inbound-shipments/inbound-shipments";
-import { OutboundShipments } from "./pages/warehouse/outbound-shipments/outbound-shipments";
-import { Inventory } from "./pages/warehouse/inventory/inventory";
-import { ScanReceive } from "./pages/warehouse/scan-receive/scan-receive";
-import { ScanDispatch } from "./pages/warehouse/scan-dispatch/scan-dispatch";
-import { Support } from "./pages/warehouse/support/support";
-import { WarehouseDashboardPage } from "./pages/warehouse/dashboard/dashboard";
 
 // DISTRIBUTOR
 import { DistrubuterDashboardPage } from "./pages/distributor/dashboard/DistrubuterDashboardPage";
@@ -75,8 +65,9 @@ import { SecuritySettings } from "./pages/distributor/settings/security/security
 import { ApiSettings } from "./pages/distributor/settings/api-settings/api-settings";
 
 import { CreateShipment } from "./pages/merchant/create-shipment/create-shipment";
+import { MerchantDisputesComponent } from "./pages/merchant/disputes/disputes";
 
-// MARCHAND
+// MARCHANT
 import { BulkUpload } from "./pages/merchant/bulk-upload/bulk-upload";
 import { Payments } from "./pages/merchant/payments/payments";
 import { AddressBook } from "./pages/merchant/address-book/address-book";
@@ -108,27 +99,46 @@ export const routes: Routes = [
   },
   {
     path: "forgot-password",
-    loadComponent: () => import("./forgot-password/forgot-password.component").then((m) => m.ForgotPasswordComponent),
+    loadComponent: () =>
+      import("./forgot-password/forgot-password.component").then(
+        (m) => m.ForgotPasswordComponent,
+      ),
   },
   {
     path: "reset-password",
-    loadComponent: () => import("./reset-password/reset-password.component").then((m) => m.ResetPasswordComponent),
+    loadComponent: () =>
+      import("./reset-password/reset-password.component").then(
+        (m) => m.ResetPasswordComponent,
+      ),
   },
   {
     path: "404",
-    loadComponent: () => import("./error-pages/not-found/not-found.component").then((m) => m.NotFoundComponent),
+    loadComponent: () =>
+      import("./error-pages/not-found/not-found.component").then(
+        (m) => m.NotFoundComponent,
+      ),
   },
   {
     path: "403",
-    loadComponent: () => import("./error-pages/forbidden/forbidden.component").then((m) => m.ForbiddenComponent),
+    loadComponent: () =>
+      import("./error-pages/forbidden/forbidden.component").then(
+        (m) => m.ForbiddenComponent,
+      ),
   },
   {
     path: "500",
-    loadComponent: () => import("./error-pages/server-error/server-error.component").then((m) => m.ServerErrorComponent),
+    loadComponent: () =>
+      import("./error-pages/server-error/server-error.component").then(
+        (m) => m.ServerErrorComponent,
+      ),
   },
   {
     path: "set-password",
     component: RegisterComponent,
+  },
+  {
+    path: "change-credentials",
+    component: ChangeCredentialsComponent,
   },
   {
     path: "super-admin",
@@ -169,6 +179,7 @@ export const routes: Routes = [
       { path: "profile", component: MerchantProfilePage },
       { path: "warehouse", component: MerchantWarehouse },
       { path: "merchants/profile/:id", component: MerchantProfile },
+      { path: "disputes", component: MerchantDisputesComponent },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -244,21 +255,7 @@ export const routes: Routes = [
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
-  {
-    path: "warehouse",
-    component: WarehouseDashboard,
-    children: [
-      { path: "dashboard", component: WarehouseDashboardPage },
-      { path: "inbound-shipments", component: InboundShipments },
-      { path: "outbound-shipments", component: OutboundShipments },
-      { path: "inventory", component: Inventory },
-      { path: "scan-receive", component: ScanReceive },
-      { path: "scan-dispatch", component: ScanDispatch },
-      { path: "reports", component: Reports },
-      { path: "support", component: Support },
-      { path: "", redirectTo: "dashboard", pathMatch: "full" },
-    ],
-  },
+
   {
     path: "terms",
     loadComponent: () => import("./pages/terms/terms").then((m) => m.Terms),

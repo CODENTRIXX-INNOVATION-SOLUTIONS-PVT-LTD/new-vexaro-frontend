@@ -1,1 +1,134 @@
-<p>address-book works!</p>
+<div class="address-book-container">
+  <!-- Toast alert -->
+  @if (notificationMessage()) {
+    <div class="notification-toast">
+      <span class="material-icons">check_circle</span>
+      <span>{{ notificationMessage() }}</span>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-info">
+      <h1>Address Book Directory</h1>
+      <p>Save and manage regular customer destinations for rapid, error-free shipment creation.</p>
+    </div>
+    <button class="primary-btn" (click)="showForm.set(!showForm())">
+      <span class="material-icons">{{ showForm() ? 'close' : 'add_location' }}</span>
+      {{ showForm() ? 'Close Form' : 'Add New Address' }}
+    </button>
+  </header>
+
+  <!-- ADD ADDRESS FORM -->
+  @if (showForm()) {
+    <div class="card form-card animated-slide">
+      <div class="card-header">
+        <h3>Create Contact Address Card</h3>
+      </div>
+      <form (ngSubmit)="saveAddress()" #addressForm="ngForm" class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="contactName">Customer Name / Store Name *</label>
+            <input id="contactName" type="text" name="name" [(ngModel)]="name" required class="form-control" placeholder="e.g. Ramesh Chandra" />
+          </div>
+          <div class="form-group">
+            <label for="contactPhone">Mobile Number *</label>
+            <input id="contactPhone" type="text" name="phone" [(ngModel)]="phone" required class="form-control" placeholder="e.g. 9876543210" />
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">Email Address (Optional)</label>
+            <input id="contactEmail" type="email" name="email" [(ngModel)]="email" class="form-control" placeholder="e.g. ramesh@example.com" />
+          </div>
+          <div class="form-group address-span-2">
+            <label for="contactStreet">Street Address, Landmark *</label>
+            <input id="contactStreet" type="text" name="street" [(ngModel)]="street" required class="form-control" placeholder="e.g. 54, Pocket B, Sector 2" />
+          </div>
+          <div class="form-group">
+            <label for="contactCity">City / District *</label>
+            <input id="contactCity" type="text" name="city" [(ngModel)]="city" required class="form-control" placeholder="e.g. Bengaluru" />
+          </div>
+          <div class="form-group">
+            <label for="contactState">State *</label>
+            <input id="contactState" type="text" name="state" [(ngModel)]="state" required class="form-control" placeholder="e.g. Karnataka" />
+          </div>
+          <div class="form-group">
+            <label for="contactPin">Pincode *</label>
+            <input id="contactPin" type="text" name="pincode" [(ngModel)]="pincode" required class="form-control" placeholder="e.g. 560001" />
+          </div>
+          <div class="form-group">
+            <label for="contactLabel">Address Type Label</label>
+            <select id="contactLabel" name="label" [(ngModel)]="label" class="form-control">
+              <option value="Home">Home Address</option>
+              <option value="Office">Office Building</option>
+              <option value="Store">Retail Shop</option>
+              <option value="Warehouse">Warehouse Depot</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" [disabled]="!addressForm.form.valid">
+            <span class="material-icons">save</span>
+            Save to Directory
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- SEARCH FILTERS -->
+  <div class="filters-card">
+    <div class="search-group">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Filter addresses by name, state, city or pincode..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+  </div>
+
+  <!-- ADDRESSES GRID -->
+  <div class="address-grid">
+    @for (addr of getFilteredAddresses(); track addr.id) {
+      <div class="address-card card">
+        <div class="card-label-row">
+          <span class="addr-label" [class]="addr.label.toLowerCase()">
+            {{ addr.label }}
+          </span>
+          <button class="delete-btn" (click)="deleteAddress(addr.id)" title="Delete Address">
+            <span class="material-icons">delete_outline</span>
+          </button>
+        </div>
+
+        <div class="card-details">
+          <h3>{{ addr.name }}</h3>
+          
+          <div class="contact-line">
+            <span class="material-icons">phone</span>
+            <span>+91 {{ addr.phone }}</span>
+          </div>
+
+          @if (addr.email) {
+            <div class="contact-line">
+              <span class="material-icons">mail_outline</span>
+              <span>{{ addr.email }}</span>
+            </div>
+          }
+
+          <div class="address-paragraph">
+            <span class="material-icons">place</span>
+            <p>{{ addr.street }}, {{ addr.city }}, {{ addr.state }} - <strong>{{ addr.pincode }}</strong></p>
+          </div>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state-card card">
+        <span class="material-icons empty-icon">contacts</span>
+        <h3>No Addresses Saved</h3>
+        <p>Your address book matches no active query filters. Add one above to get started.</p>
+      </div>
+    }
+  </div>
+</div>

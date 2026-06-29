@@ -1,5 +1,23 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+export interface CourierProfit {
+  name: string;
+  shipments: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+  margin: string;
+}
+
+export interface MerchantProfit {
+  name: string;
+  shipments: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+  margin: string;
+}
 
 @Component({
   selector: 'app-profit-report',
@@ -8,25 +26,123 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="page-container">
       <div class="page-header">
-        <h1 class="page-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 8px;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v10h10"></path></svg> Profit Report</h1>
+        <h1 class="page-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="svg-icon title-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v10h10"></path></svg> 
+          Profit Report
+        </h1>
+        <div class="actions">
+          <button class="action-btn" (click)="exportPDF()">Download PDF Report</button>
+        </div>
       </div>
-      <div class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; display: block; margin: 0 auto 16px; color: #cbd5e1;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-        <h3>Under Construction</h3>
-        <p>Profit reporting will be available in the next release.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Net Profit</span>
+          <span class="stat-value">₹45,000</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Average Profit / Order</span>
+          <span class="stat-value">₹50.56</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Net Profit Margin</span>
+          <span class="stat-value">8.25%</span>
+        </div>
+      </div>
+
+      <div class="section-title">Profits by Courier Partner</div>
+      <div class="table-wrapper mb-4">
+        <table>
+          <thead>
+            <tr>
+              <th>Courier Name</th>
+              <th>Total Shipments</th>
+              <th>Total Revenue</th>
+              <th>Franchise Cost</th>
+              <th>Net Profit</th>
+              <th>Margin (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of courierData">
+              <td class="fw-bold">{{item.name}}</td>
+              <td>{{item.shipments}}</td>
+              <td>₹{{item.revenue.toLocaleString('en-IN')}}</td>
+              <td>₹{{item.cost.toLocaleString('en-IN')}}</td>
+              <td>₹{{item.profit.toLocaleString('en-IN')}}</td>
+              <td><span class="badge profit">{{item.margin}}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Profits by Merchant Customer</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Merchant Name</th>
+              <th>Total Shipments</th>
+              <th>Total Revenue</th>
+              <th>Franchise Cost</th>
+              <th>Net Profit</th>
+              <th>Margin (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of merchantData">
+              <td class="fw-bold">{{item.name}}</td>
+              <td>{{item.shipments}}</td>
+              <td>₹{{item.revenue.toLocaleString('en-IN')}}</td>
+              <td>₹{{item.cost.toLocaleString('en-IN')}}</td>
+              <td>₹{{item.profit.toLocaleString('en-IN')}}</td>
+              <td><span class="badge profit">{{item.margin}}</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   `,
   styles: [`
-    .page-container { padding: 24px; }
-    .page-title { font-size: 22px; font-weight: 700; color: rgb(10, 10, 10); margin-bottom: 24px; }
-    .page-title i { color: rgb(11, 74, 111); margin-right: 8px; }
-    .empty-state { text-align: center; padding: 64px 24px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; }
-    .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 16px; }
-    .empty-state h3 { font-size: 18px; font-weight: 700; color: rgb(10, 10, 10); margin: 0 0 8px; }
-    .empty-state p { color: #64748b; margin: 0; }
+    .page-container { padding: 24px; font-family: 'Inter', sans-serif; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 22px; font-weight: 700; color: #0f172a; display: flex; align-items: center; }
+    .title-icon { color: rgb(11, 74, 111); margin-right: 10px; width: 24px; height: 24px; }
+    .action-btn { background: rgb(11, 74, 111); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .action-btn:hover { background: rgb(8, 58, 87); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+    .stat-label { font-size: 14px; color: #64748b; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .section-title { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 16px; }
+    .table-wrapper { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .mb-4 { margin-bottom: 32px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th { background: #f8fafc; padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 16px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+    tr:last-child td { border-bottom: none; }
+    .fw-bold { font-weight: 600; color: #0f172a; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .badge.profit { background: #dcfce7; color: #15803d; }
   `]
 })
 export class ProfitReport implements OnInit {
+  courierData: CourierProfit[] = [
+    { name: 'Delhivery', shipments: 450, revenue: 225000, cost: 200000, profit: 25000, margin: '11.1%' },
+    { name: 'DTDC', shipments: 320, revenue: 160000, cost: 148000, profit: 12000, margin: '7.5%' },
+    { name: 'BlueDart', shipments: 80, revenue: 56000, cost: 50000, profit: 6000, margin: '10.7%' },
+    { name: 'Ekart', shipments: 40, revenue: 20000, cost: 18000, profit: 2000, margin: '10.0%' }
+  ];
+
+  merchantData: MerchantProfit[] = [
+    { name: 'ABC Electronics', shipments: 380, revenue: 190000, cost: 172000, profit: 18000, margin: '9.5%' },
+    { name: 'Global Traders', shipments: 450, revenue: 320000, cost: 295000, profit: 25000, margin: '7.8%' },
+    { name: 'Prime Retail', shipments: 60, revenue: 35000, cost: 33000, profit: 2000, margin: '5.7%' }
+  ];
+
   ngOnInit() {}
+
+  exportPDF() {
+    alert('Generating PDF report for download...');
+  }
 }

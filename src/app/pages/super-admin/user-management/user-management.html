@@ -1,1 +1,172 @@
-<p>user-management works!</p>
+<div class="user-mgmt-container">
+  <!-- Toast alert -->
+  @if (notificationMessage()) {
+    <div class="notification-toast">
+      <span class="material-icons">check_circle</span>
+      <span>{{ notificationMessage() }}</span>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-info">
+      <h1>Platform Operators & Staff</h1>
+      <p>Configure dashboard permissions, search system staff accounts, and manage operator status.</p>
+    </div>
+    <button class="primary-btn" (click)="showAddForm.set(!showAddForm())">
+      <span class="material-icons">{{ showAddForm() ? 'close' : 'add' }}</span>
+      {{ showAddForm() ? 'Close Form' : 'Register Staff Member' }}
+    </button>
+  </header>
+
+  <!-- ADD STAFF FORM -->
+  @if (showAddForm()) {
+    <div class="card form-card animated-slide">
+      <div class="card-header">
+        <h3>Register New Staff Account</h3>
+      </div>
+      <form (ngSubmit)="addUser()" #staffForm="ngForm" class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="userName">Full Name</label>
+            <input
+              id="userName"
+              type="text"
+              name="name"
+              [(ngModel)]="newUserName"
+              required
+              class="form-control"
+              placeholder="e.g. Anil Kumar"
+            />
+          </div>
+          <div class="form-group">
+            <label for="userEmail">Email Address</label>
+            <input
+              id="userEmail"
+              type="email"
+              name="email"
+              [(ngModel)]="newUserEmail"
+              required
+              class="form-control"
+              placeholder="e.g. anil.ops@vexaro.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="userRole">Dashboard Role Permission</label>
+            <select id="userRole" name="role" [(ngModel)]="newUserRole" class="form-control">
+              <option value="Operator">Warehouse Operator</option>
+              <option value="Support Agent">Customer Support Desk</option>
+              <option value="Auditor">Weight Mismatch Auditor</option>
+              <option value="Super Admin">System Administrator</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" [disabled]="!staffForm.form.valid">
+            <span class="material-icons">check</span>
+            Activate Account
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- FILTERS BAR -->
+  <div class="filters-card">
+    <!-- Search Bar -->
+    <div class="search-group">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search staff by name, email or ID..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+
+    <!-- Role Filters -->
+    <div class="filter-group">
+      <label for="roleFilterSelect">Role Type</label>
+      <select
+        id="roleFilterSelect"
+        [ngModel]="roleFilter()"
+        (ngModelChange)="roleFilter.set($event)"
+      >
+        <option value="ALL">All Roles</option>
+        <option value="Super Admin">Super Administrator</option>
+        <option value="Operator">Warehouse Operator</option>
+        <option value="Support Agent">Customer Support</option>
+        <option value="Auditor">Weight Auditor</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- USER DIRECTORY TABLE -->
+  <div class="card table-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User Details</th>
+            <th>System ID</th>
+            <th>Role Badge</th>
+            <th>Joined Date</th>
+            <th>Status Switch</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of getFilteredUsers(); track user.id) {
+            <tr>
+              <td class="user-info-cell">
+                <div class="user-avatar" [class]="user.role.toLowerCase().replace(' ', '-')">
+                  {{ user.name[0] }}
+                </div>
+                <div>
+                  <strong>{{ user.name }}</strong>
+                  <span class="subtext">{{ user.email }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="id-tag">{{ user.id }}</span>
+              </td>
+              <td>
+                <span class="role-pill" [class]="user.role.toLowerCase().replace(' ', '-')">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>
+                <span>{{ user.joinedDate | date: 'dd MMM yyyy' }}</span>
+              </td>
+              <td>
+                <!-- Toggle Slider -->
+                <label class="switch-toggle">
+                  <input
+                    type="checkbox"
+                    [checked]="user.status === 'Active'"
+                    (change)="toggleUserStatus(user)"
+                  />
+                  <span class="slider-round"></span>
+                </label>
+              </td>
+              <td>
+                <span class="status-label" [class.active]="user.status === 'Active'">
+                  {{ user.status }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-row">
+                <span class="material-icons empty-icon">group_off</span>
+                <h4>No System Staff Found</h4>
+                <p>Verify spelling adjustments or register a new administrator above.</p>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

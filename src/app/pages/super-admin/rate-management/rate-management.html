@@ -1,1 +1,244 @@
-<p>rate-management works!</p>
+<div class="rate-mgmt-container">
+  <!-- Notification Toast -->
+  @if (notificationMessage()) {
+    <div class="notification-toast">
+      <span class="material-icons">check_circle</span>
+      <span>{{ notificationMessage() }}</span>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-info">
+      <h1>Rate & Pricing Configuration</h1>
+      <p>Configure courier pricing matrix, base rate slabs, and global logistics surcharges.</p>
+    </div>
+  </header>
+
+  <!-- Navigation Tab Bar -->
+  <div class="tab-bar">
+    <button [class.active]="activeTab() === 'rates'" (click)="activeTab.set('rates')">
+      <span class="material-icons">local_shipping</span>
+      Courier Rate Cards
+    </button>
+    <button [class.active]="activeTab() === 'slabs'" (click)="activeTab.set('slabs')">
+      <span class="material-icons">line_weight</span>
+      Weight Slabs
+    </button>
+    <button [class.active]="activeTab() === 'cod'" (click)="activeTab.set('cod')">
+      <span class="material-icons">percent</span>
+      COD & Fuel Surcharges
+    </button>
+  </div>
+
+  <!-- TAB CONTENT: RATES -->
+  @if (activeTab() === 'rates') {
+    <div class="tab-content-panel animated-fade">
+      <div class="card table-card">
+        <div class="card-header">
+          <h3>Pricing Sheets per Carrier</h3>
+          <span class="badge info">Rates in INR (₹)</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Courier Partner</th>
+                <th>Base (up to 0.5kg)</th>
+                <th>Additional (per 0.5kg)</th>
+                <th>COD Surcharge</th>
+                <th>Fuel Surcharge</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (card of rateCards(); track card.code; let idx = $index) {
+                <tr>
+                  <td class="courier-name-cell">
+                    <span class="avatar-sm">{{ card.courier[0] }}</span>
+                    <div>
+                      <strong>{{ card.courier }}</strong>
+                      <span class="subtext">{{ card.code }}</span>
+                    </div>
+                  </td>
+                  
+                  <!-- Base Rate cell -->
+                  <td>
+                    @if (editingRateIndex() === idx) {
+                      <div class="inline-edit">
+                        <span>₹</span>
+                        <input type="number" [(ngModel)]="editBaseRateValue" class="inline-input" />
+                      </div>
+                    } @else {
+                      <strong>₹{{ card.baseRate }}</strong>
+                    }
+                  </td>
+
+                  <!-- Addl Rate cell -->
+                  <td>
+                    @if (editingRateIndex() === idx) {
+                      <div class="inline-edit">
+                        <span>₹</span>
+                        <input type="number" [(ngModel)]="editAddlRateValue" class="inline-input" />
+                      </div>
+                    } @else {
+                      <span>₹{{ card.additionalRate }}</span>
+                    }
+                  </td>
+
+                  <!-- COD Surcharge cell -->
+                  <td>
+                    <span>{{ card.codPercent }}% (min ₹{{ card.codMin }})</span>
+                  </td>
+
+                  <!-- Fuel Surcharge cell -->
+                  <td>
+                    @if (editingRateIndex() === idx) {
+                      <div class="inline-edit">
+                        <input type="number" [(ngModel)]="editFuelSurchargeValue" class="inline-input-small" />
+                        <span>%</span>
+                      </div>
+                    } @else {
+                      <span>{{ card.fuelSurcharge }}%</span>
+                    }
+                  </td>
+
+                  <!-- Status badge -->
+                  <td>
+                    <span class="status-pill" [class.active]="card.active" (click)="toggleCourierActive(idx)">
+                      {{ card.active ? 'Active' : 'Disabled' }}
+                    </span>
+                  </td>
+
+                  <!-- Action triggers -->
+                  <td>
+                    @if (editingRateIndex() === idx) {
+                      <div class="btn-group">
+                        <button class="icon-btn success" (click)="saveRate(idx)" title="Save changes">
+                          <span class="material-icons">check</span>
+                        </button>
+                        <button class="icon-btn danger" (click)="cancelEditRate()" title="Cancel">
+                          <span class="material-icons">close</span>
+                        </button>
+                      </div>
+                    } @else {
+                      <button class="primary-btn-sm" (click)="startEditRate(idx)">
+                        <span class="material-icons">edit</span>
+                        Edit Rates
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB CONTENT: SLABS -->
+  @if (activeTab() === 'slabs') {
+    <div class="tab-content-panel animated-fade">
+      <div class="slabs-grid">
+        @for (slab of weightSlabs(); track slab.id) {
+          <div class="slab-card card">
+            <div class="slab-header">
+              <span class="slab-id">{{ slab.id }}</span>
+              <span class="slab-range">{{ slab.minWeight }} - {{ slab.maxWeight }} kg</span>
+            </div>
+            
+            <div class="slab-body">
+              @if (editingSlabId() === slab.id) {
+                <div class="form-group">
+                  <label>Slab Name</label>
+                  <input type="text" [(ngModel)]="editSlabName" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Weight Increment (kg)</label>
+                  <input type="number" [(ngModel)]="editSlabIncrement" step="0.1" class="form-control" />
+                </div>
+              } @else {
+                <h4>{{ slab.name }}</h4>
+                <p>{{ slab.description }}</p>
+                <div class="slab-meta">
+                  <span>Increment Step: <strong>{{ slab.increment }} kg</strong></span>
+                </div>
+              }
+            </div>
+
+            <div class="slab-footer">
+              @if (editingSlabId() === slab.id) {
+                <button class="primary-btn-sm" (click)="saveSlab(slab.id)">Save</button>
+                <button class="secondary-btn-sm" (click)="cancelEditSlab()">Cancel</button>
+              } @else {
+                <button class="secondary-btn-sm edit-slab-trigger" (click)="startEditSlab(slab)">
+                  <span class="material-icons">settings</span>
+                  Modify Configuration
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- TAB CONTENT: COD & FUEL -->
+  @if (activeTab() === 'cod') {
+    <div class="tab-content-panel animated-fade">
+      <div class="pricing-settings-grid">
+        <!-- Fuel Surcharge Box -->
+        <div class="card settings-card">
+          <div class="card-header">
+            <h3>Global Logistics Adjustments</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Default Fuel Surcharge (%)</label>
+              <div class="input-prefix-wrapper">
+                <input type="number" [(ngModel)]="globalFuelSurcharge" class="form-control" />
+                <span class="suffix">%</span>
+              </div>
+              <p class="input-hint">Applied as a flat administrative surcharge on final calculated shipment base fees.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Minimum COD Fee (₹)</label>
+              <div class="input-prefix-wrapper">
+                <span class="prefix">₹</span>
+                <input type="number" [(ngModel)]="globalMinCod" class="form-control" />
+              </div>
+              <p class="input-hint">The lowest possible collection charge if the invoice collection percentage is low.</p>
+            </div>
+
+            <button class="primary-btn" (click)="saveGlobalSettings()">
+              <span class="material-icons">save</span>
+              Save Adjustments
+            </button>
+          </div>
+        </div>
+
+        <!-- Help Info Box -->
+        <div class="card info-card">
+          <div class="card-header">
+            <h3>Logistics Rates Formula</h3>
+          </div>
+          <div class="card-body formula-body">
+            <p>Platform system charges are dynamically computed based on active pricing sheets:</p>
+            <div class="formula-box">
+              <code>Total Shipping Cost = Base Rate + (Additional Weight Units × Addl. Rate) + Fuel Surcharge (%)</code>
+            </div>
+            <ul class="formula-list">
+              <li>Base rate values cover the initial manifest slab (0.5kg by default).</li>
+              <li>Fuel percentages stack atop the weight billing sum.</li>
+              <li>COD Cash charges are calculated dynamically upon package booking.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

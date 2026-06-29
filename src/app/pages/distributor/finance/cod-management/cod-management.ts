@@ -39,6 +39,17 @@ export class CodManagement implements OnInit {
   loadData() {
     this.isLoading = true;
     // TODO: GET /distributor/:id/cod-remittances
+    this.records = [
+      { awb: 'AWB889012', merchantName: 'Global Traders', merchantId: 'M2', amount: 2500, status: 'Pending Remittance', date: '17 Jun 2026' },
+      { awb: 'AWB661122', merchantName: 'Prime Retail', merchantId: 'M3', amount: 1800, status: 'Remitted', date: '15 Jun 2026' },
+      { awb: 'AWB554321', merchantName: 'Global Traders', merchantId: 'M2', amount: 320, status: 'Pending Remittance', date: '14 Jun 2026' },
+      { awb: 'AWB334211', merchantName: 'ABC Electronics', merchantId: 'M1', amount: 1200, status: 'Remitted', date: '12 Jun 2026' },
+    ];
+    this.summary = {
+      pending: 2820,
+      remitted: 3000,
+      returned: 0
+    };
     this.isLoading = false;
     this.applyFilters();
   }

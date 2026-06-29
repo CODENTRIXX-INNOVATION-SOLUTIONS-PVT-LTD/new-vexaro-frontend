@@ -27,6 +27,13 @@ export class AllMerchantWallets implements OnInit {
   loadWallets() {
     this.isLoading = true;
     // TODO: GET /distributor/:id/merchant-wallets
+    this.merchantWallets = [
+      { id: 'M1', businessName: 'ABC Electronics', merchantCode: 'MER001', balance: 12400, codEscrow: 4500, status: 'Active' },
+      { id: 'M2', businessName: 'Global Traders', merchantCode: 'MER002', balance: 45000, codEscrow: 12000, status: 'Active' },
+      { id: 'M3', businessName: 'Prime Retail', merchantCode: 'MER003', balance: 3500, codEscrow: 0, status: 'Active' },
+      { id: 'M4', businessName: 'Mega Store', merchantCode: 'MER004', balance: 0, codEscrow: 1800, status: 'Suspended' }
+    ];
+    this.totalDistributed = this.merchantWallets.reduce((s, w) => s + w.balance, 0);
     this.isLoading = false;
     this.applyFilters();
   }

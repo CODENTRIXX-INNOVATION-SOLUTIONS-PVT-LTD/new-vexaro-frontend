@@ -30,6 +30,19 @@ export class ShipmentReports implements OnInit {
   loadReport() {
     this.isLoading = true;
     // TODO: GET /distributor/:id/reports/shipments
+    this.summary = {
+      total: 890,
+      delivered: 812,
+      failed: 43,
+      rto: 35
+    };
+    this.dataList = [
+      { date: '17 Jun 2026', total: 48, delivered: 42, failed: 4, rto: 2, codCollected: 45000 },
+      { date: '16 Jun 2026', total: 55, delivered: 50, failed: 3, rto: 2, codCollected: 38000 },
+      { date: '15 Jun 2026', total: 60, delivered: 55, failed: 3, rto: 2, codCollected: 52000 },
+      { date: '14 Jun 2026', total: 42, delivered: 38, failed: 2, rto: 2, codCollected: 29000 },
+      { date: '13 Jun 2026', total: 38, delivered: 35, failed: 2, rto: 1, codCollected: 18000 },
+    ];
     this.isLoading = false;
   }
 

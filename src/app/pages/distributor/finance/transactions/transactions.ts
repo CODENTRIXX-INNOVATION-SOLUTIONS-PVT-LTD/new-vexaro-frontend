@@ -34,6 +34,13 @@ export class Transactions implements OnInit {
   loadTransactions() {
     this.isLoading = true;
     // TODO: GET /distributor/:id/transactions
+    this.transactions = [
+      { id: 'TXN8001', date: '17 Jun 2026', type: 'Credit', category: 'Wallet Topup', amount: 50000, status: 'Completed', reference: 'REQ1003' },
+      { id: 'TXN8002', date: '17 Jun 2026', type: 'Debit', category: 'Merchant Wallet Funding', amount: 10000, status: 'Completed', reference: 'MWF9901' },
+      { id: 'TXN8003', date: '16 Jun 2026', type: 'Credit', category: 'Margin Profit', amount: 4500, status: 'Completed', reference: 'MP9982' },
+      { id: 'TXN8004', date: '15 Jun 2026', type: 'Debit', category: 'Courier Charge', amount: 320, status: 'Completed', reference: 'AWB889012' },
+      { id: 'TXN8005', date: '14 Jun 2026', type: 'Debit', category: 'Dispute Deduction', amount: 150, status: 'Completed', reference: 'DIS1001' }
+    ];
     this.isLoading = false;
     this.applyFilters();
   }

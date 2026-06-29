@@ -1,1 +1,150 @@
-<p>bulk-upload works!</p>
+<div class="bulk-upload-container">
+  <!-- Toast alert -->
+  @if (notificationMessage()) {
+    <div class="notification-toast">
+      <span class="material-icons">check_circle</span>
+      <span>{{ notificationMessage() }}</span>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-info">
+      <h1>Bulk Shipment Upload</h1>
+      <p>Upload a CSV spreadsheet to book hundreds of delivery shipments concurrently.</p>
+    </div>
+    <button class="secondary-btn" (click)="downloadSampleTemplate()">
+      <span class="material-icons">download</span>
+      Download Sample CSV Template
+    </button>
+  </header>
+
+  <!-- DROPZONE CARD -->
+  @if (uploadState() === 'idle') {
+    <div class="card dropzone-card animated-fade" (click)="simulateFileSelection()">
+      <span class="material-icons cloud-icon">cloud_upload</span>
+      <h3>Click here to select CSV file</h3>
+      <p>or drag and drop your shipment spreadsheet document here</p>
+      <span class="upload-hint">Supported formats: CSV (UTF-8 format). Max size 5MB.</span>
+    </div>
+  }
+
+  <!-- UPLOADING PROGRESS -->
+  @if (uploadState() === 'uploading') {
+    <div class="card progress-card animated-fade">
+      <span class="material-icons spinner-icon">upload_file</span>
+      <h3>Uploading your spreadsheet...</h3>
+      <p class="filename">{{ fileName() }}</p>
+      <div class="progress-bar-wrapper">
+        <div class="progress-fill" [style.width.%]="uploadProgress()"></div>
+      </div>
+      <span class="progress-pct">{{ uploadProgress() }}% uploaded</span>
+    </div>
+  }
+
+  <!-- PARSING STATE -->
+  @if (uploadState() === 'parsing') {
+    <div class="card progress-card animated-fade">
+      <span class="material-icons spinner-icon rotate">sync</span>
+      <h3>Parsing & Validating Entries...</h3>
+      <p>Validating destination pincodes, checking COD collection thresholds, and auditing weights.</p>
+    </div>
+  }
+
+  <!-- COMPLETED STATE & METRICS -->
+  @if (uploadState() === 'complete') {
+    <div class="complete-dashboard animated-slide">
+      <!-- Summary metrics cards -->
+      <div class="metrics-row">
+        <div class="metric-card card total">
+          <span class="material-icons">analytics</span>
+          <div>
+            <span class="label">Total Records Found</span>
+            <span class="val">{{ totalRows() }}</span>
+          </div>
+        </div>
+
+        <div class="metric-card card success">
+          <span class="material-icons">check_circle</span>
+          <div>
+            <span class="label">Valid & Ready to Book</span>
+            <span class="val">{{ validRows() }}</span>
+          </div>
+        </div>
+
+        <div class="metric-card card error">
+          <span class="material-icons">error</span>
+          <div>
+            <span class="label">Faulty Rows (Need Fix)</span>
+            <span class="val">{{ errorCount() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Panel -->
+      <div class="card actions-panel">
+        <div class="left-desc">
+          <span class="material-icons info-symbol">info</span>
+          <p>
+            @if (errorCount() > 0) {
+              Some rows contain validation issues. You can book the <strong>{{ validRows() }} valid shipments</strong> now and upload a separate file for the corrected errors later.
+            } @else {
+              All shipments are verified and ready for logistics allocation.
+            }
+          </p>
+        </div>
+        <div class="btn-group">
+          <button class="secondary-btn" (click)="clearUpload()">
+            <span class="material-icons">delete</span>
+            Discard CSV
+          </button>
+          <button class="primary-btn" [disabled]="validRows() === 0" (click)="processUpload()">
+            <span class="material-icons">publish</span>
+            Process {{ validRows() }} Shipments
+          </button>
+        </div>
+      </div>
+
+      <!-- Errors Log Table -->
+      @if (errorCount() > 0) {
+        <div class="card table-card">
+          <div class="card-header">
+            <h3>CSV Validation Error Log</h3>
+            <span class="badge danger">{{ errorCount() }} Rows Flagged</span>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Spreadsheet Row</th>
+                  <th>Flagged Input Field</th>
+                  <th>Submitted Value</th>
+                  <th>Reason for Failure</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (err of parsingErrors(); track err.row) {
+                  <tr>
+                    <td class="row-num-cell">
+                      <strong>Row #{{ err.row }}</strong>
+                    </td>
+                    <td>
+                      <span class="field-tag">{{ err.field }}</span>
+                    </td>
+                    <td>
+                      <code class="val-tag">{{ err.value }}</code>
+                    </td>
+                    <td class="reason-text">
+                      <span class="material-icons danger-dot">circle</span>
+                      {{ err.reason }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

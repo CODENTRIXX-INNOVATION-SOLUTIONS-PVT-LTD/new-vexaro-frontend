@@ -56,20 +56,32 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
-      this.token.set(params["token"] ?? "");
-      this.inviteeName.set(
-        params["name"] ? decodeURIComponent(params["name"]) : "",
-      );
-      this.inviteeRole.set(params["role"] ?? "");
-      this.inviteeEmail.set(
-        params["email"] ? decodeURIComponent(params["email"]) : "",
-      );
+      const tokenVal = params["token"] || "";
+      this.token.set(tokenVal);
 
-      if (this.token()) {
-        setTimeout(() => this.tokenValid.set(true), 600);
-      } else {
+      if (!tokenVal) {
         this.tokenValid.set(false);
+        return;
       }
+
+      // Mock verification request: GET /api/auth/verify-invite?token=inviteToken
+      this.isLoading.set(true);
+      this.tokenValid.set(null); // set loading state
+      
+      setTimeout(() => {
+        this.isLoading.set(false);
+        // Simulate validating token
+        if (tokenVal === "invalid-token" || tokenVal.length < 5) {
+          this.tokenValid.set(false);
+        } else {
+          this.tokenValid.set(true);
+          // Simulate receiving payload from backend
+          const isDist = tokenVal.toLowerCase().includes("dist");
+          this.inviteeEmail.set(isDist ? "invited-distributor@vexaro.in" : "invited-merchant@vexaro.in");
+          this.inviteeRole.set(isDist ? "DISTRIBUTOR" : "MERCHANT");
+          this.inviteeName.set(isDist ? "Alex Distributor" : "Sam Merchant");
+        }
+      }, 1000);
     });
   }
 
@@ -90,6 +102,10 @@ export class RegisterComponent implements OnInit {
       this.errorMessage.set("Password must be at least 8 characters.");
       return;
     }
+    if (this.passwordStrength === "weak") {
+      this.errorMessage.set("Please choose a stronger password.");
+      return;
+    }
     if (this.password !== this.confirmPassword) {
       this.errorMessage.set("Passwords do not match.");
       return;
@@ -97,22 +113,29 @@ export class RegisterComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    // Replace with real API: POST /api/v1/auth/set-password { token, password }
+    // Mock API Call: POST /api/auth/set-password { token, password }
     setTimeout(() => {
       this.isLoading.set(false);
-      this.successMessage.set("Password set! Redirecting to your dashboard…");
+      this.successMessage.set("Account activated successfully! Redirecting to dashboard...");
+      
       setTimeout(() => {
+        // Set mock session details
+        localStorage.setItem("token", "mock-vexaro-session-token");
+        localStorage.setItem("userRole", this.inviteeRole());
+
         switch (this.inviteeRole()) {
           case "DISTRIBUTOR":
+            localStorage.setItem("distributorCredentialsChanged", "true");
             this.router.navigate(["/distributor"]);
             break;
           case "MERCHANT":
+            localStorage.setItem("merchantCredentialsChanged", "true");
             this.router.navigate(["/merchant"]);
             break;
           default:
             this.router.navigate(["/login"]);
         }
-      }, 1800);
-    }, 1000);
+      }, 1500);
+    }, 1200);
   }
 }

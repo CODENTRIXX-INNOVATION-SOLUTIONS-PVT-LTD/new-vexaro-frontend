@@ -1,1 +1,148 @@
-<p>merchant-tracking works!</p>
+<div class="tracking-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-info">
+      <h1>Shipment Live Tracking</h1>
+      <p>Enter the AWB tracking barcode to fetch real-time package locations, transit scans, and carrier handover updates.</p>
+    </div>
+  </header>
+
+  <!-- SEARCH INPUT -->
+  <div class="card search-card">
+    <form (ngSubmit)="trackShipment()" class="search-form">
+      <div class="input-wrapper">
+        <span class="material-icons search-icon">search</span>
+        <input
+          type="text"
+          placeholder="Enter AWB Tracking ID (e.g. VX-982341205)"
+          [(ngModel)]="searchQuery"
+          name="query"
+          required
+        />
+      </div>
+      <button type="submit" class="primary-btn">
+        <span class="material-icons">track_changes</span>
+        Track Package
+      </button>
+    </form>
+    
+    <div class="quick-suggest">
+      <span>Quick examples:</span>
+      <button class="tag-btn" (click)="quickTrack('VX-982341205')">VX-982341205 (Delivered)</button>
+      <button class="tag-btn" (click)="quickTrack('VX-982341289')">VX-982341289 (In Transit)</button>
+    </div>
+  </div>
+
+  <!-- SEARCH RESULTS ERROR -->
+  @if (hasSearched() && errorMessage()) {
+    <div class="card error-card animated-fade">
+      <span class="material-icons error-icon">error_outline</span>
+      <h3>Tracking ID Not Found</h3>
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
+
+  <!-- SEARCH RESULTS SUCCESS -->
+  @if (hasSearched() && activeDetails()) {
+    <div class="tracking-dashboard animated-slide">
+      <!-- Status Summary Banner -->
+      <div class="status-banner card" [class]="activeDetails()?.status?.toLowerCase()?.replace(' ', '-')">
+        <div class="banner-left">
+          <span class="label">Current Transit Status</span>
+          <h2>{{ activeDetails()?.status }}</h2>
+          <span class="carrier-tag">Carrier: <strong>{{ activeDetails()?.courierName }}</strong></span>
+        </div>
+        <div class="banner-right">
+          <span class="label">Estimated Delivery</span>
+          <h3>{{ activeDetails()?.estimatedDelivery | date: 'dd MMM yyyy' }}</h3>
+          <span class="awb-display">AWB: {{ activeDetails()?.awb }}</span>
+        </div>
+      </div>
+
+      <!-- Layout Grid -->
+      <div class="tracking-layout-grid">
+        <!-- Left Column: Details Cards -->
+        <div class="details-column">
+          <!-- Route Details -->
+          <div class="card details-card">
+            <div class="card-header">
+              <h3>Route Directory</h3>
+            </div>
+            <div class="card-body">
+              <div class="route-node">
+                <span class="material-icons route-bullet source">circle</span>
+                <div>
+                  <span class="label">Origin Pickup</span>
+                  <strong>{{ activeDetails()?.origin }}</strong>
+                </div>
+              </div>
+              <div class="route-connector-line"></div>
+              <div class="route-node">
+                <span class="material-icons route-bullet dest">place</span>
+                <div>
+                  <span class="label">Destination Delivery</span>
+                  <strong>{{ activeDetails()?.destination }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recipient info -->
+          <div class="card details-card">
+            <div class="card-header">
+              <h3>Recipient Information</h3>
+            </div>
+            <div class="card-body recipient-details">
+              <div class="info-row">
+                <span class="lbl">Recipient Name</span>
+                <strong>{{ activeDetails()?.recipientName }}</strong>
+              </div>
+              <div class="info-row">
+                <span class="lbl">Mobile Number</span>
+                <span>+91 {{ activeDetails()?.recipientPhone }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Vertical Timeline -->
+        <div class="card timeline-card">
+          <div class="card-header">
+            <h3>Package Journey Log</h3>
+          </div>
+          <div class="card-body timeline-body">
+            <div class="vertical-timeline">
+              @for (node of activeDetails()?.checkpoints; track node.time; let idx = $index) {
+                <div class="timeline-step" [class.latest]="idx === 0">
+                  <div class="timeline-bullet-wrapper">
+                    <div class="bullet-node">
+                      @if (idx === 0) {
+                        <span class="material-icons pulse">gps_fixed</span>
+                      } @else {
+                        <span class="material-icons">check</span>
+                      }
+                    </div>
+                    @if (idx < (activeDetails()?.checkpoints?.length || 0) - 1) {
+                      <div class="bullet-line"></div>
+                    }
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-title-row">
+                      <h4>{{ node.status }}</h4>
+                      <span class="time-stamp">{{ node.time | date: 'dd MMM, h:mm a' }}</span>
+                    </div>
+                    <span class="location-tag">
+                      <span class="material-icons">place</span>
+                      {{ node.location }}
+                    </span>
+                    <p class="desc">{{ node.description }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

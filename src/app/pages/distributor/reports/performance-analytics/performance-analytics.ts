@@ -30,6 +30,19 @@ export class PerformanceAnalytics implements OnInit {
   loadAnalytics() {
     this.isLoading = true;
     // TODO: GET /distributor/:id/reports/performance
+    this.summary = {
+      revenue: 545000,
+      profitMargin: '9%',
+      activeMerchants: 10,
+      merchantGrowth: '+12%'
+    };
+    this.dataList = [
+      { name: 'Average Pickup Time', value: '2.4 Hours', rating: 'Excellent', ratingClass: 'text-success' },
+      { name: 'Average Delivery Time', value: '2.8 Days', rating: 'Good', ratingClass: 'text-primary' },
+      { name: 'RTO Rate', value: '4.2%', rating: 'Very Low', ratingClass: 'text-success' },
+      { name: 'Customer Satisfaction', value: '4.8 / 5', rating: 'Excellent', ratingClass: 'text-success' },
+      { name: 'Dispute Resolution Rate', value: '96%', rating: 'Excellent', ratingClass: 'text-success' },
+    ];
     this.isLoading = false;
   }
 
