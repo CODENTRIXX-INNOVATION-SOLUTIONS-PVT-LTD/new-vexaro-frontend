@@ -40,7 +40,7 @@ export class DistributorDashboard {
     },
     {
       label: 'Merchant Finance',
-      icon: 'fa-hand-holding-usd',
+      icon: 'fa-money-bill-wave',
       expanded: false,
       children: [
         { label: 'Fund Merchant Wallet', route: '/distributor/merchant-finance/topup' },
