@@ -16,7 +16,7 @@ export class Sidebar implements OnInit, OnDestroy {
   sidebarClass = '';
   private viewport = inject(ViewportService);
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   @Input()
   set title(value: string) {
@@ -30,14 +30,25 @@ export class Sidebar implements OnInit, OnDestroy {
   private routerSub!: Subscription;
 
   ngOnInit() {
+    // Auto-collapse on tablet (768px – 1199px), not mobile
+    if (this.viewport.isTablet() && !this.viewport.isHandset()) {
+      this.collapsed = true;
+    }
+
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.autoExpandActive(event.urlAfterRedirects);
-      this.drawerOpen = false; // Close drawer on navigation
+      if (this.viewport.isHandset()) {
+        // Mobile: close the slide-in drawer
+        this.drawerOpen = false;
+      } else if (this.viewport.isTablet() && !this.viewport.isHandset()) {
+        // Tablet: re-collapse to icon-only after navigation
+        this.collapsed = true;
+      }
     });
-    
-    // Initial check
+
+    // Initial active route check
     setTimeout(() => {
       this.autoExpandActive(this.router.url);
     }, 100);
@@ -50,10 +61,12 @@ export class Sidebar implements OnInit, OnDestroy {
   }
 
   toggleCollapse(): void {
-    if (this.viewport.isTablet()) {
-       this.toggleDrawer();
+    if (this.viewport.isHandset()) {
+      // Mobile: slide-in drawer
+      this.toggleDrawer();
     } else {
-       this.collapsed = !this.collapsed;
+      // Tablet / Desktop: toggle icon-only collapsed class
+      this.collapsed = !this.collapsed;
     }
   }
 
@@ -72,6 +85,15 @@ export class Sidebar implements OnInit, OnDestroy {
   }
 
   toggleSubmenu(item: MenuItem) {
+    if (this.viewport.isHandset()) {
+      // Mobile: open drawer first, then expand submenu
+      if (!this.drawerOpen) {
+        this.drawerOpen = true;
+      }
+      item.expanded = !item.expanded;
+      return;
+    }
+    // Tablet / Desktop: expand sidebar fully if icon-only, then show children
     if (this.collapsed) {
       this.collapsed = false;
     }
@@ -83,7 +105,7 @@ export class Sidebar implements OnInit, OnDestroy {
       return true;
     }
     if (item.children) {
-      return item.children.some(child => 
+      return item.children.some(child =>
         child.route && this.router.isActive(child.route, { paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' })
       );
     }

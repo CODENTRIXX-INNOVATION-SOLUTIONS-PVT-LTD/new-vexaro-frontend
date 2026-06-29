@@ -69,12 +69,15 @@ export class CreateMerchant implements OnInit {
   isStepValid(): boolean {
     if (this.currentStep === 1) {
       return this.merchantForm.get('businessName')?.valid === true &&
-             this.merchantForm.get('displayName')?.valid === true;
+             this.merchantForm.get('displayName')?.valid === true &&
+             this.merchantForm.get('gstin')?.valid === true &&
+             this.merchantForm.get('pan')?.valid === true;
     }
     if (this.currentStep === 2) {
       return this.merchantForm.get('contactPerson')?.valid === true &&
              this.merchantForm.get('phone')?.valid === true &&
              this.merchantForm.get('email')?.valid === true &&
+             this.merchantForm.get('addressLine1')?.valid === true &&
              this.merchantForm.get('city')?.valid === true &&
              this.merchantForm.get('state')?.valid === true &&
              this.merchantForm.get('pincode')?.valid === true;

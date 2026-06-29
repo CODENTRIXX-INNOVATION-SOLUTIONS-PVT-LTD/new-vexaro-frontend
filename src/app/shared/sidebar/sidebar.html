@@ -10,172 +10,192 @@
 
     <ul class="nav-menu" [class]="sidebarClass">
         @for(item of menuItems; track item.label) {
-            <!-- If item has children (Nested Parent) -->
-            @if(item.children && item.children.length > 0) {
-                <li class="has-submenu" [class.active-parent]="isParentActive(item)">
-                    <a (click)="toggleSubmenu(item)" class="menu-item-link" [class.expanded]="item.expanded">
-                        <div class="menu-item-content">
-                            @if (item.icon) {
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle; margin-right: 8px;" class="svg-icon">
-                                    @switch (item.icon) {
-                                        @case ('fa-chart-pie') {
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="M12 2v10h10"></path>
-                                        }
-                                        @case ('fa-store') {
-                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                        }
-                                        @case ('fa-truck-ramp-box') {
-                                            <rect x="1" y="3" width="15" height="13"></rect>
-                                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                                        }
-                                        @case ('fa-warehouse') {
-                                            <path d="M3 10.18a1.5 1.5 0 0 0 .58 1.18l8 6a1.5 1.5 0 0 0 1.84 0l8-6a1.5 1.5 0 0 0 .58-1.18V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path>
-                                            <path d="M12 2v2"></path>
-                                            <rect x="9" y="14" width="6" height="6"></rect>
-                                        }
-                                        @case ('fa-box-open') {
-                                            <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12h12l1-12"></path>
-                                        }
-                                        @case ('fa-map-marked-alt') {
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
-                                            <circle cx="12" cy="9" r="2.5"></circle>
-                                        }
-                                        @case ('fa-wallet') {
-                                            <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
-                                        }
-                                        @case ('fa-chart-line') {
-                                            <path d="M18 20V10M12 20V4M6 20v-6"></path>
-                                        }
-                                        @case ('fa-cog') {
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                                        }
-                                        @case ('fa-headset') {
-                                            <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                                            <path d="M8 21h8M12 17v4"></path>
-                                        }
-                                        @case ('fa-user') {
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                            <circle cx="12" cy="7" r="4"></circle>
-                                        }
-                                        @case ('fa-tags') {
-                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                                        }
-                                        @case ('fa-balance-scale') {
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="M12 9v4M12 17h.01"></path>
-                                        }
-                                        @case ('fa-hand-holding-usd') {
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
-                                            <path d="M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
-                                        }
-                                        @default {
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                                        }
-                                    }
-                                </svg>
-                            }
-                            <span class="label">{{ item.label }}</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="arrow-icon svg-icon" [class.rotate]="item.expanded"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </a>
-                    
-                    <ul class="submenu" [class.show]="item.expanded && !collapsed">
-                        @for(child of item.children; track child.route) {
-                            <li routerLinkActive="active-menu">
-                                <a [routerLink]="child.route" class="submenu-link">
-                                    <span class="dot"></span>
-                                    {{ child.label }}
-                                </a>
-                            </li>
+        <!-- If item has children (Nested Parent) -->
+        @if(item.children && item.children.length > 0) {
+        <li class="has-submenu" [class.active-parent]="isParentActive(item)">
+            <a (click)="toggleSubmenu(item)" class="menu-item-link" [class.expanded]="item.expanded"
+                [title]="collapsed ? item.label : ''">
+                <div class="menu-item-content">
+                    @if (item.icon) {
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                        style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle; margin-right: 8px;"
+                        class="svg-icon">
+                        @switch (item.icon) {
+                        @case ('fa-chart-pie') {
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 2v10h10"></path>
                         }
-                    </ul>
-                </li>
-            } 
-            <!-- Single Menu Item -->
-            @else {
+                        @case ('fa-store') {
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        }
+                        @case ('fa-truck-ramp-box') {
+                        <rect x="1" y="3" width="15" height="13"></rect>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        }
+                        @case ('fa-warehouse') {
+                        <path
+                            d="M3 10.18a1.5 1.5 0 0 0 .58 1.18l8 6a1.5 1.5 0 0 0 1.84 0l8-6a1.5 1.5 0 0 0 .58-1.18V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z">
+                        </path>
+                        <path d="M12 2v2"></path>
+                        <rect x="9" y="14" width="6" height="6"></rect>
+                        }
+                        @case ('fa-box-open') {
+                        <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12h12l1-12"></path>
+                        }
+                        @case ('fa-map-marked-alt') {
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+                        <circle cx="12" cy="9" r="2.5"></circle>
+                        }
+                        @case ('fa-wallet') {
+                        <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
+                        }
+                        @case ('fa-chart-line') {
+                        <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                        }
+                        @case ('fa-cog') {
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                        }
+                        @case ('fa-headset') {
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <path d="M8 21h8M12 17v4"></path>
+                        }
+                        @case ('fa-user') {
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                        }
+                        @case ('fa-tags') {
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                        }
+                        @case ('fa-balance-scale') {
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 9v4M12 17h.01"></path>
+                        }
+                        @case ('fa-hand-holding-usd') {
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+                        <path d="M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                        }
+                        @default {
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                        }
+                        }
+                    </svg>
+                    }
+                    <span class="label">{{ item.label }}</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;"
+                    class="arrow-icon svg-icon" [class.rotate]="item.expanded">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </a>
+
+            <ul class="submenu" [class.show]="item.expanded && !collapsed">
+                @for(child of item.children; track child.route) {
                 <li routerLinkActive="active-menu">
-                    <a [routerLink]="item.route" class="menu-item-link">
-                        <div class="menu-item-content">
-                            @if (item.icon) {
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle; margin-right: 8px;" class="svg-icon">
-                                    @switch (item.icon) {
-                                        @case ('fa-chart-pie') {
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="M12 2v10h10"></path>
-                                        }
-                                        @case ('fa-store') {
-                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                        }
-                                        @case ('fa-truck-ramp-box') {
-                                            <rect x="1" y="3" width="15" height="13"></rect>
-                                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                                        }
-                                        @case ('fa-warehouse') {
-                                            <path d="M3 10.18a1.5 1.5 0 0 0 .58 1.18l8 6a1.5 1.5 0 0 0 1.84 0l8-6a1.5 1.5 0 0 0 .58-1.18V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path>
-                                            <path d="M12 2v2"></path>
-                                            <rect x="9" y="14" width="6" height="6"></rect>
-                                        }
-                                        @case ('fa-box-open') {
-                                            <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12h12l1-12"></path>
-                                        }
-                                        @case ('fa-map-marked-alt') {
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
-                                            <circle cx="12" cy="9" r="2.5"></circle>
-                                        }
-                                        @case ('fa-wallet') {
-                                            <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
-                                        }
-                                        @case ('fa-chart-line') {
-                                            <path d="M18 20V10M12 20V4M6 20v-6"></path>
-                                        }
-                                        @case ('fa-cog') {
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                                        }
-                                        @case ('fa-headset') {
-                                            <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                                            <path d="M8 21h8M12 17v4"></path>
-                                        }
-                                        @case ('fa-user') {
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                            <circle cx="12" cy="7" r="4"></circle>
-                                        }
-                                        @case ('fa-tags') {
-                                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                                        }
-                                        @case ('fa-balance-scale') {
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="M12 9v4M12 17h.01"></path>
-                                        }
-                                        @case ('fa-hand-holding-usd') {
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
-                                            <path d="M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
-                                        }
-                                        @default {
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                                        }
-                                    }
-                                </svg>
-                            }
-                            <span class="label">{{ item.label }}</span>
-                        </div>
+                    <a [routerLink]="child.route" class="submenu-link">
+                        <span class="dot"></span>
+                        {{ child.label }}
                     </a>
                 </li>
-            }
+                }
+            </ul>
+        </li>
+        }
+        <!-- Single Menu Item -->
+        @else {
+        <li routerLinkActive="active-menu">
+            <a [routerLink]="item.route" class="menu-item-link" [title]="collapsed ? item.label : ''">
+                <div class="menu-item-content">
+                    @if (item.icon) {
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                        style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle; margin-right: 8px;"
+                        class="svg-icon">
+                        @switch (item.icon) {
+                        @case ('fa-chart-pie') {
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 2v10h10"></path>
+                        }
+                        @case ('fa-store') {
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        }
+                        @case ('fa-truck-ramp-box') {
+                        <rect x="1" y="3" width="15" height="13"></rect>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        }
+                        @case ('fa-warehouse') {
+                        <path
+                            d="M3 10.18a1.5 1.5 0 0 0 .58 1.18l8 6a1.5 1.5 0 0 0 1.84 0l8-6a1.5 1.5 0 0 0 .58-1.18V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z">
+                        </path>
+                        <path d="M12 2v2"></path>
+                        <rect x="9" y="14" width="6" height="6"></rect>
+                        }
+                        @case ('fa-box-open') {
+                        <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12h12l1-12"></path>
+                        }
+                        @case ('fa-map-marked-alt') {
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+                        <circle cx="12" cy="9" r="2.5"></circle>
+                        }
+                        @case ('fa-wallet') {
+                        <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
+                        }
+                        @case ('fa-chart-line') {
+                        <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                        }
+                        @case ('fa-cog') {
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                        }
+                        @case ('fa-headset') {
+                        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                        <path d="M8 21h8M12 17v4"></path>
+                        }
+                        @case ('fa-user') {
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                        }
+                        @case ('fa-tags') {
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                        }
+                        @case ('fa-balance-scale') {
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 9v4M12 17h.01"></path>
+                        }
+                        @case ('fa-hand-holding-usd') {
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+                        <path d="M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                        }
+                        @default {
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                        }
+                        }
+                    </svg>
+                    }
+                    <span class="label">{{ item.label }}</span>
+                </div>
+            </a>
+        </li>
+        }
         }
     </ul>
 

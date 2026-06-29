@@ -11,7 +11,7 @@
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
     overflow-y: auto;
 }
 
@@ -57,6 +57,11 @@
 .sidebar-toggle:hover {
     background-color: #f1f5f9;
     color: rgb(10, 10, 10);
+}
+
+.sidebar.collapsed .logo-container {
+    justify-content: center;
+    padding: 20px 8px;
 }
 
 .sidebar.collapsed .sidebar-toggle {
@@ -114,9 +119,58 @@
     display: none;
 }
 
+/* Collapsed: tighten up the nav-menu so icons fill the 80px bar properly */
+.sidebar.collapsed .nav-menu {
+    padding: 12px 8px;
+    gap: 3px;
+}
+
 .sidebar.collapsed .menu-item-link {
     justify-content: center;
-    padding: 14px;
+    padding: 11px 8px;
+    border-radius: 12px;
+    min-height: 44px;
+}
+
+/* Center + clear the SVG icon */
+.sidebar.collapsed .menu-item-content {
+    justify-content: center;
+    gap: 0;
+}
+
+/* Make icons clearly visible — larger, darker, no residual margin */
+.sidebar.collapsed .svg-icon {
+    margin: 0 !important;
+    width: 1.5em !important;
+    height: 1.5em !important;
+    color: #334155 !important;
+    flex-shrink: 0;
+}
+
+/* Hover: accent the icon */
+.sidebar.collapsed .menu-item-link:hover .svg-icon {
+    color: rgb(11, 74, 111) !important;
+}
+
+/* Active parent icon accent */
+.sidebar.collapsed .active-parent > .menu-item-link .svg-icon {
+    color: rgb(11, 74, 111) !important;
+}
+
+/* Active single-item icon accent */
+.sidebar.collapsed .active-menu > .menu-item-link .svg-icon {
+    color: rgb(11, 74, 111) !important;
+}
+
+/* Collapsed logout: hide label, center icon */
+.sidebar.collapsed .logout .label {
+    display: none;
+}
+
+.sidebar.collapsed .logout {
+    justify-content: center;
+    padding: 11px 8px;
+    margin: 12px 8px;
 }
 
 .menu-item-link:hover {
@@ -129,12 +183,13 @@
 }
 
 /* Parent Active State */
-.active-parent > .menu-item-link {
+.active-parent>.menu-item-link {
     background-color: #f1f5f9;
     color: rgb(11, 74, 111);
     font-weight: 600;
 }
-.active-parent > .menu-item-link .menu-item-content i {
+
+.active-parent>.menu-item-link .menu-item-content i {
     color: rgb(11, 74, 111);
 }
 
@@ -198,24 +253,25 @@
 }
 
 /* Child Active State */
-.active-menu > .submenu-link {
+.active-menu>.submenu-link {
     color: rgb(11, 74, 111);
     background-color: #eff6ff;
     font-weight: 600;
 }
 
-.active-menu > .submenu-link .dot {
+.active-menu>.submenu-link .dot {
     background-color: rgb(11, 74, 111);
     transform: scale(1.2);
 }
 
 /* Single Item Active State */
-.active-menu > .menu-item-link {
+.active-menu>.menu-item-link {
     background-color: #eff6ff;
     color: rgb(11, 74, 111);
     font-weight: 600;
 }
-.active-menu > .menu-item-link .menu-item-content i {
+
+.active-menu>.menu-item-link .menu-item-content i {
     color: rgb(11, 74, 111);
 }
 
@@ -238,11 +294,6 @@
     background: #fee2e2;
 }
 
-.sidebar.collapsed .logout {
-    justify-content: center;
-    padding: 14px;
-}
-
 /* Sidebar Overlay for Mobile */
 .sidebar-overlay {
     position: fixed;
@@ -250,7 +301,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 998;
     opacity: 0;
     visibility: hidden;
@@ -262,29 +313,8 @@
     visibility: visible;
 }
 
-/* Tablet Layout (< 1200px) */
-@media(max-width: 1199.98px) {
-    .sidebar:not(.drawer-open) {
-        width: 80px;
-    }
-    .sidebar:not(.drawer-open) .label {
-        display: none;
-    }
-    .sidebar:not(.drawer-open) .arrow-icon {
-        display: none;
-    }
-    .sidebar:not(.drawer-open) img {
-        display: none;
-    }
-    .sidebar:not(.drawer-open) .menu-item-link {
-        justify-content: center;
-        padding: 14px;
-    }
-    .sidebar:not(.drawer-open) .logout {
-        justify-content: center;
-        padding: 14px;
-    }
-}
+/* Tablet collapse is handled via .collapsed class (set in TypeScript ngOnInit).
+   This ensures clicking a parent icon correctly expands the sidebar inline. */
 
 /* Mobile Layout (< 768px) */
 @media(max-width: 767.98px) {
@@ -293,35 +323,69 @@
     }
     .sidebar {
         position: fixed;
-        left: -272px; /* Hide off-screen by default */
+        left: -272px;
+        /* Hide off-screen by default */
         top: 0;
         z-index: 999;
-        width: 272px !important; /* Full expanded width when open */
+        width: 272px !important;
+        /* Full expanded width when open */
         height: 100vh;
         transition: left 0.3s ease;
     }
 
     .sidebar.drawer-open {
-        left: 0; /* Slide in */
+        left: 0;
+        /* Slide in */
     }
 
     /* When drawer is open, show text and logo */
     .sidebar.drawer-open .label {
         display: inline-block !important;
     }
+
     .sidebar.drawer-open .arrow-icon {
         display: inline-block !important;
     }
+
     .sidebar.drawer-open img {
         display: block !important;
         opacity: 1 !important;
     }
+
     .sidebar.drawer-open .menu-item-link {
         justify-content: space-between !important;
         padding: 12px 16px !important;
     }
+
     .sidebar.drawer-open .logout {
         justify-content: flex-start !important;
         padding: 12px 16px !important;
     }
+}
+
+
+.sidebar {
+    overflow-x: hidden;
+}
+
+.menu-item-link {
+    white-space: nowrap;
+}
+
+.menu-item-content {
+    overflow: hidden;
+}
+
+.label {
+    transition: opacity .2s ease;
+}
+
+.sidebar.collapsed .label {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.sidebar:not(.collapsed) .label {
+    opacity: 1;
+    visibility: visible;
 }
