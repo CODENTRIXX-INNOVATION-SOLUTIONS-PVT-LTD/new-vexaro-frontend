@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 $ink: rgb(10, 10, 10);
 $paper: rgb(250, 250, 247);
 $blue: rgb(11, 74, 111);
@@ -253,7 +255,7 @@ label {
   transition: color 0.2s;
 
   &:hover {
-    color: darken($accent, 10%);
+    color: color.adjust($accent, $lightness: -10%);
   }
 }
 
@@ -338,7 +340,7 @@ label {
   margin-top: 0.5rem;
 
   &:hover:not(:disabled) {
-    background: darken($blue, 6%);
+    background: color.adjust($blue, $lightness: -6%);
     box-shadow: 0 6px 20px rgba(11, 74, 111, 0.3);
     transform: translateY(-1px);
   }
