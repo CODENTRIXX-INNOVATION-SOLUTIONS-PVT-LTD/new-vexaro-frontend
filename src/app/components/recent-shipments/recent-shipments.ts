@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-recent-shipments',
@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
 })
 export class RecentShipments {
 
-shipments = [
+  @Input() shipments: any[] = [
   {
     trackingId: 'VX001245',
     customer: 'Rahul Sharma',

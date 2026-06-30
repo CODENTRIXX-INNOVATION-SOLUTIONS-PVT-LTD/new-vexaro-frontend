@@ -1,9 +1,6 @@
 <div class="dashboard">
 
-    <app-dashboard-header
-        role="Merchant"
-        userName="Sahil Gour"
-        email="sahil@gmail.com"
+    <app-dashboard-header role="Merchant" userName="Sahil Gour" email="sahil@gmail.com"
         profileImage="https://i.pravatar.cc/150?img=12">
     </app-dashboard-header>
 
@@ -11,25 +8,25 @@
 
     <div class="two-section">
 
-        <app-recent-shipments></app-recent-shipments>
+        <app-recent-shipments [shipments]="shipments"></app-recent-shipments>
 
         <div class="quick-section">
 
             <h3>Quick Actions</h3>
 
-            <button class="action-btn primary">
+            <button routerLink="/merchant/shipments" class="action-btn primary">
                 <span class="material-icons">add</span>
                 Create Shipment
             </button>
-            <button class="action-btn">
+            <button routerLink="/merchant/bulk-upload" class="action-btn">
                 <span class="material-icons">upload_file</span>
                 Bulk Upload
             </button>
-            <button class="action-btn">
+            <button class="action-btn" (click)="openPrintModal()">
                 <span class="material-icons">print</span>
                 Print Labels
             </button>
-            <button class="action-btn">
+            <button class="action-btn" (click)="openManifestModal()">
                 <span class="material-icons">download</span>
                 Download Manifest
             </button>
@@ -39,4 +36,194 @@
         <app-shipment-overview></app-shipment-overview>
         <app-top-destinations></app-top-destinations>
     </div>
+
+    <!-- Print Labels Modal -->
+    @if (showPrintModal()) {
+        <div class="modal-overlay" (click)="closePrintModal()">
+            <div class="modal-content-wrapper modal-large" (click)="$event.stopPropagation()">
+                <div class="modal-header-bar">
+                    <div>
+                        <h3>Print Shipping Labels</h3>
+                        <p>Select shipments to print AWB shipping labels</p>
+                    </div>
+                    <button class="close-modal-btn" (click)="closePrintModal()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+
+                <div class="modal-split-layout">
+                    <!-- Left: Shipments List -->
+                    <div class="modal-left-list">
+                        <div class="list-actions-header">
+                            <label class="checkbox-container">
+                                <input type="checkbox" [checked]="isAllPrintSelected()" (change)="toggleAllPrint($event)">
+                                <span class="checkmark"></span>
+                                <span class="checkbox-label">Select All Shipments</span>
+                            </label>
+                            <span class="selected-badge">{{ getSelectedPrintCount() }} Selected</span>
+                        </div>
+
+                        <div class="shipment-items-scroll">
+                            @for (s of shipments; track s.id) {
+                                <div class="shipment-item-card" [class.active]="selectedShipmentForPreview()?.id === s.id" (click)="selectPreview(s)">
+                                    <label class="checkbox-container" (click)="$event.stopPropagation()">
+                                        <input type="checkbox" [(ngModel)]="printSelection[s.id]">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <div class="item-details">
+                                        <div class="item-top">
+                                            <span class="item-awb">{{ s.id }}</span>
+                                            <span class="courier-tag">{{ s.courier }}</span>
+                                        </div>
+                                        <div class="item-bottom">
+                                            <span class="item-cust">{{ s.customerName }}</span>
+                                            <span class="item-dest">{{ s.destination }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Right: Live Preview -->
+                    <div class="modal-right-preview">
+                        <h4>Label Live Preview</h4>
+                        @if (selectedShipmentForPreview()) {
+                            <div class="live-label-container">
+                                <div class="live-label-header">
+                                    <span class="live-courier-title">{{ selectedShipmentForPreview().courier }}</span>
+                                    <span class="live-awb-tag">AWB: {{ selectedShipmentForPreview().id }}</span>
+                                </div>
+                                <div class="live-barcode-area">
+                                    <div class="live-barcode-bars"></div>
+                                    <div class="live-barcode-text">{{ selectedShipmentForPreview().id }}</div>
+                                </div>
+                                <div class="live-address-area">
+                                    <div class="live-address-block">
+                                        <div class="addr-label">SENDER:</div>
+                                        <strong>{{ selectedShipmentForPreview().senderName }}</strong>
+                                        <div class="addr-text">{{ selectedShipmentForPreview().senderAddress }}</div>
+                                    </div>
+                                    <div class="live-address-block border-top">
+                                        <div class="addr-label">RECEIVER:</div>
+                                        <strong>{{ selectedShipmentForPreview().customerName }}</strong>
+                                        <div class="addr-text">{{ selectedShipmentForPreview().receiverAddress }}</div>
+                                    </div>
+                                </div>
+                                <div class="live-label-footer">
+                                    <div>Date: {{ selectedShipmentForPreview().date }}</div>
+                                    <div>Weight: {{ selectedShipmentForPreview().weight }}</div>
+                                    <div class="live-amount-badge">
+                                        {{ selectedShipmentForPreview().status === 'Pending' ? 'COD: ' + selectedShipmentForPreview().amount : 'PREPAID' }}
+                                    </div>
+                                </div>
+                            </div>
+                        } @else {
+                            <div class="no-preview-selected">
+                                <span class="material-icons">info</span>
+                                <p>Select a shipment to preview its shipping label</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="modal-footer-bar">
+                    <button class="btn-secondary" (click)="closePrintModal()">Cancel</button>
+                    <button class="btn-primary" (click)="printLabels()" [disabled]="getSelectedPrintCount() === 0">
+                        <span class="material-icons">print</span>
+                        Print Selected Labels ({{ getSelectedPrintCount() }})
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Download Manifest Modal -->
+    @if (showManifestModal()) {
+        <div class="modal-overlay" (click)="closeManifestModal()">
+            <div class="modal-content-wrapper modal-medium" (click)="$event.stopPropagation()">
+                <div class="modal-header-bar">
+                    <div>
+                        <h3>Download Manifest</h3>
+                        <p>Generate and export shipping manifest for courier handover</p>
+                    </div>
+                    <button class="close-modal-btn" (click)="closeManifestModal()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+
+                <div class="modal-split-layout column-on-mobile">
+                    <!-- Left: Manifest Shipments Selection -->
+                    <div class="modal-left-list scrollable-height">
+                        <div class="list-actions-header">
+                            <label class="checkbox-container">
+                                <input type="checkbox" [checked]="isAllManifestSelected()" (change)="toggleAllManifest($event)">
+                                <span class="checkmark"></span>
+                                <span class="checkbox-label">Select All Shipments</span>
+                            </label>
+                        </div>
+
+                        <div class="shipment-items-scroll">
+                            @for (s of shipments; track s.id) {
+                                <div class="shipment-item-card static">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" [(ngModel)]="manifestSelection[s.id]">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <div class="item-details">
+                                        <div class="item-top">
+                                            <span class="item-awb">{{ s.id }}</span>
+                                            <span class="courier-tag">{{ s.courier }}</span>
+                                        </div>
+                                        <div class="item-bottom">
+                                            <span class="item-cust">{{ s.customerName }}</span>
+                                            <span class="item-weight">{{ s.weight }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Right: Manifest Summary Details -->
+                    <div class="modal-right-summary">
+                        <h4>Manifest Summary</h4>
+                        <div class="summary-details-card">
+                            <div class="summary-row">
+                                <span class="summary-label">Total Shipments:</span>
+                                <span class="summary-value">{{ getSelectedManifestCount() }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Total Est. Weight:</span>
+                                <span class="summary-value">{{ getSelectedManifestWeight().toFixed(1) }} kg</span>
+                            </div>
+                            <div class="summary-row border-top">
+                                <span class="summary-label">Handover Date:</span>
+                                <span class="summary-value">{{ today | date:'dd MMM yyyy' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="alert-info-box">
+                            <span class="material-icons">help_outline</span>
+                            <p>Generate PDF manifest for signature handover, or CSV manifest for digital uploads.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer-bar">
+                    <button class="btn-secondary" (click)="closeManifestModal()">Cancel</button>
+                    <div class="footer-action-buttons">
+                        <button class="btn-outline" (click)="downloadCSVManifest()" [disabled]="getSelectedManifestCount() === 0">
+                            <span class="material-icons">download</span>
+                            Download CSV
+                        </button>
+                        <button class="btn-primary" (click)="printPDFManifest()" [disabled]="getSelectedManifestCount() === 0">
+                            <span class="material-icons">picture_as_pdf</span>
+                            Print PDF Manifest ({{ getSelectedManifestCount() }})
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
