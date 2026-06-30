@@ -125,60 +125,44 @@
 @media(max-width:992px) {
 
     .dashboard {
-
-        padding: 20px;
+        padding: 0px;
     }
 
     .two-section {
-
         grid-template-columns: 1fr;
     }
 
     .chart-section {
-
         grid-template-columns: 1fr;
     }
 }
 
-
 /* MOBILE */
-
 @media(max-width:768px) {
-
     .dashboard {
-
         padding: 14px;
     }
 
     .two-section,
     .chart-section {
-
         grid-template-columns: 1fr;
-
         gap: 18px;
     }
 
     .quick-section {
-
         padding: 18px;
     }
 }
 
-
 /* SMALL MOBILE */
-
 @media(max-width:480px) {
-
     .dashboard {
-
         padding: 10px;
     }
 
     .quick-section {
-
         padding: 14px;
     }
-
 }
 
 /* ==========================================================================

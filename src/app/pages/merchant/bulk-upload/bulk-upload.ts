@@ -1,6 +1,7 @@
 import { Component, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import Papa from "papaparse";
 
 interface ParsingError {
   row: number;
@@ -16,85 +17,107 @@ interface ParsingError {
   styleUrl: "./bulk-upload.css",
 })
 export class BulkUpload {
-  uploadState = signal<"idle" | "uploading" | "parsing" | "complete">("idle");
-  uploadProgress = signal<number>(0);
-  fileName = signal<string>("");
 
-  totalRows = signal<number>(0);
-  validRows = signal<number>(0);
-  errorCount = signal<number>(0);
+  uploadState = signal<"idle" | "uploading" | "parsing" | "complete">("idle");
+
+  selectedFile = signal<File | null>(null);
+
+  fileName = signal("");
+
+  uploadProgress = signal(0);
+
+  totalRows = signal(0);
+  validRows = signal(0);
+  errorCount = signal(0);
 
   parsingErrors = signal<ParsingError[]>([]);
 
   notificationMessage = signal<string | null>(null);
 
+  csvHeaders = signal<string[]>([]);
+  csvPreview = signal<any[]>([]);
+
   showNotification(msg: string) {
     this.notificationMessage.set(msg);
+
     setTimeout(() => {
       this.notificationMessage.set(null);
     }, 3000);
   }
 
-  // Triggered by clicking dropzone
-  simulateFileSelection() {
-    if (this.uploadState() !== "idle") return;
+  onFileSelected(event: Event) {
 
-    this.fileName.set("shipments_bulk_june2026.csv");
-    this.uploadState.set("uploading");
-    this.uploadProgress.set(0);
+    const input = event.target as HTMLInputElement;
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      this.uploadProgress.update(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          this.triggerParsing();
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 150);
-  }
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
 
-  triggerParsing() {
-    this.uploadState.set("parsing");
-    
-    // Simulate short parsing delay
-    setTimeout(() => {
-      this.totalRows.set(128);
-      this.validRows.set(123);
-      this.errorCount.set(5);
-      
-      this.parsingErrors.set([
-        { row: 14, field: "Recipient Phone", value: "98765", reason: "Phone number must be exactly 10 digits." },
-        { row: 32, field: "Pincode", value: "ABC123", reason: "Invalid postal code format for destination." },
-        { row: 45, field: "Declared Value", value: "-250", reason: "Value cannot be negative." },
-        { row: 78, field: "Pincode", value: "999999", reason: "Service unavailable at specified pincode." },
-        { row: 102, field: "COD Amount", value: "60000", reason: "COD collection limit exceeds maximum ₹50,000 threshold." }
-      ]);
+    const file = input.files[0];
 
-      this.uploadState.set("complete");
-      this.showNotification("CSV parsed. Verification results loaded below.");
-    }, 1200);
+    this.selectedFile.set(file);
+    this.fileName.set(file.name);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+
+        this.csvHeaders.set(result.meta.fields ?? []);
+        this.csvPreview.set(result.data.slice(0, 5));
+
+        this.showNotification(`Selected file: ${file.name}`);
+      }
+    });
+
+    input.value = "";
   }
 
   clearUpload() {
-    this.uploadState.set("idle");
-    this.uploadProgress.set(0);
+
+    this.selectedFile.set(null);
     this.fileName.set("");
+
+    this.csvHeaders.set([]);
+    this.csvPreview.set([]);
+
+    this.uploadState.set("idle");
+
+    this.uploadProgress.set(0);
+
     this.totalRows.set(0);
     this.validRows.set(0);
     this.errorCount.set(0);
+
     this.parsingErrors.set([]);
   }
 
-  processUpload() {
-    if (this.validRows() === 0) return;
-    this.showNotification(`Successfully queued ${this.validRows()} shipments for booking!`);
-    this.clearUpload();
-  }
-
   downloadSampleTemplate() {
+    const link = document.createElement("a");
+    link.href = "assets/bulk_shipments.csv";
+    link.download = "bulk_shipments.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     this.showNotification("Sample CSV template downloaded successfully.");
   }
+
+  getFileSize(): string {
+
+    if (!this.selectedFile()) return "";
+
+    const size = this.selectedFile()!.size;
+
+    if (size < 1024) {
+      return `${size} Bytes`;
+    }
+
+    if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(2)} KB`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
 }
