@@ -56,6 +56,7 @@ $font: "Plus Jakarta Sans", sans-serif;
   text-decoration: none;
   color: white;
   flex-shrink: 0;
+
   &--mobile {
     display: none;
   }
@@ -105,16 +106,19 @@ $font: "Plus Jakarta Sans", sans-serif;
 // ─── FORM HEADER ─────────────────────────────────────────────
 .form-header {
   margin-bottom: 2rem;
+
   h1 {
     font-size: 2.1rem;
     font-weight: 800;
     letter-spacing: -0.03em;
     color: $blue;
     margin: 0 0 0.5rem;
+
     span {
       color: $accent;
     }
   }
+
   p {
     font-size: 0.95rem;
     color: $muted;
@@ -135,6 +139,7 @@ $font: "Plus Jakarta Sans", sans-serif;
   border-radius: 0.75rem;
   padding: 0.85rem 1.1rem;
   margin-bottom: 1.5rem;
+
   svg {
     width: 1.1rem;
     height: 1.1rem;
@@ -183,8 +188,10 @@ label {
     border-color: $blue;
     box-shadow: 0 0 0 4px rgba(11, 74, 111, 0.08);
   }
+
   &.has-error {
     border-color: rgba(192, 57, 27, 0.4);
+
     &:focus-within {
       box-shadow: 0 0 0 4px rgba(192, 57, 27, 0.08);
     }
@@ -200,6 +207,7 @@ label {
     outline: none;
     border-radius: 0.75rem;
     font-family: $font;
+
     &::placeholder {
       color: rgba(10, 10, 10, 0.3);
     }
@@ -226,9 +234,11 @@ label {
   display: flex;
   color: rgba(11, 74, 111, 0.4);
   transition: color 0.2s;
+
   &:hover {
     color: $blue;
   }
+
   svg {
     width: 1.2rem;
     height: 1.2rem;
@@ -241,6 +251,7 @@ label {
   color: $accent;
   text-decoration: none;
   transition: color 0.2s;
+
   &:hover {
     color: darken($accent, 10%);
   }
@@ -260,9 +271,11 @@ label {
     opacity: 0;
     width: 0;
     height: 0;
-    &:checked + .checkmark {
+
+    &:checked+.checkmark {
       background: $blue;
       border-color: $blue;
+
       &::after {
         display: block;
       }
@@ -280,6 +293,7 @@ label {
     transition:
       background 0.15s,
       border-color 0.15s;
+
     &::after {
       content: "";
       display: none;
@@ -328,9 +342,11 @@ label {
     box-shadow: 0 6px 20px rgba(11, 74, 111, 0.3);
     transform: translateY(-1px);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -364,10 +380,12 @@ label {
   color: $muted;
   line-height: 1.6;
   text-align: center;
+
   a {
     color: $accent;
     font-weight: 600;
     text-decoration: none;
+
     &:hover {
       text-decoration: underline;
     }
@@ -396,6 +414,7 @@ label {
   .brand--mobile {
     display: inline-flex;
     margin-bottom: 2rem;
+
     .brand-logo-img {
       height: 32px;
       width: auto;

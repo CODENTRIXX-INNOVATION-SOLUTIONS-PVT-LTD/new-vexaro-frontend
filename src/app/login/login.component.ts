@@ -10,7 +10,7 @@ import { Router, RouterLink } from "@angular/router";
   styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent {
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   email = "";
   password = "";
@@ -41,8 +41,8 @@ export class LoginComponent {
     setTimeout(() => {
       const user = this.fakeUsers.find(
         (u) =>
-            u.email === this.email.trim().toLowerCase() &&
-            u.password === this.password,
+          u.email === this.email.trim().toLowerCase() &&
+          u.password === this.password,
       );
       this.isLoading.set(false);
 

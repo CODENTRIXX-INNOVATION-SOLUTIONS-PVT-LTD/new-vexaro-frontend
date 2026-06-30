@@ -94,3 +94,28 @@
         </table>
     </div>
 </div>
+
+<!-- Proof Modal Overlay -->
+@if (isProofModalOpen) {
+<div class="modal-overlay" (click)="closeProofModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Proof Document</h3>
+            <span class="modal-subtitle">AWB: {{ currentProofAwb }}</span>
+            <button class="close-btn" (click)="closeProofModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Simulated document viewer since we only have mock strings like 'proof1.jpg' -->
+            <div class="document-viewer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="doc-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <p><strong>{{ currentProofUrl }}</strong></p>
+                <p class="text-muted">In a real environment, this would display the actual image or PDF.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeProofModal()">Close</button>
+            <button class="btn-primary" (click)="closeProofModal()">Download Copy</button>
+        </div>
+    </div>
+</div>
+}

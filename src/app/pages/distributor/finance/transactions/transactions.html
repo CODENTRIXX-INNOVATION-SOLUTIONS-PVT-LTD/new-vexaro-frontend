@@ -2,15 +2,30 @@
     <div class="header">
         <h2>Transaction History</h2>
         <div class="actions">
-            <button class="view-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="17"></line><line x1="16" y1="13" x2="8" y2="17"></line></svg> Export CSV</button>
-            <button class="view-btn" style="background: #10b981;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 15h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8v5zM15 15h1M15 11h2"></path></svg> Statement</button>
+            <button class="view-btn" (click)="exportCSV()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="8" y1="13" x2="16" y2="17"></line>
+                    <line x1="16" y1="13" x2="8" y2="17"></line>
+                </svg> Export CSV</button>
+            <button class="view-btn" (click)="downloadStatement()" style="background: #10b981;"><svg
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M8 15h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8v5zM15 15h1M15 11h2"></path>
+                </svg> Statement</button>
         </div>
     </div>
 
     <div class="filter-bar">
         <div class="form-row">
-            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input" style="max-width: 200px;">
-            
+            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input"
+                style="max-width: 200px;">
+
             <select [(ngModel)]="typeFilter" (change)="applyFilters()" class="status-select">
                 <option value="All">All Types</option>
                 <option value="Credit">Credit (+)</option>
@@ -32,44 +47,49 @@
                     <th>Reference</th>
                 </tr>
             </thead>
-                <tbody>
-                    @if (isLoading) {
-                        <tr>
-                            <td colspan="7" class="text-center py-4" style="color: #94a3b8;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading transactions...</td>
-                        </tr>
-                    } @else if (filteredTransactions.length === 0) {
-                        <tr>
-                            <td colspan="7" class="text-center py-4" style="color: #94a3b8;">No transactions found.</td>
-                        </tr>
-                    } @else {
-                        @for(trx of filteredTransactions; track trx.id) {
-                        <tr>
-                            <td>{{trx.date}}</td>
-                            <td class="fw-bold" style="color: #6b7280;">{{trx.id}}</td>
-                            <td>
-                                <span class="status"
-                                    [class.credit]="trx.type === 'Credit'"
-                                    [class.debit]="trx.type === 'Debit'">
-                                    {{trx.type}}
-                                </span>
-                            </td>
-                            <td><strong>{{trx.category}}</strong></td>
-                            <td [style.color]="trx.type === 'Credit' ? '#16a34a' : '#dc2626'" style="font-weight: 600;">
-                                {{trx.type === 'Credit' ? '+' : '-'}}₹{{trx.amount | number}}
-                            </td>
-                            <td>
-                                <span class="status-badge"
-                                    [class.completed]="trx.status === 'Completed'"
-                                    [class.pending]="trx.status === 'Pending'"
-                                    [class.failed]="trx.status === 'Failed'">
-                                    {{trx.status}}
-                                </span>
-                            </td>
-                            <td style="font-size: 13px; color: #64748b;">{{trx.reference}}</td>
-                        </tr>
-                        }
-                    }
-                </tbody>
+            <tbody>
+                @if (isLoading) {
+                <tr>
+                    <td colspan="7" class="text-center py-4" style="color: #94a3b8;"><svg
+                            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                            style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;"
+                            class="svg-icon animate-spin">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg> Loading transactions...</td>
+                </tr>
+                } @else if (filteredTransactions.length === 0) {
+                <tr>
+                    <td colspan="7" class="text-center py-4" style="color: #94a3b8;">No transactions found.</td>
+                </tr>
+                } @else {
+                @for(trx of filteredTransactions; track trx.id) {
+                <tr>
+                    <td>{{trx.date}}</td>
+                    <td class="fw-bold" style="color: #6b7280;">{{trx.id}}</td>
+                    <td>
+                        <span class="status" [class.credit]="trx.type === 'Credit'"
+                            [class.debit]="trx.type === 'Debit'">
+                            {{trx.type}}
+                        </span>
+                    </td>
+                    <td><strong>{{trx.category}}</strong></td>
+                    <td [style.color]="trx.type === 'Credit' ? '#16a34a' : '#dc2626'" style="font-weight: 600;">
+                        {{trx.type === 'Credit' ? '+' : '-'}}₹{{trx.amount | number}}
+                    </td>
+                    <td>
+                        <span class="status-badge" [class.completed]="trx.status === 'Completed'"
+                            [class.pending]="trx.status === 'Pending'" [class.failed]="trx.status === 'Failed'">
+                            {{trx.status}}
+                        </span>
+                    </td>
+                    <td style="font-size: 13px; color: #64748b;">{{trx.reference}}</td>
+                </tr>
+                }
+                }
+            </tbody>
         </table>
     </div>
 </div>

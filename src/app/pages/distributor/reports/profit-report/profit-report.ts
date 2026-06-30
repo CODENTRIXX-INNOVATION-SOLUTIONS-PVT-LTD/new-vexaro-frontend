@@ -143,6 +143,133 @@ export class ProfitReport implements OnInit {
   ngOnInit() {}
 
   exportPDF() {
-    alert('Generating PDF report for download...');
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pop-up blocked. Please allow popups to download report.');
+      return;
+    }
+
+    const courierRows = this.courierData.map(item => `
+      <tr>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${item.name}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">${item.shipments}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">₹${item.revenue.toLocaleString('en-IN')}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">₹${item.cost.toLocaleString('en-IN')}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #16a34a; font-weight: 600;">₹${item.profit.toLocaleString('en-IN')}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 500;">${item.margin}</span></td>
+      </tr>
+    `).join('');
+
+    const merchantRows = this.merchantData.map(item => `
+      <tr>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${item.name}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">${item.shipments}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">₹${item.revenue.toLocaleString('en-IN')}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">₹${item.cost.toLocaleString('en-IN')}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #16a34a; font-weight: 600;">₹${item.profit.toLocaleString('en-IN')}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 500;">${item.margin}</span></td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Profit Analysis Report - Vexaro</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 40px; }
+            .header-table { width: 100%; margin-bottom: 30px; }
+            .logo { font-size: 24px; font-weight: 800; color: rgb(11, 74, 111); }
+            .title { text-align: right; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #64748b; }
+            
+            .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0 35px; }
+            .stat-card { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+            .stat-label { font-size: 12px; color: #64748b; margin-bottom: 4px; font-weight: 500; }
+            .stat-value { font-size: 20px; font-weight: bold; color: #0f172a; }
+
+            .section-title { font-size: 15px; font-weight: bold; color: #334155; margin: 25px 0 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+            .trx-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-bottom: 25px; }
+            .trx-table th { background: #f8fafc; padding: 10px; font-weight: 600; color: #64748b; border-bottom: 2px solid #cbd5e1; }
+            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <table class="header-table">
+            <tr>
+              <td class="logo">VEXARO</td>
+              <td class="title">Profit Analysis Report</td>
+            </tr>
+          </table>
+
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 20px;" />
+          <div style="font-size: 13px; color: #475569;">
+            <strong>Generated Date:</strong> ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Net Profit</span>
+              <span class="stat-value" style="color: #16a34a;">₹45,000</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Average Profit / Order</span>
+              <span class="stat-value">₹50.56</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Net Profit Margin</span>
+              <span class="stat-value">8.25%</span>
+            </div>
+          </div>
+
+          <div class="section-title">Profits by Courier Partner</div>
+          <table class="trx-table">
+            <thead>
+              <tr>
+                <th>Courier Name</th>
+                <th>Total Shipments</th>
+                <th>Total Revenue</th>
+                <th>Franchise Cost</th>
+                <th>Net Profit</th>
+                <th>Margin (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${courierRows}
+            </tbody>
+          </table>
+
+          <div class="section-title">Profits by Merchant Customer</div>
+          <table class="trx-table">
+            <thead>
+              <tr>
+                <th>Merchant Name</th>
+                <th>Total Shipments</th>
+                <th>Total Revenue</th>
+                <th>Franchise Cost</th>
+                <th>Net Profit</th>
+                <th>Margin (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${merchantRows}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>This is an automated performance report ledger statement.</p>
+            <p>Vexaro Courier Solutions &copy; ${new Date().getFullYear()}</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 }

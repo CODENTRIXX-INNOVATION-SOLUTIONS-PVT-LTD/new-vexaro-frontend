@@ -59,6 +59,41 @@
         </div>
       </div>
 
+      <!-- Tracking Stepper Visualization -->
+      <div class="card stepper-card">
+        <div class="stepper-wrapper">
+          <!-- Step 1: Created -->
+          <div class="stepper-item" [class.completed]="true" [class.active]="activeDetails()?.status === 'Created'">
+            <div class="step-counter"><span class="material-icons">receipt</span></div>
+            <div class="step-name">Created</div>
+          </div>
+          
+          <!-- Step 2: Picked Up / In Transit -->
+          <div class="stepper-item" 
+               [class.completed]="['In Transit', 'Out for Delivery', 'Delivered'].includes(activeDetails()?.status || '')" 
+               [class.active]="activeDetails()?.status === 'In Transit'">
+            <div class="step-counter"><span class="material-icons">local_shipping</span></div>
+            <div class="step-name">In Transit</div>
+          </div>
+          
+          <!-- Step 3: Out for Delivery -->
+          <div class="stepper-item" 
+               [class.completed]="['Out for Delivery', 'Delivered'].includes(activeDetails()?.status || '')"
+               [class.active]="activeDetails()?.status === 'Out for Delivery'">
+            <div class="step-counter"><span class="material-icons">directions_bike</span></div>
+            <div class="step-name">Out for Delivery</div>
+          </div>
+          
+          <!-- Step 4: Delivered -->
+          <div class="stepper-item" 
+               [class.completed]="activeDetails()?.status === 'Delivered'"
+               [class.active]="activeDetails()?.status === 'Delivered'">
+            <div class="step-counter"><span class="material-icons">check_circle</span></div>
+            <div class="step-name">Delivered</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Layout Grid -->
       <div class="tracking-layout-grid">
         <!-- Left Column: Details Cards -->

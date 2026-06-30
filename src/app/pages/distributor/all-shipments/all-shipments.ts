@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { CsvExportService } from '../../../shared/csv-export.service';
 
 export interface Shipment {
   id: string;
@@ -31,6 +32,8 @@ export class AllShipments implements OnInit {
   statusFilter: string = 'All';
   merchantFilterId: string = '';
   isLoading: boolean = false;
+
+  private csvService = inject(CsvExportService);
 
   constructor(private route: ActivatedRoute, private router: Router) {}
 
@@ -67,5 +70,19 @@ export class AllShipments implements OnInit {
   
   viewTimeline(awb: string) {
     this.router.navigate(['/distributor/tracking/search'], { queryParams: { awb } });
+  }
+
+  exportCSV() {
+    const headers = ['AWB', 'Merchant', 'Dest. Pincode', 'Status', 'Payment Type', 'COD Amount', 'Last Updated'];
+    const rows = this.filteredShipments.map(s => [
+      s.awb,
+      s.merchantName,
+      s.destPincode,
+      s.status,
+      s.paymentType,
+      s.codAmount,
+      s.lastUpdated
+    ]);
+    this.csvService.export('shipments_export', headers, rows);
   }
 }

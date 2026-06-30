@@ -1,23 +1,45 @@
 <div class="page-container">
   <div class="page-header">
-    <button class="btn-back" (click)="goBack()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Merchants</button>
+    <button class="btn-back" (click)="goBack()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+        style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg> Merchants</button>
     <div class="header-info">
       <h1 class="page-title">{{ merchant.businessName || 'Merchant Profile' }}</h1>
       <div class="header-meta">
         <code>{{ merchant.merchantCode }}</code>
         <span class="status-badge" [class.status-active]="merchant.status === 'Active'"
-              [class.status-suspended]="merchant.status === 'Suspended'"
-              [class.status-inactive]="merchant.status === 'Inactive'">
+          [class.status-suspended]="merchant.status === 'Suspended'"
+          [class.status-inactive]="merchant.status === 'Inactive'">
           {{ merchant.status }}
         </span>
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn-topup" (click)="topupWallet()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Fund Wallet</button>
+      <button class="btn-topup" (click)="topupWallet()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+          style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg> Fund Wallet</button>
       @if (merchant.status === 'Active') {
-        <button class="btn-danger" (click)="suspendMerchant()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg> Suspend</button>
+      <button class="btn-danger" (click)="suspendMerchant()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+          style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+        </svg> Suspend</button>
       } @else {
-        <button class="btn-success" (click)="activateMerchant()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Activate</button>
+      <button class="btn-success" (click)="activateMerchant()"><svg xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+          stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;"
+          class="svg-icon">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg> Activate</button>
       }
     </div>
   </div>
@@ -25,28 +47,54 @@
   <!-- Quick Stats -->
   <div class="stats-row">
     <div class="stat-card">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon blue svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon blue svg-icon">
+        <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
+      </svg>
       <div>
         <div class="stat-value">₹{{ merchant.walletBalance | number }}</div>
         <div class="stat-label">Wallet Balance</div>
       </div>
     </div>
     <div class="stat-card">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon purple svg-icon"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;"
+        class="stat-icon purple svg-icon">
+        <path
+          d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+        </path>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+      </svg>
       <div>
         <div class="stat-value">{{ merchant.totalShipments }}</div>
         <div class="stat-label">Total Shipments</div>
       </div>
     </div>
     <div class="stat-card">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon green svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;"
+        class="stat-icon green svg-icon">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
       <div>
         <div class="stat-value"><code>{{ merchant.warehouseId || '—' }}</code></div>
         <div class="stat-label">Warehouse ID</div>
       </div>
     </div>
     <div class="stat-card">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon orange svg-icon"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;"
+        class="stat-icon orange svg-icon">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+      </svg>
       <div>
         <div class="stat-value">{{ merchant.paymentTerms || 'Prepaid' }}</div>
         <div class="stat-label">Payment Terms</div>
@@ -63,20 +111,20 @@
 
   <!-- Overview Tab -->
   @if (activeTab === 'overview') {
-    <div class="detail-card">
-      <h3 class="detail-title">Business Details</h3>
-      <div class="detail-grid">
-        <div class="detail-row"><span>Business Name</span><strong>{{ merchant.businessName || '—' }}</strong></div>
-        <div class="detail-row"><span>Display Name</span><strong>{{ merchant.displayName || '—' }}</strong></div>
-        <div class="detail-row"><span>GSTIN</span><strong><code>{{ merchant.gstin || '—' }}</code></strong></div>
-        <div class="detail-row"><span>PAN</span><strong><code>{{ merchant.pan || '—' }}</code></strong></div>
-        <div class="detail-row"><span>Contact Person</span><strong>{{ merchant.contactPerson || '—' }}</strong></div>
-        <div class="detail-row"><span>Phone</span><strong>{{ merchant.phone || '—' }}</strong></div>
-        <div class="detail-row"><span>Email</span><strong>{{ merchant.email || '—' }}</strong></div>
-        <div class="detail-row"><span>City</span><strong>{{ merchant.city || '—' }}, {{ merchant.state }}</strong></div>
-        <div class="detail-row"><span>Pincode</span><strong>{{ merchant.pincode || '—' }}</strong></div>
-        <div class="detail-row"><span>Credit Limit</span><strong>₹{{ merchant.creditLimit | number }}</strong></div>
-      </div>
+  <div class="detail-card">
+    <h3 class="detail-title">Business Details</h3>
+    <div class="detail-grid">
+      <div class="detail-row"><span>Business Name</span><strong>{{ merchant.businessName || '—' }}</strong></div>
+      <div class="detail-row"><span>Display Name</span><strong>{{ merchant.displayName || '—' }}</strong></div>
+      <div class="detail-row"><span>GSTIN</span><strong><code>{{ merchant.gstin || '—' }}</code></strong></div>
+      <div class="detail-row"><span>PAN</span><strong><code>{{ merchant.pan || '—' }}</code></strong></div>
+      <div class="detail-row"><span>Contact Person</span><strong>{{ merchant.contactPerson || '—' }}</strong></div>
+      <div class="detail-row"><span>Phone</span><strong>{{ merchant.phone || '—' }}</strong></div>
+      <div class="detail-row"><span>Email</span><strong>{{ merchant.email || '—' }}</strong></div>
+      <div class="detail-row"><span>City</span><strong>{{ merchant.city || '—' }}, {{ merchant.state }}</strong></div>
+      <div class="detail-row"><span>Pincode</span><strong>{{ merchant.pincode || '—' }}</strong></div>
+      <div class="detail-row"><span>Credit Limit</span><strong>₹{{ merchant.creditLimit | number }}</strong></div>
     </div>
+  </div>
   }
 </div>
