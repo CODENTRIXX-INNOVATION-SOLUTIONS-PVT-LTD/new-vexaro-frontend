@@ -549,3 +549,178 @@ tbody tr:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08);
 }
+
+/* ── Loading state ─────────────────────────────────────────────────────────── */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+    gap: 16px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.spinner-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid rgba(11, 74, 111, 0.12);
+    border-top-color: rgb(11, 74, 111);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Error banner ──────────────────────────────────────────────────────────── */
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff1ee;
+    border: 1px solid rgba(192, 57, 27, 0.15);
+    color: #c0391b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+.retry-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid rgba(192, 57, 27, 0.3);
+    color: #c0391b;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.retry-btn:hover {
+    background: rgba(192, 57, 27, 0.06);
+}
+
+/* ── Date cell ─────────────────────────────────────────────────────────────── */
+.date-cell {
+    font-size: 13px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* ── Pagination ────────────────────────────────────────────────────────────── */
+.table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover:not(:disabled):not(.active) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.page-btn.active {
+    background: rgb(11, 74, 111);
+    color: white;
+    border-color: rgb(11, 74, 111);
+    font-weight: 700;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-ellipsis {
+    font-size: 13px;
+    color: #94a3b8;
+    padding: 0 4px;
+    user-select: none;
+}
+
+/* ── Status filter note in footer ─────────────────────────────────────────── */
+.filter-note {
+    display: inline-block;
+    background: #eff6ff;
+    color: rgb(11, 74, 111);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin: 0 2px;
+    border: 1px solid #bfdbfe;
+}
+
+/* ── Direct View Profile button ───────────────────────────────────────────── */
+.view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: white;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 8px;
+    color: rgb(11, 74, 111);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.view-btn:hover {
+    background: #eff6ff;
+    border-color: rgb(11, 74, 111);
+    box-shadow: 0 2px 8px rgba(11, 74, 111, 0.12);
+    transform: translateY(-1px);
+}
+
+.view-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}

@@ -1,215 +1,224 @@
 <div class="page-container">
 
     <div class="page-header">
-
         <div>
-
             <h2>Distributors</h2>
-
             <div class="breadcrumb">
                 <a routerLink="/super-admin/dashboard">Dashboard</a>
                 <span>›</span>
                 <span class="active">Distributors</span>
             </div>
-
         </div>
-
         <button class="add-btn" (click)="showModal = true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
             Add Distributor
         </button>
-
     </div>
-
-    <div class="info-box">
-        <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></i>
-        <span>
-            Click on <strong>"Add Distributor"</strong> button to create a new
-            distributor.
-        </span>
-    </div>
-<!--  -->
-
 
     <!-- Metrics Bar -->
     <div class="metrics-grid">
         <div class="metric-card total">
-            <div class="metric-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+            <div class="metric-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
             <div class="metric-info">
                 <h3>Total Distributors</h3>
                 <p>{{ totalDistributors }}</p>
             </div>
         </div>
         <div class="metric-card active">
-            <div class="metric-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg></div>
+            <div class="metric-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
+                </svg>
+            </div>
             <div class="metric-info">
-                <h3>Active Distributors</h3>
+                <h3>Active (this page)</h3>
                 <p>{{ activeDistributors }}</p>
             </div>
         </div>
         <div class="metric-card inactive">
-            <div class="metric-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg></div>
+            <div class="metric-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+            </div>
             <div class="metric-info">
-                <h3>Inactive Distributors</h3>
+                <h3>Inactive (this page)</h3>
                 <p>{{ inactiveDistributors }}</p>
             </div>
         </div>
     </div>
 
-<!--  -->
-
     <div class="table-card">
 
-        <div class="search-box">
-            <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></i>
-            <input type="text" placeholder="Search distributor...">
+        <!-- Controls Row -->
+        <div class="controls-row">
+            <div class="search-box">
+                <i>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </i>
+                <input type="text" [(ngModel)]="searchQuery" placeholder="Search by company, name or email…">
+            </div>
+
+            <div class="filter-box">
+                <div class="select-wrapper">
+                    <i>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                    </i>
+                    <select [(ngModel)]="statusFilter">
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active Only</option>
+                        <option value="Inactive">Inactive Only</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
-        <table>
+        <!-- Loading -->
+        @if (isLoading()) {
+        <div class="loading-state">
+            <div class="spinner-wrap"><span class="spinner"></span></div>
+            <p>Loading distributors…</p>
+        </div>
+        }
 
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Distributor Name</th>
-                    <th>Region</th>
-                    <th>Margin</th>
-                    <th>Ledger Balance</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+        <!-- Error -->
+        @else if (errorMessage()) {
+        <div class="error-banner" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" style="width:1.1rem;height:1.1rem;flex-shrink:0">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="12" cy="16" r="0.75" fill="currentColor"/>
+            </svg>
+            {{ errorMessage() }}
+            <button class="retry-btn" (click)="loadDistributors()">Retry</button>
+        </div>
+        }
 
-            <tbody>
-
-                @for(distributor of allDistributors; track distributor.id){
-
-                <tr>
-
-                    <td>{{ distributor.id }}</td>
-                    <td>{{ distributor.name }}</td>
-                    <td>{{ distributor.region }}</td>
-                    <td><span class="margin-badge">{{ distributor.margin }}</span></td>
-                    <td><strong>₹{{ distributor.ledger | number:'1.0-0' }}</strong></td>
-
-                    <td>
-                        <span class="status" [class.active-status]="distributor.status === 'Active'"
-                            [class.inactive-status]="distributor.status === 'Inactive'"
-                            [class.pending-status]="distributor.status === 'Pending'">
-
-                            {{ distributor.status }}
-
-                        </span>
-                    </td>
-                    <td class="action-cell">
-
-                        <div class="action-menu">
-
-                            <button class="menu-btn" (click)="toggleMenu(distributor.id); $event.stopPropagation()">
-
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-
-                            </button>
-
-                            @if(activeMenu === distributor.id){
-
-                            <div class="dropdown-menu">
-
-                                <button (click)="viewDistributor(distributor.id)">
-                                    <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i>
-                                    <span>Distributor Profile</span>
-                                </button>
-                                
-                                <button (click)="openLedgerModal(distributor)">
-                                    <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></i>
-                                    <span>Manage Ledger</span>
-                                </button>
-
-                                @if (distributor.status === 'Pending') {
-                                <button (click)="approveDistributor(distributor.name)">
-                                    <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg></i>
-                                    <span>Approve Request</span>
-                                </button>
-                                }
-
+        <!-- Table -->
+        @else {
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Distributor / Company</th>
+                        <th>Contact Details</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (dist of filteredDistributors; track dist.id) {
+                    <tr>
+                        <td>
+                            <div class="company-cell">
+                                <div class="company-avatar" [class.avatar-inactive]="!dist.isActive">
+                                    {{ getInitials(dist.firstName, dist.lastName, dist.companyName) }}
+                                </div>
+                                <div class="company-details">
+                                    <span class="company-name">{{ getDisplayName(dist) }}</span>
+                                    <span class="company-sub">{{ dist.email }}</span>
+                                </div>
                             </div>
-
-                            }
-
-                        </div>
-
-                    </td>
-                </tr>
-
-                }
-
-            </tbody>
-
-        </table>
-
-        <div class="table-footer">
-            Showing 1 to 5 of 12 entries
+                        </td>
+                        <td>
+                            <div class="contact-details">
+                                <span class="contact-name">{{ dist.firstName }} {{ dist.lastName }}</span>
+                                @if (dist.phone) {
+                                <span class="contact-phone">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                    </svg>
+                                    {{ dist.phone }}
+                                </span>
+                                }
+                            </div>
+                        </td>
+                        <td class="email-cell">{{ dist.email }}</td>
+                        <td>
+                            <span class="status"
+                                [class.active-status]="dist.isActive"
+                                [class.inactive-status]="!dist.isActive">
+                                <i>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:0.55em;height:0.55em">
+                                        <circle cx="12" cy="12" r="8"/>
+                                    </svg>
+                                </i>
+                                {{ dist.isActive ? 'Active' : 'Inactive' }}
+                            </span>
+                        </td>
+                        <td class="date-cell">{{ dist.createdAt | date:'d MMM y' }}</td>
+                        <td class="action-cell text-right">
+                            <button class="view-btn" (click)="viewDistributor(dist.id)">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:0.95em;height:0.95em">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                View Profile
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:2rem;height:2rem;color:#cbd5e1;margin-bottom:8px">
+                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            <p>No distributors found matching your filters.</p>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
         </div>
 
+        <!-- Footer -->
+        <div class="table-footer">
+            <span>Showing {{ filteredDistributors.length }} of {{ distributors().length }} on page {{ currentPage() }} · {{ totalCount() }} total</span>
+
+            @if (totalPages() > 1) {
+            <div class="pagination">
+                <button class="page-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">‹</button>
+                @for (p of pagesArray; track p; let i = $index) {
+                    @if (i > 0 && pagesArray[i - 1] !== p - 1) {
+                        <span class="page-ellipsis">…</span>
+                    }
+                    <button class="page-btn" [class.active]="p === currentPage()" (click)="goToPage(p)">{{ p }}</button>
+                }
+                <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">›</button>
+            </div>
+            }
+        </div>
+        }
     </div>
-
-
 
 </div>
 
-<!-- Modal -->
-
-@if(showModal){
+<!-- Add Distributor Modal -->
+@if (showModal) {
 <div class="modal-overlay">
     <div class="modal-container">
-        <app-add-distributor-modal (close)="closeModal()" (distributorSaved)="onDistributorSaved()">
+        <app-add-distributor-modal (close)="showModal = false" (distributorSaved)="onDistributorSaved()">
         </app-add-distributor-modal>
     </div>
 </div>
-
 }
 
-@if(showSuccessModal){
+@if (showSuccessModal) {
 <div class="modal-overlay">
     <div class="modal-container">
-        <app-distributor-created-success (close)="closeSuccessModal()">
+        <app-distributor-created-success (close)="showSuccessModal = false">
         </app-distributor-created-success>
-    </div>
-</div>
-}
-
-@if(showLedgerModal){
-<div class="modal-overlay">
-    <div class="modal-container ledger-modal">
-        <div class="modal-header">
-            <h3>Manage Wholesale Ledger</h3>
-            <button class="close-btn" (click)="closeLedgerModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-        </div>
-        <div class="modal-body">
-            <p>Distributor: <strong>{{ selectedDistributor?.name }}</strong></p>
-            <p>Current Balance: <strong>₹{{ selectedDistributor?.ledger | number:'1.0-0' }}</strong></p>
-            
-            <div class="form-group">
-                <label>Transaction Category</label>
-                <select [(ngModel)]="ledgerTransactionType">
-                    <option value="ADD">Core Top-Up (Add Funds)</option>
-                    <option value="DEDUCT">Manual Override (Deduct Funds)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Value (INR)</label>
-                <input type="number" [(ngModel)]="ledgerAmount" placeholder="Enter amount">
-            </div>
-
-            <div class="form-group">
-                <label>Corporate Bank Deposit Ref</label>
-                <input type="text" [(ngModel)]="ledgerRef" placeholder="e.g. UTR-123456789">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-cancel" (click)="closeLedgerModal()">Dismiss</button>
-            <button class="btn-primary" (click)="commitLedgerTransaction()">Commit Funding Entry</button>
-        </div>
     </div>
 </div>
 }

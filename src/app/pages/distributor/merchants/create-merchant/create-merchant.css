@@ -524,3 +524,65 @@ button {
     display: none;
   }
 }
+
+/* Success / Error Banners */
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(to right, #d1fae5, #ecfdf5);
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.success-banner svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #059669;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(to right, #fee2e2, #fff1f2);
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.error-banner svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Summary card (standalone, not inside split layout) */
+.form-step .summary-card {
+  margin-top: 32px;
+}
+
+/* Role Badge */
+.role-badge {
+  background: linear-gradient(135deg, var(--primary), #6366f1);
+  color: white;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+

@@ -1,6 +1,7 @@
 import { Component, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { AuthService } from "../services/auth.service"; // <-- Update the path if needed
 
 @Component({
   selector: "app-login",
@@ -10,20 +11,18 @@ import { Router, RouterLink } from "@angular/router";
   styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent {
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) { }
 
   email = "";
   password = "";
   rememberMe = false;
+
   showPassword = signal(false);
   isLoading = signal(false);
   errorMessage = signal("");
-
-  private readonly fakeUsers = [
-    { email: "admin@vexaro.in", password: "Admin@123", role: "SUPER_ADMIN" },
-    { email: "dist1@vexaro.in", password: "Dist@123", role: "DISTRIBUTOR" },
-    { email: "merchant1@vexaro.in", password: "Merch@123", role: "MERCHANT" },
-  ];
 
   togglePassword(): void {
     this.showPassword.update((v) => !v);
@@ -31,58 +30,44 @@ export class LoginComponent {
 
   onSubmit(): void {
     this.errorMessage.set("");
-    if (!this.email || !this.password) {
+
+    if (!this.email.trim() || !this.password.trim()) {
       this.errorMessage.set("Please enter your email and password.");
       return;
     }
 
     this.isLoading.set(true);
 
-    setTimeout(() => {
-      const user = this.fakeUsers.find(
-        (u) =>
-          u.email === this.email.trim().toLowerCase() &&
-          u.password === this.password,
-      );
-      this.isLoading.set(false);
+    this.authService.login(this.email.trim(), this.password).subscribe({
+      next: (response) => {
+        this.isLoading.set(false);
 
-      if (!user) {
-        this.errorMessage.set("Invalid email or password. Please try again.");
-        return;
-      }
+        const data = response.data;
 
-      // Store mock token and user role for strict route guards
-      localStorage.setItem("token", "mock-vexaro-session-token");
-      localStorage.setItem("userRole", user.role);
+        // Save tokens
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
 
-      switch (user.role) {
-        case "SUPER_ADMIN":
-          const hasChanged = localStorage.getItem("superAdminCredentialsChanged") === "true";
-          if (!hasChanged) {
-            this.router.navigate(["/change-credentials"]);
-          } else {
-            this.router.navigate(["/super-admin"]);
-          }
-          break;
-        case "DISTRIBUTOR":
-          const distChanged = localStorage.getItem("distributorCredentialsChanged") === "true";
-          if (!distChanged) {
-            this.router.navigate(["/set-password"], { queryParams: { token: "mockToken-dist" } });
-          } else {
-            this.router.navigate(["/distributor"]);
-          }
-          break;
-        case "MERCHANT":
-          const merchChanged = localStorage.getItem("merchantCredentialsChanged") === "true";
-          if (!merchChanged) {
-            this.router.navigate(["/set-password"], { queryParams: { token: "mockToken-merchant" } });
-          } else {
-            this.router.navigate(["/merchant"]);
-          }
-          break;
+        // Save logged in user
+        localStorage.setItem("user", JSON.stringify(data.user));
 
-        default: this.router.navigate(["/login"]);
-      }
-    }, 900);
+        // Save role separately (optional)
+        localStorage.setItem("userRole", data.user.role);
+
+        // Save redirect path (optional)
+        localStorage.setItem("redirectTo", `/${data.redirectTo}/dashboard`);
+
+        // Navigate to the page decided by backend
+        this.router.navigate([`/${data.redirectTo}/dashboard`]);
+      },
+
+      error: (error) => {
+        this.isLoading.set(false);
+        console.log(error)
+        this.errorMessage.set(
+          error?.error?.message || "Invalid email or password."
+        );
+      },
+    });
   }
 }

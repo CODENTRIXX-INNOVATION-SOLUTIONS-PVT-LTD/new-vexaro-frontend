@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { TitleCasePipe } from "@angular/common";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
+import { AuthService } from "../services/auth.service";
 
 @Component({
   selector: "app-register",
@@ -14,7 +15,8 @@ export class RegisterComponent implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-  ) {}
+    private authService: AuthService
+  ) { }
 
   inviteeName = signal("");
   inviteeRole = signal("");
@@ -64,24 +66,25 @@ export class RegisterComponent implements OnInit {
         return;
       }
 
-      // Mock verification request: GET /api/auth/verify-invite?token=inviteToken
       this.isLoading.set(true);
-      this.tokenValid.set(null); // set loading state
-      
-      setTimeout(() => {
-        this.isLoading.set(false);
-        // Simulate validating token
-        if (tokenVal === "invalid-token" || tokenVal.length < 5) {
-          this.tokenValid.set(false);
-        } else {
+      this.tokenValid.set(null);
+
+      this.authService.verifyInvite(tokenVal).subscribe({
+        next: (res) => {
+          this.isLoading.set(false);
           this.tokenValid.set(true);
-          // Simulate receiving payload from backend
-          const isDist = tokenVal.toLowerCase().includes("dist");
-          this.inviteeEmail.set(isDist ? "invited-distributor@vexaro.in" : "invited-merchant@vexaro.in");
-          this.inviteeRole.set(isDist ? "DISTRIBUTOR" : "MERCHANT");
-          this.inviteeName.set(isDist ? "Alex Distributor" : "Sam Merchant");
+
+          const data = res.data;
+          this.inviteeEmail.set(data.email);
+          this.inviteeRole.set(data.role);
+          this.inviteeName.set(data.name);
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          this.tokenValid.set(false);
+          console.error("Verify Invite Error:", err);
         }
-      }, 1000);
+      });
     });
   }
 
@@ -113,29 +116,44 @@ export class RegisterComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    // Mock API Call: POST /api/auth/set-password { token, password }
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.successMessage.set("Account activated successfully! Redirecting to dashboard...");
-      
-      setTimeout(() => {
-        // Set mock session details
-        localStorage.setItem("token", "mock-vexaro-session-token");
-        localStorage.setItem("userRole", this.inviteeRole());
+    this.authService.setPassword(this.token(), this.password).subscribe({
+      next: (res) => {
+        this.isLoading.set(false);
+        this.successMessage.set("Account activated successfully! Redirecting to dashboard...");
 
-        switch (this.inviteeRole()) {
-          case "DISTRIBUTOR":
-            localStorage.setItem("distributorCredentialsChanged", "true");
-            this.router.navigate(["/distributor"]);
-            break;
-          case "MERCHANT":
-            localStorage.setItem("merchantCredentialsChanged", "true");
-            this.router.navigate(["/merchant"]);
-            break;
-          default:
-            this.router.navigate(["/login"]);
+        const data = res.data;
+        // The API returns accessToken and refreshToken on set-password
+        if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
+        if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+        if (data.user?.role) localStorage.setItem("userRole", data.user.role);
+
+        setTimeout(() => {
+          if (data.redirectTo) {
+            this.router.navigate([data.redirectTo]);
+          } else {
+            // Fallback routing
+            switch (data.user?.role) {
+              case "DISTRIBUTOR":
+                this.router.navigate(["/distributor"]);
+                break;
+              case "MERCHANT":
+                this.router.navigate(["/merchant"]);
+                break;
+              default:
+                this.router.navigate(["/login"]);
+            }
+          }
+        }, 1500);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        let errorMsg = err.error?.message || "An error occurred while setting the password.";
+        if (err.error?.errors && Array.isArray(err.error.errors)) {
+          errorMsg = err.error.errors.map((e: any) => `${e.field}: ${e.message}`).join(' | ');
         }
-      }, 1500);
-    }, 1200);
+        this.errorMessage.set(errorMsg);
+        console.error("Set Password Error:", err.error);
+      }
+    });
   }
 }

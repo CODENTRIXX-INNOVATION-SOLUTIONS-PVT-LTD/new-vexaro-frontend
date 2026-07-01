@@ -427,3 +427,60 @@ select[readonly] {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
 }
+
+/* ── Loading & error states ─────────────────────────────────────────────────── */
+.profile-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    gap: 16px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.profile-spinner {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 3px solid rgba(11, 74, 111, 0.12);
+    border-top-color: rgb(11, 74, 111);
+    border-radius: 50%;
+    animation: dist-profile-spin 0.7s linear infinite;
+    display: inline-block;
+}
+
+@keyframes dist-profile-spin {
+    to { transform: rotate(360deg); }
+}
+
+.profile-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff1ee;
+    border: 1px solid rgba(192, 57, 27, 0.15);
+    color: #c0391b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    margin: 24px 0;
+}
+
+.retry-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid rgba(192, 57, 27, 0.35);
+    color: #c0391b;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.retry-btn:hover {
+    background: rgba(192, 57, 27, 0.07);
+}

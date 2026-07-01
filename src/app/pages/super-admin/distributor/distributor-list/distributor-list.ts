@@ -1,185 +1,136 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AddDistributorModal } from '../../../../models/add-distributor-modal/add-distributor-modal';
-import { DistributorCreatedSuccess } from '../../../../models/distributor-created-success/distributor-created-success';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FinancialStore } from '../../../../shared/financial-store';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+
+import { AddDistributorModal } from '../../../../models/add-distributor-modal/add-distributor-modal';
+import { DistributorCreatedSuccess } from '../../../../models/distributor-created-success/distributor-created-success';
+import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+
 @Component({
   selector: 'app-distributor-list',
   imports: [RouterLink, AddDistributorModal, DistributorCreatedSuccess, CommonModule, FormsModule],
   templateUrl: './distributor-list.html',
   styleUrl: './distributor-list.css'
 })
-export class DistributorList {
+export class DistributorList implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private merchantService = inject(MerchantService);
+  private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
 
+  // ── Remote state ─────────────────────────────────────────────────────────────
+  distributors = signal<MerchantUser[]>([]);
+  isLoading = signal(true);
+  errorMessage = signal('');
 
-  constructor(private router: Router) { }
+  // Pagination
+  currentPage = signal(1);
+  readonly pageLimit = 20;
+  totalCount = signal(0);
+  totalPages = signal(1);
+
+  // ── Modal state (kept from original) ─────────────────────────────────────────
   showModal = false;
   showAddModal = false;
   showSuccessModal = false;
 
-  // Ledger Modal State
-  showLedgerModal = false;
-  selectedDistributor: any = null;
-  ledgerAmount: number | null = null;
-  ledgerRef: string = '';
-  ledgerTransactionType: 'ADD' | 'DEDUCT' = 'ADD';
-
-  activeMenu: number | null = null;
-
-  toggleMenu(id: number) {
-    this.activeMenu = this.activeMenu === id ? null : id;
+  // ── Search (debounced, triggers backend call) ─────────────────────────────────
+  private _searchQuery = '';
+  get searchQuery(): string { return this._searchQuery; }
+  set searchQuery(value: string) {
+    this._searchQuery = value;
+    this.searchSubject.next(value);
   }
 
-  openSuccessModal() {
-    this.showSuccessModal = true;
+  // ── Derived counts ────────────────────────────────────────────────────────────
+  get totalDistributors()    { return this.totalCount(); }
+  get activeDistributors()   { return this.distributors().filter(d => d.isActive).length; }
+  get inactiveDistributors() { return this.distributors().filter(d => !d.isActive).length; }
+
+  // Status filter — client-side on current page (backend has no isActive param)
+  statusFilter = 'All';
+  get filteredDistributors(): MerchantUser[] {
+    if (this.statusFilter === 'All') return this.distributors();
+    const wantActive = this.statusFilter === 'Active';
+    return this.distributors().filter(d => d.isActive === wantActive);
   }
 
-  closeSuccessModal() {
-    this.showSuccessModal = false;
+  // ── Lifecycle ─────────────────────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.searchSubject.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.currentPage.set(1);
+      this.loadDistributors();
+    });
+    this.loadDistributors();
   }
 
-  openAddModal() {
-    this.showAddModal = true;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  closeAddModal() {
-    this.showAddModal = false;
-  }
+  // ── Data loading ──────────────────────────────────────────────────────────────
+  loadDistributors(): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
-  onDistributorSaved() {
-    this.showAddModal = false;
-    this.showSuccessModal = true;
-  }
-
-  openLedgerModal(dist: any) {
-    this.selectedDistributor = dist;
-    this.showLedgerModal = true;
-    this.activeMenu = null;
-  }
-
-  closeLedgerModal() {
-    this.showLedgerModal = false;
-    this.selectedDistributor = null;
-    this.ledgerAmount = null;
-    this.ledgerRef = '';
-    this.ledgerTransactionType = 'ADD';
-  }
-
-  commitLedgerTransaction() {
-    if (!this.ledgerAmount || this.ledgerAmount <= 0) {
-      alert('Please enter a valid amount.');
-      return;
-    }
-    if (!this.ledgerRef.trim()) {
-      alert('Please enter a reference number.');
-      return;
-    }
-
-    if (this.ledgerTransactionType === 'ADD') {
-      this.selectedDistributor.ledger += this.ledgerAmount;
-    } else {
-      if (this.selectedDistributor.ledger < this.ledgerAmount) {
-         alert('Insufficient balance to deduct!');
-         return;
+    this.merchantService.listDistributors({
+      search: this._searchQuery.trim() || undefined,
+      page: this.currentPage(),
+      limit: this.pageLimit,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.distributors.set(res.data.users);
+        this.totalCount.set(res.meta.total);
+        this.totalPages.set(res.meta.pages);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.errorMessage.set(err?.error?.message || 'Failed to load distributors. Please try again.');
+        this.isLoading.set(false);
       }
-      this.selectedDistributor.ledger -= this.ledgerAmount;
-    }
-
-    alert(`Ledger successfully updated. New Balance: ₹${this.selectedDistributor.ledger}`);
-    this.closeLedgerModal();
+    });
   }
 
-  get totalDistributors() {
-    return this.allDistributors.length;
+  // ── Pagination ────────────────────────────────────────────────────────────────
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadDistributors();
   }
 
-  get activeDistributors() {
-    return this.allDistributors.filter(
-      d => d.status === 'Active'
-    ).length;
+  get pagesArray(): number[] {
+    const total = this.totalPages();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const cur = this.currentPage();
+    const pages = new Set([1, total, cur - 1, cur, cur + 1].filter(p => p >= 1 && p <= total));
+    return [...pages].sort((a, b) => a - b);
   }
 
-  get inactiveDistributors() {
-    return this.allDistributors.filter(
-      d => d.status === 'Inactive'
-    ).length;
-  }
-
-  distributors = [
-    {
-      id: 1,
-      name: 'SpeedX Logistics',
-      region: 'North Zone',
-      margin: '+12%',
-      ledger: 450000,
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'FastWay Distributors',
-      region: 'West Zone',
-      margin: '+10%',
-      ledger: 120000,
-      status: 'Active'
-    },
-    {
-      id: 3,
-      name: 'QuickMove Logistics',
-      region: 'South Zone',
-      margin: '+15%',
-      ledger: 0,
-      status: 'Inactive'
-    },
-    {
-      id: 4,
-      name: 'Swift Distributors',
-      region: 'East Zone',
-      margin: '+10%',
-      ledger: 250000,
-      status: 'Active'
-    },
-    {
-      id: 5,
-      name: 'Global Reach Dist.',
-      region: 'Central Zone',
-      margin: '+8%',
-      ledger: 75000,
-      status: 'Active'
-    }
-  ];
-
-  openModal() {
-    this.showModal = true;
-  }
-
-  closeModal() {
-    this.showModal = false;
-  }
-
-
-  viewDistributor(id: number): void {
+  // ── Actions ───────────────────────────────────────────────────────────────────
+  viewDistributor(id: string): void {
     this.router.navigate(['/super-admin/distributors/profile', id]);
   }
 
-  get allDistributors() {
-    const mappedRequests = FinancialStore.onboardingRequests.map((req, index) => ({
-      id: 10 + index,
-      name: req.distributorName,
-      region: req.region,
-      margin: '+10%',
-      ledger: 0,
-      status: req.status
-    }));
-    return [...this.distributors, ...mappedRequests];
+  onDistributorSaved(): void {
+    this.showAddModal = false;
+    this.showSuccessModal = true;
+    this.loadDistributors(); // refresh after adding
   }
 
-  approveDistributor(name: string) {
-    const req = FinancialStore.onboardingRequests.find(r => r.distributorName === name);
-    if (req) {
-      req.status = 'Active';
-      alert(`Distributor account for "${name}" approved successfully!`);
-    }
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  getInitials(firstName: string, lastName: string, companyName?: string): string {
+    const src = companyName || `${firstName} ${lastName}`;
+    return src.split(' ').map(p => p.charAt(0)).join('').substring(0, 2).toUpperCase() || 'D';
+  }
+
+  getDisplayName(d: MerchantUser): string {
+    return d.companyName || `${d.firstName} ${d.lastName}`;
   }
 }

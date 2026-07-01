@@ -1,62 +1,74 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { UserService } from '../../../../services/user.service';
 
 @Component({
   selector: 'app-create-merchant',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './create-merchant.html',
   styleUrl: './create-merchant.css'
 })
-export class CreateMerchant implements OnInit {
-  merchantForm!: FormGroup;
-  currentStep: number = 1;
-  totalSteps: number = 3;
-  isSubmitting: boolean = false;
+export class CreateMerchant {
+  currentStep = 1;
+  totalSteps = 2;
+  isSubmitting = false;
+  errorMessage = '';
+  successMessage = '';
 
-  // Preview of auto-generated IDs
-  previewMerchantId: string = '';
-  previewWarehouseId: string = '';
+  // Step 1 — Merchant Personal Info
+  firstName = '';
+  lastName = '';
+  email = '';
+  phone = '';
+  companyName = '';
 
-  constructor(private fb: FormBuilder, private router: Router) {}
+  // Step 2 — Warehouse Details (required for MERCHANT role)
+  warehouseAddress = '';
+  warehousePincode = '';
+  warehouseCity = '';
+  warehouseState = '';
+  warehouseCountry = 'India';
+  warehouseContactPerson = '';
+  warehouseName = '';
+  warehouseGstNo = '';
 
-  ngOnInit() {
-    this.merchantForm = this.fb.group({
-      // Step 1 — Business Info
-      businessName: ['', [Validators.required, Validators.minLength(3)]],
-      displayName: ['', Validators.required],
-      gstin: ['', [Validators.pattern(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/)]],
-      pan: ['', [Validators.pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)]],
+  readonly INDIAN_STATES = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Puducherry'
+  ];
 
-      // Step 2 — Contact Info
-      contactPerson: ['', Validators.required],
-      phone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
-      email: ['', [Validators.required, Validators.email]],
-      addressLine1: ['', Validators.required],
-      city: ['', Validators.required],
-      state: ['', Validators.required],
-      pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  constructor(private router: Router, private userService: UserService) {}
 
-      // Step 3 — Financial Setup
-      creditLimit: [0, [Validators.required, Validators.min(0)]],
-      paymentTerms: ['Prepaid', Validators.required],
-      initialWalletTopup: [0, [Validators.min(0)]],
-    });
-
-    this.generatePreviewIds();
+  isStep1Valid(): boolean {
+    return !!(
+      this.firstName.trim() &&
+      this.lastName.trim() &&
+      this.email.trim() &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())
+    );
   }
 
-  generatePreviewIds() {
-    const timestamp = Date.now().toString().slice(-6);
-    this.previewMerchantId = `MRC-${timestamp}`;
-    this.previewWarehouseId = `WH-${timestamp}`;
+  isStep2Valid(): boolean {
+    return !!(
+      this.warehouseAddress.trim().length >= 5 &&
+      this.warehousePincode.trim().length === 6 &&
+      /^\d{6}$/.test(this.warehousePincode.trim()) &&
+      this.warehouseCity.trim() &&
+      this.warehouseState.trim() &&
+      this.warehouseContactPerson.trim()
+    );
   }
 
   nextStep() {
-    if (this.currentStep < this.totalSteps) {
-      this.currentStep++;
+    if (this.currentStep === 1 && this.isStep1Valid()) {
+      this.currentStep = 2;
     }
   }
 
@@ -66,37 +78,48 @@ export class CreateMerchant implements OnInit {
     }
   }
 
-  isStepValid(): boolean {
-    if (this.currentStep === 1) {
-      return this.merchantForm.get('businessName')?.valid === true &&
-             this.merchantForm.get('displayName')?.valid === true &&
-             this.merchantForm.get('gstin')?.valid === true &&
-             this.merchantForm.get('pan')?.valid === true;
-    }
-    if (this.currentStep === 2) {
-      return this.merchantForm.get('contactPerson')?.valid === true &&
-             this.merchantForm.get('phone')?.valid === true &&
-             this.merchantForm.get('email')?.valid === true &&
-             this.merchantForm.get('addressLine1')?.valid === true &&
-             this.merchantForm.get('city')?.valid === true &&
-             this.merchantForm.get('state')?.valid === true &&
-             this.merchantForm.get('pincode')?.valid === true;
-    }
-    return true;
-  }
-
   submitMerchant() {
-    if (this.merchantForm.invalid) return;
+    if (!this.isStep1Valid() || !this.isStep2Valid()) return;
+
     this.isSubmitting = true;
-    // TODO: API Call
-    // POST /distributor/:id/merchants
-    // Body: { ...merchantForm.value }
-    // Response: { merchantId, warehouseId, loginCredentials }
-    console.log('Creating merchant:', this.merchantForm.value);
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.router.navigate(['/distributor/merchants']);
-    }, 1500);
+    this.errorMessage = '';
+
+    const payload: any = {
+      firstName: this.firstName.trim(),
+      lastName: this.lastName.trim(),
+      email: this.email.trim(),
+      role: 'MERCHANT',
+      warehouse: {
+        address: this.warehouseAddress.trim(),
+        pincode: this.warehousePincode.trim(),
+        city: this.warehouseCity.trim(),
+        state: this.warehouseState.trim(),
+        country: this.warehouseCountry.trim() || 'India',
+        contactPerson: this.warehouseContactPerson.trim(),
+      }
+    };
+
+    if (this.phone?.trim()) payload.phone = this.phone.trim();
+    if (this.companyName?.trim()) payload.companyName = this.companyName.trim();
+    if (this.warehouseName?.trim()) payload.warehouse.name = this.warehouseName.trim();
+    if (this.warehouseGstNo?.trim()) payload.warehouse.gstNo = this.warehouseGstNo.trim();
+
+    this.userService.inviteUser(payload).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.successMessage = 'Merchant invited successfully! An email has been sent to set their password.';
+        setTimeout(() => this.router.navigate(['/distributor/merchants']), 2000);
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        let msg = err.error?.message || 'Failed to invite merchant. Please try again.';
+        if (err.error?.errors && Array.isArray(err.error.errors)) {
+          msg = err.error.errors.map((e: any) => `${e.field}: ${e.message}`).join(' | ');
+        }
+        this.errorMessage = msg;
+        console.error('Create Merchant Error:', err.error);
+      }
+    });
   }
 
   cancel() {
