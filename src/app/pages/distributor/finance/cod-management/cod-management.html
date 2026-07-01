@@ -89,10 +89,21 @@
                             </span>
                         </td>
                         <td>
-                            <button *ngIf="record.status === 'Pending Remittance'" class="action-btn success-btn" (click)="markAsRemitted(record.awb)" title="Mark as Remitted">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg> Remit to Merchant
-                            </button>
-                            <span *ngIf="record.status !== 'Pending Remittance'" style="font-size: 12px; color: #9ca3af;">Cleared</span>
+                            @if (userRole === 'SUPER_ADMIN' && record.rawStatus === 'PENDING') {
+                                <button class="action-btn success-btn" (click)="markAsRemitted(record)" title="Confirm Vexaro Settlement">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirm Vexaro Settle
+                                </button>
+                            } @else if (userRole === 'DISTRIBUTOR' && record.rawStatus === 'SETTLED_TO_VEXARO') {
+                                <button class="action-btn success-btn" (click)="markAsRemitted(record)" title="Release to Merchant">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg> Remit to Merchant
+                                </button>
+                            } @else if (record.rawStatus === 'PENDING') {
+                                <span style="font-size: 12px; color: #94a3b8;">Awaiting Vexaro Settle</span>
+                            } @else if (record.rawStatus === 'SETTLED_TO_VEXARO') {
+                                <span style="font-size: 12px; color: #64748b;">Awaiting Distributor Release</span>
+                            } @else {
+                                <span style="font-size: 12px; color: #9ca3af;">Cleared</span>
+                            }
                         </td>
                     </tr>
                     }
