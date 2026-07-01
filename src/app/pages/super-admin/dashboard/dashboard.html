@@ -1,11 +1,6 @@
 <div class="dashboard">
-    <app-dashboard-header
-        role="Super Admin"
-        userName="Vishwas Gour"
-        email="vishwasgour@gmail.com"
-        profileImage="https://i.pravatar.cc/150?img=12"
-    ></app-dashboard-header>
-    <app-stats-cards [cards]="cards"></app-stats-cards>
+    <app-dashboard-header></app-dashboard-header>
+    <app-stats-cards [cards]="cards" [isLoading]="isLoading()"></app-stats-cards>
     <app-chart-section></app-chart-section>
     <div class="bottom-section">
         <app-recent-shipments></app-recent-shipments>

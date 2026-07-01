@@ -1,8 +1,48 @@
 <div class="shipment-card">
     <div class="header">
         <h2>Recent Shipments</h2>
-        <button class="view-btn"> View All</button>
+        <a routerLink="/super-admin/shipments" class="view-btn">View All</a>
     </div>
+
+    <!-- Loading skeleton -->
+    @if (isLoading()) {
+    <div class="skeleton-rows">
+        @for (i of [1,2,3,4,5]; track i) {
+        <div class="skeleton-row">
+            <div class="sk sk-md"></div>
+            <div class="sk sk-lg"></div>
+            <div class="sk sk-sm"></div>
+            <div class="sk sk-md"></div>
+            <div class="sk sk-sm"></div>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- Error state -->
+    @else if (hasError()) {
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" style="width:2rem;height:2rem;color:#cbd5e1">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="0.75" fill="currentColor"/>
+        </svg>
+        <p>Could not load shipments.</p>
+    </div>
+    }
+
+    <!-- Empty -->
+    @else if (rows().length === 0) {
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" style="width:2rem;height:2rem;color:#cbd5e1">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <p>No shipments yet.</p>
+    </div>
+    }
+
+    <!-- Table -->
+    @else {
     <div class="table-wrapper">
         <table>
             <thead>
@@ -15,22 +55,24 @@
                 </tr>
             </thead>
             <tbody>
-                @for(shipment of shipments; track shipment.trackingId){
+                @for (shipment of rows(); track shipment.trackingId) {
                 <tr>
-                    <td>{{shipment.trackingId}}</td>
-                    <td>{{shipment.customer}}</td>
+                    <td>{{ shipment.trackingId }}</td>
+                    <td>{{ shipment.customer }}</td>
                     <td>
-                        <span class="status" [class.delivered]="shipment.status==='Delivered'"
-                            [class.transit]="shipment.status==='In Transit'"
-                            [class.pending]="shipment.status==='Pending'">
-                            {{shipment.status}}
+                        <span class="status"
+                            [class.delivered]="statusClass(shipment.status) === 'delivered'"
+                            [class.transit]="statusClass(shipment.status) === 'transit'"
+                            [class.pending]="statusClass(shipment.status) === 'pending'">
+                            {{ shipment.status }}
                         </span>
                     </td>
-                    <td>{{shipment.courier}}</td>
-                    <td>{{shipment.date}}</td>
+                    <td>{{ shipment.courier }}</td>
+                    <td>{{ shipment.date }}</td>
                 </tr>
                 }
             </tbody>
         </table>
     </div>
+    }
 </div>

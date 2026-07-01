@@ -332,3 +332,59 @@ tbody tr:hover {
         padding: 5px 10px;
     }
 }
+
+/* ── Skeleton loading rows ─────────────────────────────────────────────────── */
+.skeleton-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.skeleton-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+.sk {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: sk-shimmer 1.4s infinite;
+    flex-shrink: 0;
+}
+
+.sk-sm  { width: 80px;  }
+.sk-md  { width: 130px; }
+.sk-lg  { width: 160px; }
+
+@keyframes sk-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Empty / error state ───────────────────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px 16px;
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.empty-state p { margin: 0; }
+
+/* View All as anchor ──────────────────────────────────────────────────────── */
+a.view-btn {
+    text-decoration: none;
+    display: inline-block;
+}

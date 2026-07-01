@@ -1,5 +1,6 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, inject } from '@angular/core';
 import Chart from 'chart.js/auto';
+import { DashboardService } from '../../services/dashboard.service';
 
 @Component({
   selector: 'app-chart-section',
@@ -9,37 +10,32 @@ import Chart from 'chart.js/auto';
   styleUrl: './chart-section.css',
 })
 export class ChartSection implements AfterViewInit {
+  private dashboardService = inject(DashboardService);
 
   ngAfterViewInit(): void {
+    this.dashboardService.getShipmentChartData().subscribe({
+      next: ({ lineChart, pieChart }) => {
+        this.renderLineChart(lineChart);
+        this.renderPieChart(pieChart);
+      },
+      error: (error) => {
+        console.error('Error fetching chart data:', error);
+        // Fallback to empty charts on error
+        this.renderLineChart({
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{ label: 'Shipments', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#2196f3', backgroundColor: '#2196f3', tension: 0.4 }]
+        });
+        this.renderPieChart({ labels: ['No Data'], data: [1] });
+      }
+    });
+  }
 
-    // Line Chart
+  private renderLineChart(data: any): void {
     new Chart('shipmentChart', {
-      type: 'line',
+      type: 'bar',
       data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [
-          {
-            label: 'Pending',
-            data: [80, 95, 70, 110, 90, 120, 100],
-            borderColor: '#ff9800',
-            backgroundColor: '#ff9800',
-            tension: 0.4
-          },
-          {
-            label: 'Delivered',
-            data: [120, 180, 140, 220, 170, 250, 210],
-            borderColor: '#4caf50',
-            backgroundColor: '#4caf50',
-            tension: 0.4
-          },
-          {
-            label: 'In Process',
-            data: [60, 85, 75, 100, 95, 130, 115],
-            borderColor: '#2196f3',
-            backgroundColor: '#2196f3',
-            tension: 0.4
-          }
-        ]
+        labels: data.labels,
+        datasets: data.datasets
       },
       options: {
         responsive: true,
@@ -56,13 +52,15 @@ export class ChartSection implements AfterViewInit {
         }
       }
     });
-    // Pie Chart
+  }
+
+  private renderPieChart(data: any): void {
     new Chart('courierPieChart', {
       type: 'pie',
       data: {
-        labels: ['BlueDart', 'Delhivery', 'DTDC'],
+        labels: data.labels,
         datasets: [{
-          data: [45, 30, 25]
+          data: data.data
         }]
       },
       options: {
@@ -70,6 +68,5 @@ export class ChartSection implements AfterViewInit {
         maintainAspectRatio: false
       }
     });
-
   }
 }
