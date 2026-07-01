@@ -6,7 +6,7 @@ interface PlatformUser {
   id: string;
   name: string;
   email: string;
-  role: "Super Admin" | "Operator" | "Support Agent" | "Auditor";
+  role: "Super Admin" | "Distributor" | "Merchant";
   status: "Active" | "Inactive";
   joinedDate: string;
 }
@@ -23,17 +23,17 @@ export class UserManagement {
 
   users = signal<PlatformUser[]>([
     { id: "USR-001", name: "Aashish Verma", email: "aashish@vexaro.com", role: "Super Admin", status: "Active", joinedDate: "2025-01-10" },
-    { id: "USR-002", name: "Ramesh Sharma", email: "ramesh.operator@vexaro.com", role: "Operator", status: "Active", joinedDate: "2025-03-15" },
-    { id: "USR-003", name: "Priya Nair", email: "priya.support@vexaro.com", role: "Support Agent", status: "Active", joinedDate: "2025-04-20" },
-    { id: "USR-004", name: "John Doe", email: "john.auditor@vexaro.com", role: "Auditor", status: "Inactive", joinedDate: "2025-05-12" },
-    { id: "USR-005", name: "Kunal Sen", email: "kunal.ops@vexaro.com", role: "Operator", status: "Active", joinedDate: "2025-06-01" }
+    { id: "USR-002", name: "Rahul Sharma", email: "rahul.distributor@vexaro.com", role: "Distributor", status: "Active", joinedDate: "2025-03-15" },
+    { id: "USR-003", name: "Priya Nair", email: "priya.merchant@vexaro.com", role: "Merchant", status: "Active", joinedDate: "2025-04-20" },
+    { id: "USR-004", name: "John Doe", email: "john.distributor@vexaro.com", role: "Distributor", status: "Inactive", joinedDate: "2025-05-12" },
+    { id: "USR-005", name: "Kunal Sen", email: "kunal.merchant@vexaro.com", role: "Merchant", status: "Active", joinedDate: "2025-06-01" }
   ]);
 
   // Form management
   showAddForm = signal<boolean>(false);
   newUserName = "";
   newUserEmail = "";
-  newUserRole: "Super Admin" | "Operator" | "Support Agent" | "Auditor" = "Operator";
+  newUserRole: "Super Admin" | "Distributor" | "Merchant" = "Merchant";
 
   notificationMessage = signal<string | null>(null);
 
@@ -90,9 +90,9 @@ export class UserManagement {
     // Clear forms
     this.newUserName = "";
     this.newUserEmail = "";
-    this.newUserRole = "Operator";
+    this.newUserRole = "Merchant";
     this.showAddForm.set(false);
 
-    this.showNotification("New staff user added successfully.");
+    this.showNotification("New user registered successfully.");
   }
 }

@@ -10,12 +10,12 @@
   <!-- Header -->
   <header class="page-header">
     <div class="header-info">
-      <h1>Platform Operators & Staff</h1>
-      <p>Configure dashboard permissions, search system staff accounts, and manage operator status.</p>
+      <h1>Platform Users</h1>
+      <p>Manage system user accounts, search user details, and modify status.</p>
     </div>
     <button class="primary-btn" (click)="showAddForm.set(!showAddForm())">
       <span class="material-icons">{{ showAddForm() ? 'close' : 'add' }}</span>
-      {{ showAddForm() ? 'Close Form' : 'Register Staff Member' }}
+      {{ showAddForm() ? 'Close Form' : 'Register User' }}
     </button>
   </header>
 
@@ -23,7 +23,7 @@
   @if (showAddForm()) {
     <div class="card form-card animated-slide">
       <div class="card-header">
-        <h3>Register New Staff Account</h3>
+        <h3>Register New User Account</h3>
       </div>
       <form (ngSubmit)="addUser()" #staffForm="ngForm" class="card-body">
         <div class="form-grid">
@@ -54,10 +54,9 @@
           <div class="form-group">
             <label for="userRole">Dashboard Role Permission</label>
             <select id="userRole" name="role" [(ngModel)]="newUserRole" class="form-control">
-              <option value="Operator">Warehouse Operator</option>
-              <option value="Support Agent">Customer Support Desk</option>
-              <option value="Auditor">Weight Mismatch Auditor</option>
-              <option value="Super Admin">System Administrator</option>
+              <option value="Super Admin">Super Admin</option>
+              <option value="Distributor">Distributor</option>
+              <option value="Merchant">Merchant</option>
             </select>
           </div>
         </div>
@@ -65,7 +64,7 @@
         <div class="form-actions">
           <button type="submit" class="primary-btn" [disabled]="!staffForm.form.valid">
             <span class="material-icons">check</span>
-            Activate Account
+            Register User
           </button>
         </div>
       </form>
@@ -79,7 +78,7 @@
       <span class="material-icons search-icon">search</span>
       <input
         type="text"
-        placeholder="Search staff by name, email or ID..."
+        placeholder="Search users by name, email or ID..."
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)"
       />
@@ -94,10 +93,9 @@
         (ngModelChange)="roleFilter.set($event)"
       >
         <option value="ALL">All Roles</option>
-        <option value="Super Admin">Super Administrator</option>
-        <option value="Operator">Warehouse Operator</option>
-        <option value="Support Agent">Customer Support</option>
-        <option value="Auditor">Weight Auditor</option>
+        <option value="Super Admin">Super Admin</option>
+        <option value="Distributor">Distributor</option>
+        <option value="Merchant">Merchant</option>
       </select>
     </div>
   </div>
@@ -160,8 +158,8 @@
             <tr>
               <td colspan="6" class="empty-row">
                 <span class="material-icons empty-icon">group_off</span>
-                <h4>No System Staff Found</h4>
-                <p>Verify spelling adjustments or register a new administrator above.</p>
+                <h4>No Users Found</h4>
+                <p>Verify spelling adjustments or register a new user above.</p>
               </td>
             </tr>
           }
