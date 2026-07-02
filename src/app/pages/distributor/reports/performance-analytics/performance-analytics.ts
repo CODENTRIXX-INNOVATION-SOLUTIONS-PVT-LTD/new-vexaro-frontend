@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CsvExportService } from '../../../../shared/csv-export.service';
+import { ReportsService } from '../../../../services/reports.service';
 
 @Component({
   selector: 'app-performance-analytics',
@@ -26,27 +27,32 @@ export class PerformanceAnalytics implements OnInit {
 
   private csvService = inject(CsvExportService);
 
+  constructor(private reportsService: ReportsService) {}
+
   ngOnInit() {
     this.loadAnalytics();
   }
 
   loadAnalytics() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/reports/performance
-    this.summary = {
-      revenue: 545000,
-      profitMargin: '9%',
-      activeMerchants: 10,
-      merchantGrowth: '+12%'
-    };
-    this.dataList = [
-      { name: 'Average Pickup Time', value: '2.4 Hours', rating: 'Excellent', ratingClass: 'text-success' },
-      { name: 'Average Delivery Time', value: '2.8 Days', rating: 'Good', ratingClass: 'text-primary' },
-      { name: 'RTO Rate', value: '4.2%', rating: 'Very Low', ratingClass: 'text-success' },
-      { name: 'Customer Satisfaction', value: '4.8 / 5', rating: 'Excellent', ratingClass: 'text-success' },
-      { name: 'Dispute Resolution Rate', value: '96%', rating: 'Excellent', ratingClass: 'text-success' },
-    ];
-    this.isLoading = false;
+    this.reportsService.getPerformanceReport().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.summary = {
+            revenue: response.data.revenue || 0,
+            profitMargin: response.data.profitMargin || '0%',
+            activeMerchants: response.data.activeMerchants || 0,
+            merchantGrowth: response.data.merchantGrowth || '+0%'
+          };
+          this.dataList = response.data.metrics || [];
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading performance analytics:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   exportCSV() {

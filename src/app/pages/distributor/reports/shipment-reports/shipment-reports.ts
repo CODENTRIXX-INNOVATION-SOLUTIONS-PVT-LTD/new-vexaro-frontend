@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CsvExportService } from '../../../../shared/csv-export.service';
+import { ReportsService } from '../../../../services/reports.service';
 
 @Component({
   selector: 'app-shipment-reports',
@@ -26,27 +27,32 @@ export class ShipmentReports implements OnInit {
 
   private csvService = inject(CsvExportService);
 
+  constructor(private reportsService: ReportsService) {}
+
   ngOnInit() {
     this.loadReport();
   }
 
   loadReport() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/reports/shipments
-    this.summary = {
-      total: 890,
-      delivered: 812,
-      failed: 43,
-      rto: 35
-    };
-    this.dataList = [
-      { date: '17 Jun 2026', total: 48, delivered: 42, failed: 4, rto: 2, codCollected: 45000 },
-      { date: '16 Jun 2026', total: 55, delivered: 50, failed: 3, rto: 2, codCollected: 38000 },
-      { date: '15 Jun 2026', total: 60, delivered: 55, failed: 3, rto: 2, codCollected: 52000 },
-      { date: '14 Jun 2026', total: 42, delivered: 38, failed: 2, rto: 2, codCollected: 29000 },
-      { date: '13 Jun 2026', total: 38, delivered: 35, failed: 2, rto: 1, codCollected: 18000 },
-    ];
-    this.isLoading = false;
+    this.reportsService.getShipmentsReport().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.summary = {
+            total: response.data.total || 0,
+            delivered: response.data.delivered || 0,
+            failed: response.data.failed || 0,
+            rto: response.data.rto || 0
+          };
+          this.dataList = response.data.dataList || [];
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading shipment report:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   exportPDF() {

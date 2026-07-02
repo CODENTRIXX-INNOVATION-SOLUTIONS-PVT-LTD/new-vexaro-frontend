@@ -23,17 +23,17 @@
 
     <div class="analytics-card">
         <h4>Delivery Success Rate</h4>
-        <h2>92%</h2>
+        <h2>{{ shipmentAnalytics.deliverySuccessRate }}%</h2>
     </div>
 
     <div class="analytics-card">
         <h4>Average Delivery Time</h4>
-        <h2>2.4 Days</h2>
+        <h2>{{ shipmentAnalytics.averageDeliveryTime }} Days</h2>
     </div>
 
     <div class="analytics-card">
         <h4>Delayed Shipments</h4>
-        <h2>54</h2>
+        <h2>{{ shipmentAnalytics.delayedShipments }}</h2>
     </div>
 
 </div>
@@ -78,17 +78,18 @@
             <th>Delivered</th>
         </tr>
 
+        @for (merchant of topMerchantsByShipments; track merchant.merchantName) {
         <tr>
-            <td>ABC Store</td>
-            <td>250</td>
-            <td>230</td>
+            <td>{{ merchant.merchantName }}</td>
+            <td>{{ merchant.totalShipments }}</td>
+            <td>{{ merchant.delivered }}</td>
         </tr>
-
+        }
+        @if (topMerchantsByShipments.length === 0) {
         <tr>
-            <td>XYZ Fashion</td>
-            <td>180</td>
-            <td>170</td>
+            <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
         </tr>
+        }
 
     </table>
 
@@ -109,12 +110,19 @@
             <th>Date</th>
         </tr>
 
+        @for (shipment of recentShipments; track shipment.trackingId) {
         <tr>
-            <td>TRK1001</td>
-            <td>ABC Store</td>
-            <td><span class="badge delivered">Delivered</span></td>
-            <td>15 Aug 2026</td>
+            <td>{{ shipment.trackingId }}</td>
+            <td>{{ shipment.merchant }}</td>
+            <td><span class="badge {{ getStatusClass(shipment.status) }}">{{ shipment.status }}</span></td>
+            <td>{{ shipment.date }}</td>
         </tr>
+        }
+        @if (recentShipments.length === 0) {
+        <tr>
+            <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+        </tr>
+        }
 
     </table>
 

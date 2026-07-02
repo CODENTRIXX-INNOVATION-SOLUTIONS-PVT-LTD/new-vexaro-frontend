@@ -74,42 +74,14 @@
                 <div class="icon-circle green">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline><line x1="12" y1="7" x2="12" y2="12"></line><line x1="12" y1="12" x2="16" y2="14"></line></svg>
                 </div>
-                <span>Request History</span>
+                <span>Payment History</span>
             </div>
 
             <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Method</th>
-                            <th>Reference</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let req of myRequests">
-                            <td class="req-id">{{ req.requestId }}</td>
-                            <td class="date-cell">{{ req.date }}</td>
-                            <td class="amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
-                            <td><span class="method-badge">{{ req.method }}</span></td>
-                            <td class="ref-cell">{{ req.reference }}</td>
-                            <td>
-                                <span class="badge" 
-                                    [class.success]="req.status === 'Approved'"
-                                    [class.pending]="req.status === 'Pending'"
-                                    [class.failed]="req.status === 'Rejected'">
-                                    {{ req.status }}
-                                </span>
-                            </td>
-                        </tr>
-                        <tr *ngIf="myRequests.length === 0">
-                            <td colspan="6" class="empty-state">No requests found.</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="empty-state">
+                    <p>Payment history is available in the Transactions page.</p>
+                    <a routerLink="/distributor/finance/transactions" class="link-btn">View Transactions</a>
+                </div>
             </div>
         </div>
     </div>

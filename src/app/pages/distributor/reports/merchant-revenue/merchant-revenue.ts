@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CsvExportService } from '../../../../shared/csv-export.service';
+import { ReportsService } from '../../../../services/reports.service';
 
 export interface MerchantRevenue {
   id: string;
@@ -127,21 +128,41 @@ export interface MerchantRevenue {
 })
 export class MerchantRevenueReport implements OnInit {
   searchTerm: string = '';
-  data: MerchantRevenue[] = [
-    { id: 'MER001', name: 'ABC Electronics', shipments: 380, revenue: 190000, codRemitted: 110000, codPending: 80000, franchiseShare: 18000 },
-    { id: 'MER002', name: 'Global Traders', shipments: 450, revenue: 320000, codRemitted: 270000, codPending: 50000, franchiseShare: 25000 },
-    { id: 'MER003', name: 'Prime Retail', shipments: 60, revenue: 35000, codRemitted: 35000, codPending: 0, franchiseShare: 2000 }
-  ];
+  data: MerchantRevenue[] = [];
   filteredData: MerchantRevenue[] = [];
 
   private csvService = inject(CsvExportService);
+
+  constructor(private reportsService: ReportsService) {}
 
   get totalRevenue(): number { return this.data.reduce((s, d) => s + d.revenue, 0); }
   get totalShipments(): number { return this.data.reduce((s, d) => s + d.shipments, 0); }
   get totalProfit(): number { return this.data.reduce((s, d) => s + d.franchiseShare, 0); }
 
   ngOnInit() {
-    this.applyFilters();
+    this.loadReport();
+  }
+
+  loadReport() {
+    this.reportsService.getMerchantRevenueReport().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.merchants) {
+          this.data = response.data.merchants.map((m: any) => ({
+            id: m.id || 'N/A',
+            name: m.name || 'N/A',
+            shipments: m.shipments || 0,
+            revenue: m.revenue || 0,
+            codRemitted: m.codRemitted || 0,
+            codPending: m.codPending || 0,
+            franchiseShare: m.franchiseShare || 0
+          }));
+          this.applyFilters();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading merchant revenue report:', error);
+      }
+    });
   }
 
   applyFilters() {

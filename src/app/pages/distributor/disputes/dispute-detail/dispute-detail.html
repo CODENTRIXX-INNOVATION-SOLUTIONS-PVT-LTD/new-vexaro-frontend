@@ -59,23 +59,23 @@
           
           @if (userRole === 'SUPER_ADMIN') {
             <div class="action-selector">
-              <label class="radio-card" [class.selected]="actionType === 'APPROVED'">
-                <input type="radio" name="action" value="APPROVED" [(ngModel)]="actionType">
+              <label class="radio-card" [class.selected]="actionType === 'RESOLVED'">
+                <input type="radio" name="action" value="RESOLVED" [(ngModel)]="actionType">
                 <div class="radio-content">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-success svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   <div>
-                    <strong>Approve & Refund</strong>
+                    <strong>Resolve & Refund</strong>
                     <p>Confirm discrepancy. Revert shipping charge difference to merchant and distributor wallets.</p>
                   </div>
                 </div>
               </label>
-              
-              <label class="radio-card" [class.selected]="actionType === 'REJECTED'">
-                <input type="radio" name="action" value="REJECTED" [(ngModel)]="actionType">
+
+              <label class="radio-card" [class.selected]="actionType === 'CLOSED'">
+                <input type="radio" name="action" value="CLOSED" [(ngModel)]="actionType">
                 <div class="radio-content">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-danger svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                   <div>
-                    <strong>Reject Dispute</strong>
+                    <strong>Close Dispute</strong>
                     <p>Decline discrepancy request. Maintain original weight charge deduction.</p>
                   </div>
                 </div>

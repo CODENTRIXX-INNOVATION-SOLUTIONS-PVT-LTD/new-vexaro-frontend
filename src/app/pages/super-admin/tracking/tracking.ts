@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ShipmentService } from '../../../services/shipment.service';
 
 export interface ShipmentSummary {
   awb: string;
@@ -33,8 +34,13 @@ export interface TrackingEvent {
   styleUrl: './tracking.css'
 })
 export class Tracking {
+  private shipmentService = inject(ShipmentService);
+  private cdr = inject(ChangeDetectorRef);
+  
   searchQuery: string = '';
   hasSearched: boolean = false;
+  isLoading: boolean = false;
+  error: string = '';
   
   // Filters
   distributorFilter: string = 'All Distributors';
@@ -50,33 +56,72 @@ export class Tracking {
   search() {
     if (!this.searchQuery.trim()) return;
     this.hasSearched = true;
+    this.isLoading = true;
+    this.error = '';
+    this.shipment = null;
+    this.timeline = [];
 
-    if (this.searchQuery.toUpperCase() === 'NOTFOUND') {
-      this.shipment = null;
-      this.timeline = [];
-      return;
-    }
+    console.log('Tracking AWB:', this.searchQuery.trim());
 
-    this.shipment = {
-      awb: this.searchQuery.toUpperCase(),
-      status: 'Out for Delivery',
-      customerName: 'Rahul Sharma',
-      pincode: '400050',
-      paymentType: 'COD',
-      amount: 1500,
-      merchantName: 'Fashion Hub',
-      distributorName: 'SpeedX Logistics',
-      warehouseName: 'Mumbai Central Hub',
-      carrier: 'Delhivery'
+    this.shipmentService.trackAWB(this.searchQuery.trim()).subscribe({
+      next: (response) => {
+        console.log('Tracking response:', response);
+        if (response.success && response.data) {
+          const data = response.data;
+          
+          // Map shipment summary
+          this.shipment = {
+            awb: data.awb || this.searchQuery,
+            status: this.mapStatus(data.status),
+            customerName: data.destination?.name || 'Unknown',
+            pincode: data.destination?.pincode || 'N/A',
+            paymentType: data.isCOD ? 'COD' : 'Prepaid',
+            amount: data.codAmount || 0,
+            merchantName: data.merchantId?.companyName || data.merchantId?.firstName || 'Unknown',
+            distributorName: data.distributorId?.companyName || 'N/A',
+            warehouseName: data.origin?.name || 'N/A',
+            carrier: data.carrier || 'N/A'
+          };
+
+          // Map timeline from statusHistory
+          this.timeline = (data.statusHistory || []).map((event: any, index: number) => ({
+            date: new Date(event.timestamp || event.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            time: new Date(event.timestamp || event.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            status: this.mapStatus(event.status),
+            location: event.location || data.destination?.city || 'Unknown',
+            description: event.note || `Status changed to ${this.mapStatus(event.status)}`,
+            isCurrent: index === 0
+          })).reverse();
+
+          console.log('Mapped shipment:', this.shipment);
+          console.log('Mapped timeline:', this.timeline);
+        } else {
+          this.error = 'Shipment not found';
+        }
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Tracking error:', err);
+        this.error = `Failed to track shipment: ${err.message || err.status || 'Unknown error'}`;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  mapStatus(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'ORDER_CREATED': 'Order Created',
+      'PICKED_UP': 'Picked Up',
+      'ARRIVED_AT_HUB': 'At Hub',
+      'OUT_FOR_DELIVERY': 'Out for Delivery',
+      'DELIVERED': 'Delivered',
+      'DELIVERY_FAILED': 'Delivery Failed',
+      'RTO': 'RTO',
+      'CANCELLED': 'Cancelled'
     };
-
-    this.timeline = [
-      { date: '16 Jun 2026', time: '08:30 AM', status: 'Out for Delivery', location: 'Bandra West Hub', description: 'Shipment dispatched with driver Ramesh Singh.', isCurrent: true },
-      { date: '16 Jun 2026', time: '06:00 AM', status: 'Sorted', location: 'Bandra West Hub', description: 'Shipment sorted and allocated to Route 4.', isCurrent: false },
-      { date: '15 Jun 2026', time: '09:45 PM', status: 'Received at Hub', location: 'Bandra West Hub', description: 'Inbound scan completed.', isCurrent: false },
-      { date: '15 Jun 2026', time: '04:15 PM', status: 'Picked Up', location: 'Andheri East', description: 'Driver Amit picked up the package.', isCurrent: false },
-      { date: '15 Jun 2026', time: '10:00 AM', status: 'Manifested', location: 'Andheri East', description: 'Merchant generated AWB.', isCurrent: false }
-    ];
+    return statusMap[status] || status;
   }
 
   intervene() {

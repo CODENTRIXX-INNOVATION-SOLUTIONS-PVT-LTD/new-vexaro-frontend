@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FinanceService } from '../../../../services/finance.service';
 
 export interface Settlement {
   id: string;
@@ -23,9 +24,12 @@ export class Settlements implements OnInit {
   settlements: Settlement[] = [];
   filteredSettlements: Settlement[] = [];
   isLoading: boolean = false;
+  isCreating: boolean = false;
   
   searchTerm: string = '';
   statusFilter: string = 'All';
+
+  constructor(private financeService: FinanceService) {}
 
   ngOnInit() {
     this.loadSettlements();
@@ -33,14 +37,27 @@ export class Settlements implements OnInit {
 
   loadSettlements() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/settlements
-    this.settlements = [
-      { id: 'SET1001', merchantName: 'ABC Electronics', merchantId: 'M1', date: '16 Jun 2026', amount: 8500, status: 'Completed', utr: 'UTR992810' },
-      { id: 'SET1002', merchantName: 'Global Traders', merchantId: 'M2', date: '17 Jun 2026', amount: 12000, status: 'Processing', utr: '—' },
-      { id: 'SET1003', merchantName: 'Prime Retail', merchantId: 'M3', date: '14 Jun 2026', amount: 4500, status: 'Completed', utr: 'UTR887102' }
-    ];
-    this.isLoading = false;
-    this.applyFilters();
+    this.financeService.listSettlements().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.settlements) {
+          this.settlements = response.data.settlements.map((s: any) => ({
+            id: s.id,
+            merchantName: s.merchantName || 'N/A',
+            merchantId: s.merchantId,
+            date: s.date || s.createdAt,
+            amount: s.amount,
+            status: s.status,
+            utr: s.utr || '—'
+          }));
+        }
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading settlements:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters() {
@@ -53,7 +70,19 @@ export class Settlements implements OnInit {
   }
 
   triggerSettlement() {
-    // TODO: Open modal to select merchant and amount to settle
-    alert('Opening Manual Settlement Dialog...');
+    if (confirm('Are you sure you want to create a new settlement request? This will initiate the settlement process for eligible transactions.')) {
+      this.isCreating = true;
+      this.financeService.createSettlement({}).subscribe({
+        next: (response: any) => {
+          this.isCreating = false;
+          alert('Settlement request created successfully!');
+          this.loadSettlements();
+        },
+        error: (error: any) => {
+          this.isCreating = false;
+          alert(error.error?.message || 'Failed to create settlement. Please try again.');
+        }
+      });
+    }
   }
 }

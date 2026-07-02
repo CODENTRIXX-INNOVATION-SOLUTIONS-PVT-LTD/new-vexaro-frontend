@@ -43,7 +43,7 @@ export class DisputeDetail implements OnInit {
   };
 
   remarks: string = '';
-  actionType: 'APPROVED' | 'REJECTED' | null = null;
+  actionType: 'RESOLVED' | 'CLOSED' | null = null;
   uploadedFiles: File[] = [];
 
   ngOnInit() {
@@ -102,6 +102,46 @@ export class DisputeDetail implements OnInit {
 
   removeFile(index: number) {
     this.uploadedFiles.splice(index, 1);
+  }
+
+  submitProof() {
+    if (this.uploadedFiles.length === 0) {
+      alert('Please select at least one file to upload.');
+      return;
+    }
+    this.isSubmitting = true;
+    
+    // Convert files to base64 URLs (temporary solution - backend should provide upload endpoint)
+    const proofImages: string[] = [];
+    let processedFiles = 0;
+    
+    this.uploadedFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        proofImages.push(e.target.result);
+        processedFiles++;
+        
+        if (processedFiles === this.uploadedFiles.length) {
+          this.disputeService.submitProof(this.disputeId, proofImages).subscribe({
+            next: () => {
+              this.isSubmitting = false;
+              alert('Proof submitted successfully!');
+              this.uploadedFiles = [];
+              this.loadDisputeDetails();
+            },
+            error: (err) => {
+              this.isSubmitting = false;
+              alert(err.error?.message || 'Failed to submit proof. Please try again.');
+            }
+          });
+        }
+      };
+      reader.onerror = () => {
+        this.isSubmitting = false;
+        alert('Failed to read file. Please try again.');
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   submitAction() {

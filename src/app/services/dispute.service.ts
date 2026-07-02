@@ -28,16 +28,25 @@ export class DisputeService {
     return this.http.post<any>(`${this.baseUrl}/disputes`, payload);
   }
 
-  resolveWeightDispute(id: string, status: 'APPROVED' | 'REJECTED'): Observable<any> {
-    return this.http.patch<any>(`${this.baseUrl}/disputes/${id}`, { status });
+  resolveWeightDispute(id: string, status: 'RESOLVED' | 'CLOSED'): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/disputes/weight-dispute/${id}/resolve`, { status });
   }
 
   submitProof(id: string, proofImages: string[]): Observable<any> {
-    // Calls the submit proof endpoint
-    return this.http.patch<any>(`${this.baseUrl}/disputes/${id}/proof`, { proofImages });
+    // Calls the submit proof endpoint for weight disputes
+    return this.http.patch<any>(`${this.baseUrl}/disputes/weight-dispute/${id}/proof`, { proofImages });
   }
 
   addComment(id: string, comment: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/disputes/${id}/reply`, { comment });
+    // Calls the comments endpoint for weight disputes
+    return this.http.post<any>(`${this.baseUrl}/disputes/weight-dispute/${id}/comments`, { comment });
+  }
+
+  listWeightDisputes(params: any = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    return this.http.get<any>(`${this.baseUrl}/disputes/weight-dispute`, { params: httpParams });
   }
 }

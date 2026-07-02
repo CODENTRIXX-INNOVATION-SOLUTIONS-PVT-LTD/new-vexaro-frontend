@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FinanceService } from '../../../../services/finance.service';
 
 @Component({
   selector: 'app-wallet',
@@ -24,21 +25,45 @@ export class Wallet implements OnInit {
   onlineStep: 'input' | 'gateway' | 'success' = 'input';
   selectedOnlineMethod: 'card' | 'upi' | 'netbanking' = 'upi';
 
+  constructor(private financeService: FinanceService) {}
+
   ngOnInit() {
     this.loadWalletData();
   }
 
   loadWalletData() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/wallet
-    this.balance = 850000;
-    this.lockedFunds = 150000;
-    this.transactions = [
-      { id: 'TXN8001', date: '17 Jun 2026', type: 'Credit', amount: 50000, status: 'Completed', description: 'Bank Transfer Topup' },
-      { id: 'TXN8002', date: '17 Jun 2026', type: 'Debit', amount: 10000, status: 'Completed', description: 'Merchant Wallet Funding (ABC Electronics)' },
-      { id: 'TXN8003', date: '16 Jun 2026', type: 'Credit', amount: 4500, status: 'Completed', description: 'Margin Profit' }
-    ];
-    this.isLoading = false;
+    this.financeService.getMyWallet().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.balance = response.data.balance || 0;
+          this.lockedFunds = response.data.lockedFunds || 0;
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading wallet:', error);
+        this.isLoading = false;
+      }
+    });
+
+    this.financeService.listTransactions().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.transactions) {
+          this.transactions = response.data.transactions.slice(0, 5).map((t: any) => ({
+            id: t.id,
+            date: t.date || t.createdAt,
+            type: t.type,
+            amount: t.amount,
+            status: t.status,
+            description: t.description || t.category
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Error loading transactions:', error);
+      }
+    });
   }
 
   openTopupModal() {

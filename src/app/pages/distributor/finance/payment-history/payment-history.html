@@ -1,0 +1,165 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">Payment History</h1>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-banner" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+      <button class="btn-close-error" (click)="errorMessage = ''" aria-label="Close error">×</button>
+    </div>
+  }
+
+  <div class="filters">
+    <div class="filter-group">
+      <label for="statusFilter">Status:</label>
+      <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()">
+        <option value="All">All</option>
+        <option value="Success">Success</option>
+        <option value="Failed">Failed</option>
+        <option value="Pending">Pending</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="startDate">Start Date:</label>
+      <input type="date" id="startDate" [(ngModel)]="startDate" (change)="onFilterChange()">
+    </div>
+    <div class="filter-group">
+      <label for="endDate">End Date:</label>
+      <input type="date" id="endDate" [(ngModel)]="endDate" (change)="onFilterChange()">
+    </div>
+    <div class="filter-group">
+      <label for="searchTerm">Search:</label>
+      <input 
+        type="text" 
+        id="searchTerm"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearchChange()" 
+        placeholder="Payment ID or Order ID"
+        aria-label="Search payments"
+      >
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <p>Loading payment history...</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredPayments.length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+      </svg>
+      <p>No payment records found.</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredPayments.length > 0) {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Payment ID</th>
+            <th>Order ID</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payment of filteredPayments; track payment.id) {
+            <tr>
+              <td><code>{{ payment.razorpayPaymentId }}</code></td>
+              <td><code>{{ payment.orderId }}</code></td>
+              <td><strong>₹{{ payment.amount.toLocaleString('en-IN') }}</strong></td>
+              <td>{{ payment.paymentMethod }}</td>
+              <td>
+                <span class="status-badge" 
+                      [class.success]="payment.status === 'Success'"
+                      [class.failed]="payment.status === 'Failed'"
+                      [class.pending]="payment.status === 'Pending'"
+                      role="status">
+                  {{ payment.status }}
+                </span>
+              </td>
+              <td>{{ payment.createdAt | date:'medium' }}</td>
+              <td>
+                <button 
+                  class="btn-view" 
+                  (click)="viewDetails(payment)"
+                  aria-label="View details for payment {{ payment.razorpayPaymentId }}">
+                  View Details
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Detail Modal -->
+@if (showDetailModal && selectedPayment) {
+  <div class="modal-overlay" (click)="closeDetailModal()" role="dialog" aria-modal="true" aria-labelledby="payment-detail-title">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2 id="payment-detail-title">Payment Details</h2>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Payment ID:</label>
+          <span><code>{{ selectedPayment.razorpayPaymentId }}</code></span>
+        </div>
+        <div class="detail-item">
+          <label>Order ID:</label>
+          <span><code>{{ selectedPayment.orderId }}</code></span>
+        </div>
+        <div class="detail-item">
+          <label>Amount:</label>
+          <span><strong>₹{{ selectedPayment.amount.toLocaleString('en-IN') }}</strong></span>
+        </div>
+        <div class="detail-item">
+          <label>Currency:</label>
+          <span>{{ selectedPayment.currency }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status:</label>
+          <span class="status-badge" 
+                [class.success]="selectedPayment.status === 'Success'"
+                [class.failed]="selectedPayment.status === 'Failed'"
+                [class.pending]="selectedPayment.status === 'Pending'"
+                role="status">
+            {{ selectedPayment.status }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <label>Payment Method:</label>
+          <span>{{ selectedPayment.paymentMethod }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Date:</label>
+          <span>{{ selectedPayment.createdAt | date:'full' }}</span>
+        </div>
+        @if (selectedPayment.description) {
+          <div class="detail-item full-width">
+            <label>Description:</label>
+            <span>{{ selectedPayment.description }}</span>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn-close" (click)="closeDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+}

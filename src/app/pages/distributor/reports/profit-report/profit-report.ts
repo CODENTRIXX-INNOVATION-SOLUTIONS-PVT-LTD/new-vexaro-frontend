@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReportsService } from '../../../../services/reports.service';
 
 export interface CourierProfit {
   name: string;
@@ -38,15 +39,15 @@ export interface MerchantProfit {
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-label">Net Profit</span>
-          <span class="stat-value">₹45,000</span>
+          <span class="stat-value">₹{{netProfit.toLocaleString('en-IN')}}</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Average Profit / Order</span>
-          <span class="stat-value">₹50.56</span>
+          <span class="stat-value">₹{{avgProfit.toFixed(2)}}</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Net Profit Margin</span>
-          <span class="stat-value">8.25%</span>
+          <span class="stat-value">{{profitMargin.toFixed(2)}}%</span>
         </div>
       </div>
 
@@ -127,20 +128,42 @@ export interface MerchantProfit {
   `]
 })
 export class ProfitReport implements OnInit {
-  courierData: CourierProfit[] = [
-    { name: 'Delhivery', shipments: 450, revenue: 225000, cost: 200000, profit: 25000, margin: '11.1%' },
-    { name: 'DTDC', shipments: 320, revenue: 160000, cost: 148000, profit: 12000, margin: '7.5%' },
-    { name: 'BlueDart', shipments: 80, revenue: 56000, cost: 50000, profit: 6000, margin: '10.7%' },
-    { name: 'Ekart', shipments: 40, revenue: 20000, cost: 18000, profit: 2000, margin: '10.0%' }
-  ];
+  courierData: CourierProfit[] = [];
+  merchantData: MerchantProfit[] = [];
 
-  merchantData: MerchantProfit[] = [
-    { name: 'ABC Electronics', shipments: 380, revenue: 190000, cost: 172000, profit: 18000, margin: '9.5%' },
-    { name: 'Global Traders', shipments: 450, revenue: 320000, cost: 295000, profit: 25000, margin: '7.8%' },
-    { name: 'Prime Retail', shipments: 60, revenue: 35000, cost: 33000, profit: 2000, margin: '5.7%' }
-  ];
+  constructor(private reportsService: ReportsService) {}
 
-  ngOnInit() {}
+  get netProfit(): number {
+    return this.courierData.reduce((sum, item) => sum + item.profit, 0);
+  }
+
+  get avgProfit(): number {
+    const totalShipments = this.courierData.reduce((sum, item) => sum + item.shipments, 0);
+    return totalShipments > 0 ? this.netProfit / totalShipments : 0;
+  }
+
+  get profitMargin(): number {
+    const totalRevenue = this.courierData.reduce((sum, item) => sum + item.revenue, 0);
+    return totalRevenue > 0 ? (this.netProfit / totalRevenue) * 100 : 0;
+  }
+
+  ngOnInit() {
+    this.loadReport();
+  }
+
+  loadReport() {
+    this.reportsService.getRevenueReport().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.courierData = response.data.courierProfits || [];
+          this.merchantData = response.data.merchantProfits || [];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading profit report:', error);
+      }
+    });
+  }
 
   exportPDF() {
     const printWindow = window.open('', '_blank');
@@ -211,15 +234,15 @@ export class ProfitReport implements OnInit {
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-label">Net Profit</span>
-              <span class="stat-value" style="color: #16a34a;">₹45,000</span>
+              <span class="stat-value" style="color: #16a34a;">₹${this.netProfit.toLocaleString('en-IN')}</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Average Profit / Order</span>
-              <span class="stat-value">₹50.56</span>
+              <span class="stat-value">₹${this.avgProfit.toFixed(2)}</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Net Profit Margin</span>
-              <span class="stat-value">8.25%</span>
+              <span class="stat-value">${this.profitMargin.toFixed(2)}%</span>
             </div>
           </div>
 

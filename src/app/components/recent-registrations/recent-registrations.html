@@ -9,29 +9,37 @@
     </div>
 
     <div class="table-wrapper">
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Email</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(user of registrations; track user.id){
-                <tr>
-                    <td>{{user.id}}</td>
-                    <td>{{user.name}}</td>
-                    <td>{{user.role}}</td>
-                    <td>{{user.email}}</td>
-                    <td>{{user.date}}</td>
-                </tr>
-                }
-            </tbody>
-        </table>
+        @if (isLoading()) {
+            <div class="loading-state">Loading registrations...</div>
+        } @else if (hasError()) {
+            <div class="error-state">Failed to load registrations</div>
+        } @else {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(user of registrations(); track user.id){
+                    <tr>
+                        <td>{{user.id}}</td>
+                        <td>{{user.name}}</td>
+                        <td>{{user.role}}</td>
+                        <td>{{user.email}}</td>
+                        <td>{{user.date}}</td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="5" class="no-data">No registrations found</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>

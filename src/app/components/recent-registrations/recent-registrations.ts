@@ -1,49 +1,51 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { UserService } from '../../services/user.service';
+
+interface RegistrationRow {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  date: string;
+}
 
 @Component({
   selector: 'app-recent-registrations',
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './recent-registrations.html',
   styleUrl: '../../common-css/super-admin-dashboard-page-bottom-table.css'
 })
-export class RecentRegistrations {
+export class RecentRegistrations implements OnInit {
+  private userService = inject(UserService);
 
-  registrations = [
-    {
-      id: 'REG001',
-      name: 'Rahul Sharma',
-      role: 'Merchant',
-      email: 'rahul@gmail.com',
-      date: '10 Jun 2026'
-    },
-    {
-      id: 'REG002',
-      name: 'Priya Singh',
-      role: 'Distributor',
-      email: 'priya@gmail.com',
-      date: '10 Jun 2026'
-    },
-    {
-      id: 'REG003',
-      name: 'Amit Verma',
-      role: 'Merchant',
-      email: 'amit@gmail.com',
-      date: '09 Jun 2026'
-    },
-    {
-      id: 'REG004',
-      name: 'Neha Gupta',
-      role: 'Merchant',
-      email: 'neha@gmail.com',
-      date: '09 Jun 2026'
-    },
-    {
-      id: 'REG005',
-      name: 'Rohan Patel',
-      role: 'Distributor',
-      email: 'rohan@gmail.com',
-      date: '08 Jun 2026'
-    }
-  ];
+  registrations = signal<RegistrationRow[]>([]);
+  isLoading = signal(true);
+  hasError = signal(false);
 
+  ngOnInit(): void {
+    this.userService.listUsers({ limit: 5, page: 1 }).subscribe({
+      next: (res) => {
+        const users = res?.data?.users ?? [];
+        this.registrations.set(users.map((u: any) => ({
+          id: u._id?.substring(0, 8) || '—',
+          name: u.companyName || `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown',
+          role: u.role || 'User',
+          email: u.email || '—',
+          date: u.createdAt
+            ? new Date(u.createdAt).toLocaleDateString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric',
+              })
+            : '—',
+        })));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('[RecentRegistrations] API error:', err);
+        this.hasError.set(true);
+        this.isLoading.set(false);
+      },
+    });
+  }
 }

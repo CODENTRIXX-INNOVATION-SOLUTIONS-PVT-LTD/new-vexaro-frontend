@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { StatsCards } from '../../../components/stats-cards/stats-cards';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinancialStore, RechargeRequest } from '../../../shared/financial-store';
+import { FinanceService } from '../../../services/finance.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-admin-payment',
@@ -11,39 +13,40 @@ import { FinancialStore, RechargeRequest } from '../../../shared/financial-store
   templateUrl: './admin-payment.html',
   styleUrl: './admin-payment.css',
 })
-export class AdminPayment {
-  activeTab: string = 'wallet';
+export class AdminPayment implements OnInit {
+  private financeService = inject(FinanceService);
+  private cdr = inject(ChangeDetectorRef);
 
-  changeTab(tab: string) {
-    this.activeTab = tab;
-  }
+  activeTab: string = 'wallet';
+  isLoading: boolean = false;
+  error: string = '';
 
   // Dashboard Overview Metrics
   paymentCards = [
     {
       title: 'Total Wallets Value',
-      value: '₹89,000',
+      value: '₹0',
       icon: 'fas fa-wallet',
       bgColor: '#DBEAFE',
       iconColor: 'rgb(11, 74, 111)'
     },
     {
       title: 'Total Admin Commission',
-      value: '₹2,000',
+      value: '₹0',
       icon: 'fas fa-percent',
       bgColor: '#DCFCE7',
       iconColor: '#16A34A'
     },
     {
       title: 'Success Transactions',
-      value: '2',
+      value: '0',
       icon: 'fas fa-exchange-alt',
       bgColor: '#FEF3C7',
       iconColor: '#D97706'
     },
     {
       title: 'Pending Refunds',
-      value: '1',
+      value: '0',
       icon: 'fas fa-undo-alt',
       bgColor: '#FEE2E2',
       iconColor: '#DC2626'
@@ -51,12 +54,7 @@ export class AdminPayment {
   ];
 
   // Distributors & Wallets List
-  distributors = [
-    { id: 1, name: 'Express Distributors Ltd', balance: 45000, lastRechargeAmount: 10000, lastRechargeDate: '15 Jun 2026', status: 'Active' },
-    { id: 2, name: 'Rapid Delivery Services', balance: 28500, lastRechargeAmount: 25000, lastRechargeDate: '15 Jun 2026', status: 'Active' },
-    { id: 3, name: 'Logistics Pro Solutions', balance: 12000, lastRechargeAmount: 5000, lastRechargeDate: '14 Jun 2026', status: 'Active' },
-    { id: 4, name: 'Safe Ship Carriers', balance: 3500, lastRechargeAmount: 2000, lastRechargeDate: '10 Jun 2026', status: 'Inactive' }
-  ];
+  distributors: any[] = [];
 
   // Form Model
   rechargeModel = {
@@ -67,60 +65,166 @@ export class AdminPayment {
   };
 
   // Transactions list
-  payments = [
-    {
-      transactionId: 'TXN001',
-      distributor: 'Express Distributors Ltd',
-      rechargeAmount: 10000,
-      adminCommission: 500,
-      paymentMethod: 'UPI',
-      date: '15 Jun 2026',
-      status: 'Success'
-    },
-    {
-      transactionId: 'TXN002',
-      distributor: 'Rapid Delivery Services',
-      rechargeAmount: 25000,
-      adminCommission: 1250,
-      paymentMethod: 'Bank Transfer',
-      date: '15 Jun 2026',
-      status: 'Success'
-    },
-    {
-      transactionId: 'TXN003',
-      distributor: 'Logistics Pro Solutions',
-      rechargeAmount: 5000,
-      adminCommission: 250,
-      paymentMethod: 'Card',
-      date: '14 Jun 2026',
-      status: 'Failed'
-    }
-  ];
+  payments: any[] = [];
 
   // Refunds list
-  refunds = [
-    {
-      refundId: 'RFD001',
-      distributor: 'Express Distributors Ltd',
-      originalTxn: 'TXN001',
-      amount: 1500,
-      reason: 'Excess charge correction',
-      date: '16 Jun 2026',
-      status: 'Processed'
-    },
-    {
-      refundId: 'RFD002',
-      distributor: 'Safe Ship Carriers',
-      originalTxn: 'TXN004',
-      amount: 2000,
-      reason: 'Failed transaction refund',
-      date: '12 Jun 2026',
-      status: 'Pending'
-    }
-  ];
+  refunds: any[] = [];
 
-  quickRecharge(distributorId: number) {
-    this.rechargeModel.distributorId = String(distributorId);
+  // Recharge requests
+  rechargeRequestsData: any[] = [];
+
+  ngOnInit() {
+    this.loadDashboardData();
+  }
+
+  loadDashboardData() {
+    this.isLoading = true;
+    
+    // Load all data in parallel
+    this.financeService.getAdminStats().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.paymentCards = [
+            {
+              title: 'Total Wallets Value',
+              value: '₹' + (res.data.totalWalletValue || 0).toLocaleString('en-IN'),
+              icon: 'fas fa-wallet',
+              bgColor: '#DBEAFE',
+              iconColor: 'rgb(11, 74, 111)'
+            },
+            {
+              title: 'Total Admin Commission',
+              value: '₹' + (res.data.totalCommission || 0).toLocaleString('en-IN'),
+              icon: 'fas fa-percent',
+              bgColor: '#DCFCE7',
+              iconColor: '#16A34A'
+            },
+            {
+              title: 'Success Transactions',
+              value: String(res.data.successTransactions || 0),
+              icon: 'fas fa-exchange-alt',
+              bgColor: '#FEF3C7',
+              iconColor: '#D97706'
+            },
+            {
+              title: 'Pending Refunds',
+              value: String(res.data.pendingRefunds || 0),
+              icon: 'fas fa-undo-alt',
+              bgColor: '#FEE2E2',
+              iconColor: '#DC2626'
+            }
+          ];
+        }
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading admin stats:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.loadDistributors();
+    this.loadTransactions();
+    this.loadRefunds();
+    this.loadRechargeRequests();
+  }
+
+  loadDistributors() {
+    this.financeService.listWallets({ limit: 100 }).subscribe({
+      next: (res) => {
+        this.distributors = (res?.data?.wallets || []).map((w: any) => ({
+          id: w.userId?._id || w._id,
+          name: w.userId?.companyName || w.userId?.firstName || 'Unknown',
+          balance: w.balance || 0,
+          lastRechargeAmount: w.lastRechargeAmount || 0,
+          lastRechargeDate: w.lastRechargeDate 
+            ? new Date(w.lastRechargeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : 'N/A',
+          status: w.status || 'Active'
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading wallets:', err);
+      }
+    });
+  }
+
+  loadTransactions() {
+    this.financeService.listTransactions({ limit: 50 }).subscribe({
+      next: (res) => {
+        this.payments = (res?.data?.transactions || []).map((t: any) => ({
+          transactionId: t._id?.substring(0, 8) || '—',
+          distributor: t.userId?.companyName || t.userId?.firstName || 'Unknown',
+          rechargeAmount: t.amount || 0,
+          adminCommission: t.commission || 0,
+          paymentMethod: t.type || 'Wallet',
+          date: t.createdAt
+            ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—',
+          status: t.status || 'Success'
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading transactions:', err);
+      }
+    });
+  }
+
+  loadRefunds() {
+    this.financeService.listRefunds({ limit: 50 }).subscribe({
+      next: (res) => {
+        this.refunds = (res?.data?.refunds || []).map((r: any) => ({
+          refundId: r._id?.substring(0, 8) || '—',
+          distributor: r.userId?.companyName || r.userId?.firstName || 'Unknown',
+          originalTxn: r.originalTransactionId?.substring(0, 8) || '—',
+          amount: r.amount || 0,
+          reason: r.reason || '—',
+          date: r.createdAt
+            ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—',
+          status: r.status || 'Pending'
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading refunds:', err);
+      }
+    });
+  }
+
+  loadRechargeRequests() {
+    this.financeService.listRechargeRequests({ limit: 50 }).subscribe({
+      next: (res) => {
+        this.rechargeRequestsData = (res?.data?.requests || []).map((r: any) => ({
+          requestId: r._id?.substring(0, 8) || '—',
+          distributorName: r.userId?.companyName || r.userId?.firstName || 'Unknown',
+          distributorId: r.userId?._id,
+          amount: r.amount || 0,
+          method: r.paymentMethod || 'UPI',
+          reference: r.referenceId || '—',
+          date: r.createdAt
+            ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—',
+          status: r.status || 'Pending'
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading recharge requests:', err);
+      }
+    });
+  }
+
+  changeTab(tab: string) {
+    this.activeTab = tab;
+  }
+
+  quickRecharge(distributorId: string) {
+    this.rechargeModel.distributorId = distributorId;
     this.activeTab = 'recharge';
   }
 
@@ -130,115 +234,74 @@ export class AdminPayment {
       return;
     }
     
-    const selectedDist = this.distributors.find(d => d.id === Number(this.rechargeModel.distributorId));
-    const amount = Number(this.rechargeModel.amount);
+    this.isLoading = true;
     
-    alert(`Wallet Recharge of ₹${amount} for ${selectedDist ? selectedDist.name : 'Distributor'} processed successfully!`);
-    
-    // Add to transaction log
-    this.payments.unshift({
-      transactionId: 'TXN' + Math.floor(100 + Math.random() * 900),
-      distributor: selectedDist ? selectedDist.name : 'Unknown Distributor',
-      rechargeAmount: amount,
-      adminCommission: parseFloat((amount * 0.05).toFixed(2)),
+    this.financeService.rechargeDistributorWallet({
+      distributorId: this.rechargeModel.distributorId,
+      amount: Number(this.rechargeModel.amount),
       paymentMethod: this.rechargeModel.paymentMethod,
-      date: '17 Jun 2026',
-      status: 'Success'
+      referenceId: this.rechargeModel.referenceId
+    }).subscribe({
+      next: (res) => {
+        alert(`Wallet Recharge of ₹${this.rechargeModel.amount} processed successfully!`);
+        this.rechargeModel = {
+          distributorId: '',
+          amount: null,
+          paymentMethod: 'UPI',
+          referenceId: ''
+        };
+        this.activeTab = 'wallet';
+        this.loadDashboardData();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        alert('Failed to process recharge. Please try again.');
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
-
-    // Update balance
-    if (selectedDist) {
-      selectedDist.balance += amount;
-      selectedDist.lastRechargeAmount = amount;
-      selectedDist.lastRechargeDate = '17 Jun 2026';
-    }
-
-    // Recalculate top stats
-    this.updateStatsCards();
-
-    // Reset Form
-    this.rechargeModel = {
-      distributorId: '',
-      amount: null,
-      paymentMethod: 'UPI',
-      referenceId: ''
-    };
-    
-    this.activeTab = 'wallet';
   }
 
   get rechargeRequests() {
-    return FinancialStore.requests;
+    return this.rechargeRequestsData;
   }
 
-  approveRequest(req: RechargeRequest) {
-    const dist = this.distributors.find(d => d.id === req.distributorId);
-    if (dist) {
-      dist.balance += req.amount;
-      dist.lastRechargeAmount = req.amount;
-      dist.lastRechargeDate = 'Today';
-    }
-
-    req.status = 'Approved';
-
-    // Add to transaction log
-    this.payments.unshift({
-      transactionId: 'TXN' + Math.floor(100 + Math.random() * 900),
-      distributor: req.distributorName,
-      rechargeAmount: req.amount,
-      adminCommission: parseFloat((req.amount * 0.05).toFixed(2)),
-      paymentMethod: req.method,
-      date: 'Today',
-      status: 'Success'
-    });
-
-    this.updateStatsCards();
-    alert(`Recharge request approved successfully! Wallet credited with ₹${req.amount.toLocaleString('en-IN')}.`);
+  get successfulPayments() {
+    return this.payments.filter(p => p.status === 'Success');
   }
 
-  rejectRequest(req: RechargeRequest) {
-    req.status = 'Rejected';
-    this.updateStatsCards();
-    alert('Recharge request has been rejected.');
-  }
-
-  updateStatsCards() {
-    const totalBalance = this.distributors.reduce((sum, d) => sum + d.balance, 0);
-    const totalCommission = this.payments
-      .filter(p => p.status === 'Success')
-      .reduce((sum, p) => sum + p.adminCommission, 0);
-    const successCount = this.payments.filter(p => p.status === 'Success').length;
-    const pendingRefunds = this.refunds.filter(r => r.status === 'Pending').length;
-
-    this.paymentCards = [
-      {
-        title: 'Total Wallets Value',
-        value: '₹' + totalBalance.toLocaleString('en-IN'),
-        icon: 'fas fa-wallet',
-        bgColor: '#DBEAFE',
-        iconColor: 'rgb(11, 74, 111)'
+  approveRequest(req: any) {
+    this.isLoading = true;
+    this.financeService.approveRechargeRequest(req.requestId).subscribe({
+      next: (res) => {
+        alert(`Recharge request approved successfully!`);
+        this.loadDashboardData();
+        this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      {
-        title: 'Total Admin Commission',
-        value: '₹' + totalCommission.toLocaleString('en-IN'),
-        icon: 'fas fa-percent',
-        bgColor: '#DCFCE7',
-        iconColor: '#16A34A'
-      },
-      {
-        title: 'Success Transactions',
-        value: String(successCount),
-        icon: 'fas fa-exchange-alt',
-        bgColor: '#FEF3C7',
-        iconColor: '#D97706'
-      },
-      {
-        title: 'Pending Refunds',
-        value: String(pendingRefunds),
-        icon: 'fas fa-undo-alt',
-        bgColor: '#FEE2E2',
-        iconColor: '#DC2626'
+      error: (err) => {
+        alert('Failed to approve request. Please try again.');
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
-    ];
+    });
+  }
+
+  rejectRequest(req: any) {
+    this.isLoading = true;
+    this.financeService.rejectRechargeRequest(req.requestId).subscribe({
+      next: (res) => {
+        alert('Recharge request has been rejected.');
+        this.loadDashboardData();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        alert('Failed to reject request. Please try again.');
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

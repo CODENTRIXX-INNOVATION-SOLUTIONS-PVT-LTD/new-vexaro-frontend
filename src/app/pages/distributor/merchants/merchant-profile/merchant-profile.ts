@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { UserService } from '../../../../services/user.service';
 
 @Component({
   selector: 'app-distributor-merchant-profile',
@@ -38,7 +39,7 @@ export class DistributorMerchantProfile implements OnInit {
     status: 'Active'
   };
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute, private router: Router, private userService: UserService) {}
 
   ngOnInit() {
     this.merchantId = this.route.snapshot.paramMap.get('id') || '';
@@ -47,29 +48,39 @@ export class DistributorMerchantProfile implements OnInit {
 
   loadMerchant() {
     this.isLoading = true;
-    // TODO: API Call → GET /distributor/:dId/merchants/:merchantId
-    this.merchant = {
-      merchantCode: this.merchantId || 'MER001',
-      businessName: 'ABC Electronics',
-      displayName: 'ABC Electro',
-      contactPerson: 'Rahul Sharma',
-      phone: '9876543210',
-      email: 'rahul@abcelectronics.com',
-      addressLine1: 'Phase 1, HSR Layout',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560102',
-      gstin: '23ABCDE1234F1Z5',
-      pan: 'ABCDE1234F',
-      warehouseId: 'WH66DU',
-      walletBalance: 12400,
-      creditLimit: 50000,
-      paymentTerms: 'Prepaid',
-      totalShipments: 1250,
-      deliveredShipments: 1100,
-      status: 'Active'
-    };
-    this.isLoading = false;
+    this.userService.getUserById(this.merchantId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const user = response.data;
+          this.merchant = {
+            merchantCode: user.merchantCode || `MRC-${user.id}`,
+            businessName: user.businessName || user.name,
+            displayName: user.displayName || user.name,
+            contactPerson: user.contactPerson || user.name,
+            phone: user.phone || '',
+            email: user.email || '',
+            addressLine1: user.addressLine1 || '',
+            city: user.city || '',
+            state: user.state || '',
+            pincode: user.pincode || '',
+            gstin: user.gstin || '',
+            pan: user.pan || '',
+            warehouseId: user.warehouseId || '',
+            walletBalance: user.walletBalance || 0,
+            creditLimit: user.creditLimit || 0,
+            paymentTerms: user.paymentTerms || '',
+            totalShipments: user.totalShipments || 0,
+            deliveredShipments: user.deliveredShipments || 0,
+            status: user.status || 'Active'
+          };
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading merchant:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   changeTab(tab: string) {
@@ -91,15 +102,37 @@ export class DistributorMerchantProfile implements OnInit {
   }
 
   suspendMerchant() {
-    if (confirm(`Are you sure you want to suspend ${this.merchant.businessName}?`)) {
-      // TODO: PUT /distributor/:dId/merchants/:merchantId/status { status: 'Suspended' }
-      this.merchant.status = 'Suspended';
+    if (confirm(`Are you sure you want to suspend ${this.merchant.businessName}? This will prevent them from booking new shipments.`)) {
+      this.isSaving = true;
+      this.userService.updateUser(this.merchantId, { status: 'Suspended' }).subscribe({
+        next: (response: any) => {
+          this.isSaving = false;
+          this.merchant.status = 'Suspended';
+          alert('Merchant suspended successfully!');
+        },
+        error: (error: any) => {
+          this.isSaving = false;
+          alert(error.error?.message || 'Failed to suspend merchant. Please try again.');
+        }
+      });
     }
   }
 
   activateMerchant() {
-    // TODO: PUT /distributor/:dId/merchants/:merchantId/status { status: 'Active' }
-    this.merchant.status = 'Active';
+    if (confirm(`Are you sure you want to activate ${this.merchant.businessName}?`)) {
+      this.isSaving = true;
+      this.userService.updateUser(this.merchantId, { status: 'Active' }).subscribe({
+        next: (response: any) => {
+          this.isSaving = false;
+          this.merchant.status = 'Active';
+          alert('Merchant activated successfully!');
+        },
+        error: (error: any) => {
+          this.isSaving = false;
+          alert(error.error?.message || 'Failed to activate merchant. Please try again.');
+        }
+      });
+    }
   }
 
   goBack() {

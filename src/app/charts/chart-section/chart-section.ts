@@ -32,7 +32,7 @@ export class ChartSection implements AfterViewInit {
 
   private renderLineChart(data: any): void {
     new Chart('shipmentChart', {
-      type: 'bar',
+      type: 'line',
       data: {
         labels: data.labels,
         datasets: data.datasets

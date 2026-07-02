@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ShipmentService } from '../../../../services/shipment.service';
 
 export interface AuditEvent {
   id: string;
@@ -24,28 +25,43 @@ export class TrackingHistory implements OnInit {
   awb: string = '';
   logs: AuditEvent[] = [];
   filteredLogs: AuditEvent[] = [];
+  isLoading: boolean = false;
 
   dateFilter: string = '';
   statusFilter: string = 'All';
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute, private router: Router, private shipmentService: ShipmentService) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       this.awb = params['awb'] || 'VEX-DEMO';
-      this.loadDummyData();
-      this.applyFilters();
+      this.loadTrackingHistory();
     });
   }
 
-  loadDummyData() {
-    this.logs = [
-      { id: 'LOG-005', timestamp: '2026-06-16 08:30:12', action: 'Status Update: OUT_FOR_DELIVERY', actor: 'System (Auto)', coordinates: '19.0760° N, 72.8777° E', deviceInfo: 'Server', status: 'Out for Delivery' },
-      { id: 'LOG-004', timestamp: '2026-06-16 06:05:00', action: 'Assigned to Route 4', actor: 'Dispatcher Rahul', coordinates: 'Hub Coordinates', deviceInfo: 'Web Panel IP: 10.0.x.x', status: 'Sorted' },
-      { id: 'LOG-003', timestamp: '2026-06-15 21:45:33', action: 'Bag Unsealed & Scanned In', actor: 'Scanner ID 402', coordinates: 'Hub Coordinates', deviceInfo: 'Zebra MC9300', status: 'Received at Hub' },
-      { id: 'LOG-002', timestamp: '2026-06-15 16:15:10', action: 'Pickup Complete', actor: 'Driver Amit', coordinates: '19.1136° N, 72.8697° E', deviceInfo: 'Android App v2.1', status: 'Picked Up' },
-      { id: 'LOG-001', timestamp: '2026-06-15 10:00:05', action: 'AWB Generated', actor: 'Merchant API', coordinates: 'N/A', deviceInfo: 'API v1', status: 'Manifested' },
-    ];
+  loadTrackingHistory() {
+    this.isLoading = true;
+    this.shipmentService.trackAWB(this.awb).subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.timeline) {
+          this.logs = response.data.timeline.map((event: any, index: number) => ({
+            id: `LOG-${String(index + 1).padStart(3, '0')}`,
+            timestamp: event.timestamp || `${event.date} ${event.time}`,
+            action: event.description || event.status,
+            actor: event.actor || 'System',
+            coordinates: event.location || 'N/A',
+            deviceInfo: event.deviceInfo || 'N/A',
+            status: event.status || 'Unknown'
+          }));
+        }
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading tracking history:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters() {

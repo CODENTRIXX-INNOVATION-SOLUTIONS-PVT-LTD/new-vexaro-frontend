@@ -133,13 +133,18 @@
 
         <tbody>
 
-            <tr *ngFor="let merchant of topRevenueMerchants">
+            @for (merchant of topRevenueMerchants; track merchant.merchantName) {
 
                 <td>{{ merchant.merchantName }}</td>
                 <td>{{ merchant.revenue }}</td>
                 <td>{{ merchant.orders }}</td>
 
+            }
+            @if (topRevenueMerchants.length === 0) {
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
             </tr>
+            }
 
         </tbody>
 
@@ -165,13 +170,18 @@
 
         <tbody>
 
-            <tr *ngFor="let payment of paymentMethods">
+            @for (payment of paymentMethods; track payment.method) {
 
                 <td>{{ payment.method }}</td>
                 <td>{{ payment.transactions }}</td>
                 <td>{{ payment.revenue }}</td>
 
+            }
+            @if (paymentMethods.length === 0) {
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
             </tr>
+            }
 
         </tbody>
 
@@ -198,7 +208,7 @@
 
         <tbody>
 
-            <tr *ngFor="let txn of recentTransactions">
+            @for (txn of recentTransactions; track txn.transactionId) {
 
                 <td>{{ txn.transactionId }}</td>
                 <td>{{ txn.merchant }}</td>
@@ -217,7 +227,12 @@
 
                 </td>
 
+            }
+            @if (recentTransactions.length === 0) {
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
             </tr>
+            }
 
         </tbody>
 

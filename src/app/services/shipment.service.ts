@@ -76,4 +76,8 @@ export class ShipmentService {
   bulkUpload(formData: FormData): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/shipments/bulk-upload`, formData);
   }
+
+  getBulkUploadStatus(jobId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/shipments/bulk-status/${jobId}`);
+  }
 }
