@@ -99,11 +99,14 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
       next: (res) => {
         if (res.success && res.data) {
           this.merchantInsights[0].value = (res.data.retentionRate || 0) + '%';
+          
           this.merchantInsights[1].value = res.data.topCategory || '—';
           this.merchantInsights[2].value = res.data.inactiveMerchants || 0;
         }
+
         this.cdr.detectChanges();
       },
+
       error: (err) => {
         console.error('Error loading merchant insights:', err);
       }
