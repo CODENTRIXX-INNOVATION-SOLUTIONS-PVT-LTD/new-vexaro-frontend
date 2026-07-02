@@ -1,0 +1,36 @@
+.chart-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 20px;
+}
+
+@media (max-width: 900px){
+    .chart-section { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.chart-card:first-child {
+    flex: 2; /* Line chart takes more space */
+}
+
+.chart-card:last-child {
+    flex: 1; /* Pie chart takes less space */
+}
+
+.chart-container,
+.pie-container {
+    height: 320px;
+    position: relative;
+}
+@media (max-width: 768px) {
+    .chart-card {
+        padding: 18px;
+    }
+}

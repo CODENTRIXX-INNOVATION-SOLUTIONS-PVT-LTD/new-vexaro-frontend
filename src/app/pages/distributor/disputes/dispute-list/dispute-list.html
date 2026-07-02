@@ -1,0 +1,84 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 9v4M12 17h.01"></path></svg> Weight Disputes</h1>
+    <p class="page-subtitle">Manage courier weight discrepancy claims raised by your merchants</p>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Status</label>
+      <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+        <option value="All">All Disputes</option>
+        <option value="Open">Action Required (Open)</option>
+        <option value="Pending">Pending with Courier</option>
+        <option value="Resolved">Resolved</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg><p>Loading disputes...</p></div>
+  }
+
+  @if (!isLoading && filteredDisputes.length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:56px;height:56px;display:block;margin:0 auto 16px;">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <h3>No Disputes Found</h3>
+      <p>There are no weight disputes matching the selected filter.</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredDisputes.length > 0) {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>AWB Number</th>
+            <th>Merchant</th>
+            <th>Courier</th>
+            <th>Applied Weight</th>
+            <th>Charged Weight</th>
+            <th>Dispute Status</th>
+            <th>Time Left to Act</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of filteredDisputes; track d.id) {
+            <tr>
+              <td><code>{{ d.awb }}</code></td>
+              <td>{{ d.merchantName }}</td>
+              <td><span class="courier-badge">{{ d.courier }}</span></td>
+              <td>{{ d.appliedWeight }} kg</td>
+              <td class="charged">{{ d.chargedWeight }} kg</td>
+              <td>
+                <span class="status-badge" [class.status-open]="d.status === 'Open'"
+                      [class.status-pending]="d.status === 'Pending'"
+                      [class.status-resolved]="d.status === 'Resolved'"
+                      [class.status-rejected]="d.status === 'Rejected'">
+                  {{ d.status }}
+                </span>
+              </td>
+              <td>
+                @if (d.status === 'Open') {
+                  <span class="timer" [class.danger]="d.hoursLeft < 24">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> {{ d.hoursLeft }} hrs
+                  </span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td>
+                <button class="btn-primary-sm" (click)="viewDispute(d.id)">Review</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

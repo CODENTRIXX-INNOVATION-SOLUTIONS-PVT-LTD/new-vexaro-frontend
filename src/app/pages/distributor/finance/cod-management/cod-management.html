@@ -1,0 +1,114 @@
+<div class="header-section">
+    <h2>COD Remittances to Merchants</h2>
+</div>
+
+<div class="stats-container">
+    <div class="card pending-card">
+        <div class="card-header">
+            <h4>Pending Remittance</h4>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <h2>₹{{summary.pending}}</h2>
+        <p>Owed to Merchants</p>
+    </div>
+
+    <div class="card deposited-card">
+        <div class="card-header">
+            <h4>Remitted to Merchants</h4>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h2>₹{{summary.remitted}}</h2>
+        <p>This Month</p>
+    </div>
+
+    <div class="card returned-card">
+        <div class="card-header">
+            <h4>Returned COD</h4>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+        </div>
+        <h2>₹{{summary.returned}}</h2>
+        <p>RTO / Failed</p>
+    </div>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="header">
+        <h2 style="font-size: 18px;">COD Transactions Log</h2>
+        <div class="actions">
+            <button class="view-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Export Report</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="form-row">
+            <input type="text" placeholder="Search AWB or Merchant..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input">
+            
+            <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+                <option value="All">All Statuses</option>
+                <option value="Pending Remittance">Pending Remittance</option>
+                <option value="Remitted">Remitted</option>
+                <option value="Returned">Returned</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>AWB</th>
+                    <th>Merchant</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #94a3b8;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading records...</td>
+                    </tr>
+                } @else if (filteredRecords.length === 0) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #94a3b8;">No records found matching criteria.</td>
+                    </tr>
+                } @else {
+                    @for(record of filteredRecords; track record.awb) {
+                    <tr>
+                        <td>{{record.date}}</td>
+                        <td class="fw-bold">{{record.awb}}</td>
+                        <td>{{record.merchantName}}</td>
+                        <td><strong style="color: #111827;">₹{{record.amount}}</strong></td>
+                        <td>
+                            <span class="status"
+                                [class.delivered]="record.status === 'Remitted'"
+                                [class.failed]="record.status === 'Returned'"
+                                [class.pending]="record.status === 'Pending Remittance'">
+                                {{record.status}}
+                            </span>
+                        </td>
+                        <td>
+                            @if (userRole === 'SUPER_ADMIN' && record.rawStatus === 'PENDING') {
+                                <button class="action-btn success-btn" (click)="markAsRemitted(record)" title="Confirm Vexaro Settlement">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirm Vexaro Settle
+                                </button>
+                            } @else if (userRole === 'DISTRIBUTOR' && record.rawStatus === 'SETTLED_TO_VEXARO') {
+                                <button class="action-btn success-btn" (click)="markAsRemitted(record)" title="Release to Merchant">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg> Remit to Merchant
+                                </button>
+                            } @else if (record.rawStatus === 'PENDING') {
+                                <span style="font-size: 12px; color: #94a3b8;">Awaiting Vexaro Settle</span>
+                            } @else if (record.rawStatus === 'SETTLED_TO_VEXARO') {
+                                <span style="font-size: 12px; color: #64748b;">Awaiting Distributor Release</span>
+                            } @else {
+                                <span style="font-size: 12px; color: #9ca3af;">Cleared</span>
+                            }
+                        </td>
+                    </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

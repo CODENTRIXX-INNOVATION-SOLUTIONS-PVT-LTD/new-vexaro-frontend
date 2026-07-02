@@ -1,0 +1,57 @@
+<div class="header-section">
+    <h2>Help Center & FAQs</h2>
+    <div class="actions">
+        <button class="action-btn secondary" routerLink="../tickets">View My Tickets</button>
+        <button class="view-btn" routerLink="../create-ticket"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Contact Support</button>
+    </div>
+</div>
+
+<div class="faq-container mt-4">
+    <div class="search-hero">
+        <h3>How can we help you today?</h3>
+    <div class="search-box">
+            <span class="search-icon-wrap">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Search for answers...">
+        </div>
+    </div>
+
+    <div class="faq-content mt-4">
+        <div class="sidebar-categories">
+            <h4>Categories</h4>
+            <ul>
+                @for(cat of categories; track cat) {
+                    <li [class.active]="activeCategory === cat" (click)="setCategory(cat)">
+                        {{cat}}
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="faq-list">
+            @for(faq of filteredFaqs; track faq.question) {
+                <div class="faq-item" [class.expanded]="faq.expanded" (click)="toggleFaq(faq)">
+                    <div class="faq-header">
+                        <h4>{{faq.question}}</h4>
+                        @if (!faq.expanded) {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        } @else {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        }
+                    </div>
+                    <div class="faq-body" *ngIf="faq.expanded">
+                        <p>{{faq.answer}}</p>
+                    </div>
+                </div>
+            }
+
+            @if(filteredFaqs.length === 0) {
+                <div class="no-results">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon" style="font-size: 32px; color: #cbd5e1; margin-bottom: 10px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <p>No FAQs found matching your search criteria.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

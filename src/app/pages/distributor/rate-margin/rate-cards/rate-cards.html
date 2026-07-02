@@ -1,0 +1,62 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Rate Cards</h1>
+      <p class="page-subtitle">View courier rates, your cost, and the margin applied to merchants</p>
+    </div>
+    <a class="btn-nav" routerLink="/distributor/rate-margin/margins"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="2" y1="14" x2="6" y2="14"></line><line x1="10" y1="8" x2="14" y2="8"></line><line x1="18" y1="16" x2="22" y2="16"></line></svg> Configure Margins</a>
+  </div>
+
+  <div class="info-bar">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    <span>Velocity base rates are not visible to merchants. Merchants only see their final rate configured by you.</span>
+  </div>
+
+  <div class="filter-bar">
+    <label>Courier</label>
+    @for (c of ['All', ...couriers]; track c) {
+      <button class="courier-filter" [class.active]="courierFilter === c" (click)="courierFilter = c">{{ c }}</button>
+    }
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg><p>Loading rates...</p></div>
+  }
+
+  @if (!isLoading && filteredSlabs.length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+      <h3>No Rate Cards Found</h3>
+      <p>Rate cards are assigned by your Super Admin. Contact them to set up courier rates for your franchise.</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredSlabs.length > 0) {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Courier</th>
+            <th>Weight Slab</th>
+            <th>Your Cost (Dist. Cost)</th>
+            <th>Your Margin</th>
+            <th>Merchant Rate</th>
+            <th>Your Profit / Shipment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredSlabs; track s.courier + s.weightFrom) {
+            <tr>
+              <td><span class="courier-badge">{{ s.courier }}</span></td>
+              <td>{{ s.weightFrom }}–{{ s.weightTo }} kg</td>
+              <td class="cost">₹{{ s.distributorCost }}</td>
+              <td class="margin">+₹{{ s.distributorMargin }}</td>
+              <td class="rate">₹{{ s.merchantRate }}</td>
+              <td class="profit">₹{{ s.distributorProfit }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

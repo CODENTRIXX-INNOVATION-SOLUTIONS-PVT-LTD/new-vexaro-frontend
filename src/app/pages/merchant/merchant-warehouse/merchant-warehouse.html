@@ -1,0 +1,144 @@
+<div class="warehouse-page">
+    <!-- Top Toast Notification -->
+    <div class="toast-notification" [class.show]="saveSuccess">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 8px;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span>Warehouse profile saved successfully!</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2>Warehouse Management</h2>
+            <div class="breadcrumb">
+                <a href="/merchant/dashboard">Dashboard</a>
+                <span>›</span>
+                <span class="active">Warehouse Settings</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Profile Card -->
+    <div class="profile-container">
+        <div class="profile-card glass-panel">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="header-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><path d="M3 10.18a1.5 1.5 0 0 0 .58 1.18l8 6a1.5 1.5 0 0 0 1.84 0l8-6a1.5 1.5 0 0 0 .58-1.18V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path><path d="M12 2v2"></path><rect x="9" y="14" width="6" height="6"></rect></svg>
+                    </div>
+                    <div>
+                        <h3>Pickup Warehouse Profile</h3>
+                        <p class="subtitle">View pickup address details and edit contact information</p>
+                    </div>
+                </div>
+                <div class="wh-id-badge">
+                    <span>ID: <strong>{{ warehouseId }}</strong></span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- Left Section: Read-Only Address -->
+                <div class="address-section">
+                    <h4>Registered Pickup Address</h4>
+                    <div class="address-details">
+                        <div class="detail-row">
+                            <span class="label">Street Address</span>
+                            <span class="value">{{ streetAddress }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">City</span>
+                            <span class="value">{{ city }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">State</span>
+                            <span class="value">{{ state }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Pincode</span>
+                            <span class="value highlight-pincode">{{ pincode }}</span>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </div>
+                        <div class="warning-text">
+                            <strong>Address modification lock</strong>
+                            <p>Address modifications require verification. Changes must be approved by your distributor to prevent courier route misalignment.</p>
+                        </div>
+                    </div>
+
+                    <button class="btn-address-change" (click)="requestAddressChange()">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 6px;" class="svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+                        Request Address Change
+                    </button>
+                </div>
+
+                <!-- Right Section: Editable Form -->
+                <div class="form-section">
+                    <h4>Warehouse Contact & Legal Details</h4>
+                    <form (submit)="saveDetails(); $event.preventDefault()">
+                        <div class="form-group">
+                            <label for="whName">Warehouse Name</label>
+                            <input type="text" id="whName" [(ngModel)]="warehouseName" name="warehouseName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contactPerson">Contact Person</label>
+                            <input type="text" id="contactPerson" [(ngModel)]="contactPerson" name="contactPerson" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contactPhone">Phone Number</label>
+                            <input type="text" id="contactPhone" [(ngModel)]="contactPhone" name="contactPhone" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gstNumber">GST Number</label>
+                            <input type="text" id="gstNumber" [(ngModel)]="gstNumber" name="gstNumber" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-save">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 6px;" class="svg-icon"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Address Change Request Dialog Modal -->
+@if (showAddressRequestConfirmation) {
+    <div class="modal-overlay" (click)="closeAddressRequest()">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <div>
+                        <h3>Address Change Request</h3>
+                        <p class="modal-sub">Submit a ticket to request a new pickup location</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" (click)="closeAddressRequest()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="modal-body">
+                <p>To change your pickup address, a formal request must be verified by the operations desk to update delivery hubs and dispatch pincodes.</p>
+                <div class="alert-info-box">
+                    <p>A support ticket will be generated automatically for your distributor to review this request.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" (click)="closeAddressRequest()">Cancel</button>
+                <button class="btn-confirm" (click)="closeAddressRequest(); saveDetails()">
+                    Confirm & Submit Request
+                </button>
+            </div>
+        </div>
+    </div>
+}

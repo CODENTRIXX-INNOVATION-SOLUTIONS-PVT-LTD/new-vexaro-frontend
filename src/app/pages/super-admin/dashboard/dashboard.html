@@ -1,0 +1,13 @@
+<div class="dashboard">
+    <app-dashboard-header></app-dashboard-header>
+    <app-stats-cards [cards]="cards" [isLoading]="isLoading()"></app-stats-cards>
+    <app-chart-section></app-chart-section>
+    <div class="bottom-section">
+        <app-recent-shipments></app-recent-shipments>
+        <app-revenue-chart></app-revenue-chart>
+    </div>
+    <div class="tables-row">
+        <app-recent-payments></app-recent-payments>
+        <app-recent-registrations></app-recent-registrations>
+    </div>
+</div>

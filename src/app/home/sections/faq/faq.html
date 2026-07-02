@@ -1,0 +1,63 @@
+<section class="py-24 lg:py-32">
+  <div class="container-custom">
+    <div appReveal class="max-w-xl mb-14">
+      <span class="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-accent">
+        <span class="h-px w-6 bg-accent"></span> Frequently Asked
+      </span>
+      <h2 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight">
+        Questions logistics
+        <span class="font-display italic font-medium text-brand-blue">leaders ask first.</span>
+      </h2>
+    </div>
+
+    <div class="grid lg:grid-cols-[1fr_1.4fr] gap-12 items-start">
+      <!-- Box illustration -->
+      <div appReveal class="relative rounded-3xl border border-ink/10 bg-white aspect-square lg:aspect-[4/5] overflow-hidden flex items-center justify-center">
+        <svg viewBox="0 0 240 240" class="w-3/4 h-3/4" xmlns="http://www.w3.org/2000/svg">
+          <!-- shadow -->
+          <ellipse cx="120" cy="205" rx="70" ry="10" fill="rgb(10,10,10)" opacity="0.06"/>
+          <!-- box top -->
+          <polygon points="120,40 200,75 120,110 40,75" fill="#ffffff" stroke="rgb(10,10,10)" stroke-opacity="0.08"/>
+          <!-- box front -->
+          <polygon points="40,75 120,110 120,190 40,155" fill="#f1f1ee" stroke="rgb(10,10,10)" stroke-opacity="0.08"/>
+          <!-- box side -->
+          <polygon points="120,110 200,75 200,155 120,190" fill="#e7e7e3" stroke="rgb(10,10,10)" stroke-opacity="0.08"/>
+          <!-- accent ribbon -->
+          <polygon points="110,42 130,42 130,192 110,192" fill="rgb(232,116,58)" opacity="0.9"/>
+          <polygon points="42,73 198,73 198,82 42,82" fill="rgb(232,116,58)" opacity="0.9"/>
+          <!-- label -->
+          <rect x="60" y="120" width="40" height="26" rx="2" fill="#ffffff" stroke="rgb(11,74,111)" stroke-opacity="0.3"/>
+          <g stroke="rgb(11,74,111)" stroke-opacity="0.35" stroke-width="2">
+            <line x1="66" y1="128" x2="94" y2="128"/>
+            <line x1="66" y1="134" x2="86" y2="134"/>
+            <line x1="66" y1="140" x2="90" y2="140"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Accordion -->
+      <div appReveal [revealDelay]="1" class="divide-y divide-ink/10">
+        @for (item of items; track item.q; let i = $index) {
+          <div class="py-6 first:pt-0">
+            <button
+              type="button"
+              class="w-full flex items-center justify-between gap-6 text-left"
+              (click)="toggle(i)"
+            >
+              <span class="text-base sm:text-lg font-bold">{{ item.q }}</span>
+              <span
+                class="shrink-0 flex h-8 w-8 items-center justify-center rounded-full border border-ink/15 text-base transition-transform duration-300"
+                [class.rotate-45]="openIndex() === i"
+              >+</span>
+            </button>
+            <div class="grid transition-[grid-template-rows] duration-400 ease-out" [style.grid-template-rows]="openIndex() === i ? '1fr' : '0fr'">
+              <div class="overflow-hidden">
+                <p class="pt-4 pr-10 text-sm sm:text-base text-ink/55 leading-relaxed">{{ item.a }}</p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

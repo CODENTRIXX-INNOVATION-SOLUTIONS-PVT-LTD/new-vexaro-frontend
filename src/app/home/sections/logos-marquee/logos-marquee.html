@@ -1,0 +1,18 @@
+<section class="border-y border-ink/10 py-7 overflow-hidden">
+  <div class="relative">
+    <p class="absolute left-5 sm:left-8 top-1/2 -translate-y-1/2 z-10 text-[11px] font-bold tracking-[0.2em] uppercase text-ink/40 bg-paper pr-4">
+      Ops Operators
+    </p>
+    <div class="pl-32 sm:pl-44">
+      <div class="marquee-track">
+        @for (group of [0,1]; track group) {
+          <div class="flex items-center gap-14 pr-14">
+            @for (logo of logos; track logo) {
+              <span class="text-xl sm:text-2xl font-extrabold text-ink/25 whitespace-nowrap tracking-tight">{{ logo }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

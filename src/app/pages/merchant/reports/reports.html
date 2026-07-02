@@ -1,0 +1,111 @@
+<div class="header-section">
+    <h2>Performance Reports</h2>
+    <div class="actions">
+        <button class="view-btn" (click)="exportCSV()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15H8v1h1v1H8"></path></svg> Export CSV</button>
+        <button class="view-btn" style="background: #e8743a;" (click)="exportPDF()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 15h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8v5zM15 15h1M15 11h2"></path></svg> Export PDF</button>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="form-row">
+        <select [(ngModel)]="dateRange" (change)="loadReport()" class="status-select">
+            <option>Today</option>
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>Last Month</option>
+        </select>
+        
+        <select [(ngModel)]="statusFilter" (change)="loadReport()" class="status-select">
+            <option>All Statuses</option>
+            <option>Delivered</option>
+            <option>Failed</option>
+            <option>RTO</option>
+        </select>
+        
+        <select [(ngModel)]="carrierFilter" (change)="loadReport()" class="status-select">
+            <option>All Carriers</option>
+            <option>Delhivery</option>
+            <option>Bluedart</option>
+            <option>Ecom Express</option>
+        </select>
+    </div>
+</div>
+
+<div class="stats-container">
+    <div class="card" style="border-left: 4px solid rgb(11, 74, 111);">
+        <h4>Total Shipments</h4>
+        <h2>{{summary.total | number}}</h2>
+    </div>
+    <div class="card" style="border-left: 4px solid #16a34a;">
+        <h4>Delivered</h4>
+        <h2>{{summary.delivered | number}}</h2>
+    </div>
+    <div class="card" style="border-left: 4px solid rgb(239, 68, 68);">
+        <h4>Failed Attempts</h4>
+        <h2>{{summary.failed | number}}</h2>
+    </div>
+    <div class="card" style="border-left: 4px solid #dc2626;">
+        <h4>RTO Generated</h4>
+        <h2>{{summary.rto | number}}</h2>
+    </div>
+</div>
+
+<div class="stats-container mt-4">
+    <div class="card" style="border-left: 4px solid rgb(232, 116, 58);">
+        <h4>Weight Disputes</h4>
+        <h2>{{summary.weightDisputes | number}}</h2>
+    </div>
+    <div class="card" style="border-left: 4px solid rgb(11, 74, 111);">
+        <h4>COD Performance</h4>
+        <h2>{{summary.codPerformance}}%</h2>
+    </div>
+    <div class="card" style="border-left: 4px solid #4f46e5;">
+        <h4>Wallet Spend</h4>
+        <h2>₹{{summary.walletSpend | number}}</h2>
+    </div>
+</div>
+
+<div class="shipment-card mt-4">
+    <div class="header">
+        <h2 style="font-size: 18px;">Daily Breakdown</h2>
+    </div>
+
+    <div class="table-wrapper mt-4">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Total Shipments</th>
+                    <th>Delivered</th>
+                    <th>Failed</th>
+                    <th>RTO</th>
+                    <th>Success Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #6b7280;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading report data...</td>
+                    </tr>
+                } @else if (dataList.length === 0) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #6b7280;">No data found matching criteria.</td>
+                    </tr>
+                } @else {
+                    @for(row of dataList; track row.date) {
+                    <tr>
+                        <td><strong>{{row.date}}</strong></td>
+                        <td class="fw-bold">{{row.total}}</td>
+                        <td style="color: #16a34a;">{{row.delivered}}</td>
+                        <td style="color: rgb(239, 68, 68);">{{row.failed}}</td>
+                        <td style="color: #374151;">{{row.rto}}</td>
+                        <td>
+                            <span class="status delivered">{{ (row.delivered / row.total * 100) | number:'1.1-1' }}%</span>
+                        </td>
+                    </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

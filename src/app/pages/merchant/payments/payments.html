@@ -1,0 +1,442 @@
+<div class="wallet-page">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg> Wallet</h2>
+            <div class="breadcrumb">
+                <a href="/merchant/dashboard">Dashboard</a>
+                <span>›</span>
+                <span class="active">Wallet</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="wallet-tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'balance'" (click)="changeTab('balance')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="8" cy="8" r="6"></circle><circle cx="18" cy="14" r="6"></circle></svg> Current Balance
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="changeTab('transactions')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Transaction History
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'requests'" (click)="changeTab('requests')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Recharge Requests
+            @if (pendingRequestsCount > 0) {
+                <span class="tab-badge">{{ pendingRequestsCount }}</span>
+            }
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'refunds'" (click)="changeTab('refunds')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg> Refund History
+            @if (pendingRefundsCount > 0) {
+                <span class="tab-badge">{{ pendingRefundsCount }}</span>
+            }
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="changeTab('disputes')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Weight Disputes
+        </button>
+    </div>
+
+    <div class="tab-body">
+
+        <!-- ====================== TAB 1: CURRENT BALANCE ====================== -->
+        @if (activeTab === 'balance') {
+
+        <!-- Hero Balance Card -->
+        <div class="balance-hero" style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
+            <div class="balance-left" style="flex: 1; min-width: 300px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="balance-icon-wrap" style="background: rgb(11, 74, 111); color: white; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
+                    </div>
+                    <div class="balance-info" style="display: flex; flex-direction: column;">
+                        <span class="balance-label" style="font-size: 14px; opacity: 0.8;">Current Balance</span>
+                        <span class="balance-amount" style="font-size: 32px; font-weight: bold; color: #ffffff;">₹{{ balance.toLocaleString('en-IN') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="balance-left" style="flex: 1; min-width: 300px; display: flex; align-items: center; justify-content: space-between; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 20px;">
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="balance-icon-wrap" style="background: rgb(232, 116, 58); color: white; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <div class="balance-info" style="display: flex; flex-direction: column;">
+                        <span class="balance-label" style=" opacity: 0.8;">COD Escrow (Pending)</span>
+                        <span class="balance-amount" style="font-size: 32px; font-weight: bold; color: #ffffff;">₹{{ codEscrowBalance.toLocaleString('en-IN') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; ">
+                <button class="hero-topup-btn" (click)="changeTab('requests')" style="background: rgba(255,255,255,0.18); color: white; border: 1.5px solid rgba(255,255,255,0.35); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Request Top-up
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="s-icon red"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
+                <div class="s-info">
+                    <div class="s-val">₹{{ totalSpent.toLocaleString('en-IN') }}</div>
+                    <div class="s-label">Total Spent</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="s-icon amber"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <div class="s-info">
+                    <div class="s-val">{{ pendingRequestsCount }}</div>
+                    <div class="s-label">Pending Recharges</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="s-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                <div class="s-info">
+                    <div class="s-val">{{ pendingRefundsCount }}</div>
+                    <div class="s-label">Pending Refunds</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="s-icon purple"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                <div class="s-info">
+                    <div class="s-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</div>
+                    <div class="s-label">Dispute Deductions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Top-up Request Form -->
+        <div class="form-card">
+            <div class="card-header">
+                <h3>Request Wallet Top-up</h3>
+                <p class="card-sub">Choose an amount and send a request to your distributor (<strong>{{ distributorName }}</strong>)</p>
+            </div>
+
+            <label class="form-label">Select Amount</label>
+            <div class="packages-grid">
+                @for (pkg of packages; track pkg) {
+                <button class="pkg-chip" [class.selected]="selectedPackage === pkg" (click)="selectPackage(pkg)">
+                    ₹{{ pkg.toLocaleString('en-IN') }}
+                </button>
+                }
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <select [(ngModel)]="topUpMethod" name="method">
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Card">Card Payment</option>
+                        <option value="Cash">Cash</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Note (optional)</label>
+                    <input type="text" [(ngModel)]="topUpNote" placeholder="e.g. Bulk shipment prepay" />
+                </div>
+            </div>
+
+            @if (selectedPackage) {
+            <div class="selected-preview">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Requesting <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via <strong>{{ topUpMethod }}</strong>
+            </div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-submit" (click)="submitTopUp()" [disabled]="!selectedPackage">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Request to Distributor
+                </button>
+            </div>
+        </div>
+
+        }
+
+        <!-- ====================== TAB 2: TRANSACTION HISTORY ====================== -->
+        @if (activeTab === 'transactions') {
+        <div class="table-card">
+            <div class="card-header">
+                <h3>Transaction History</h3>
+                <p class="card-sub">Complete log of all credits and debits on your wallet</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Txn ID</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Reference</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (txn of transactions; track txn.id) {
+                    <tr>
+                        <td class="id-cell">{{ txn.id }}</td>
+                        <td class="date-cell">{{ txn.date }}</td>
+                        <td>{{ txn.description }}</td>
+                        <td>
+                            <span class="type-badge" [class.credit]="txn.type === 'credit'" [class.debit]="txn.type === 'debit'">
+                                @if (txn.type === 'credit') {
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                                } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                                }
+                                {{ txn.type === 'credit' ? 'Credit' : 'Debit' }}
+                            </span>
+                        </td>
+                        <td [class.credit-amt]="txn.type === 'credit'" [class.debit-amt]="txn.type === 'debit'" class="amount-cell">
+                            {{ txn.type === 'credit' ? '+' : '-' }}₹{{ txn.amount.toLocaleString('en-IN') }}
+                        </td>
+                        <td class="id-cell">{{ txn.reference }}</td>
+                        <td>
+                            <span class="status-badge" [class.success]="txn.status === 'Success'" [class.pending]="txn.status === 'Pending'" [class.failed]="txn.status === 'Failed'">
+                                {{ txn.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <!-- ====================== TAB 3: RECHARGE REQUESTS ====================== -->
+        @if (activeTab === 'requests') {
+        <div class="table-card">
+            <div class="card-header-row">
+                <div>
+                    <h3>Recharge Requests</h3>
+                    <p class="card-sub">Top-up requests sent to your distributor</p>
+                </div>
+                <button class="add-btn" (click)="changeTab('balance')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> New Request
+                </button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Note</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (req of topUpRequests; track req.id) {
+                    <tr>
+                        <td class="id-cell">{{ req.id }}</td>
+                        <td class="date-cell">{{ req.date }}</td>
+                        <td class="credit-amt amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
+                        <td><span class="method-badge">{{ req.method }}</span></td>
+                        <td class="note-cell">{{ req.note }}</td>
+                        <td>
+                            <span class="status-badge"
+                                [class.success]="req.status === 'Approved'"
+                                [class.pending]="req.status === 'Pending'"
+                                [class.failed]="req.status === 'Rejected'">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <!-- ====================== TAB 4: REFUND HISTORY ====================== -->
+        @if (activeTab === 'refunds') {
+        <div class="table-card">
+            <div class="card-header">
+                <h3>Refund History</h3>
+                <p class="card-sub">Refunds credited back to your wallet</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Refund ID</th>
+                        <th>Date</th>
+                        <th>AWB Number</th>
+                        <th>Reason</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (r of refunds; track r.id) {
+                    <tr>
+                        <td class="id-cell">{{ r.id }}</td>
+                        <td class="date-cell">{{ r.date }}</td>
+                        <td class="awb-cell">{{ r.awb }}</td>
+                        <td>{{ r.reason }}</td>
+                        <td class="credit-amt amount-cell">₹{{ r.amount.toLocaleString('en-IN') }}</td>
+                        <td>
+                            <span class="status-badge"
+                                [class.success]="r.status === 'Processed'"
+                                [class.pending]="r.status === 'Pending'"
+                                [class.failed]="r.status === 'Rejected'">
+                                {{ r.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+        <!-- ====================== TAB 5: WEIGHT DISPUTE DEDUCTIONS ====================== -->
+        @if (activeTab === 'disputes') {
+
+        <div class="info-notice">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>Weight dispute deductions are applied when the actual shipment weight differs from the declared weight. <strong>Disputed</strong> entries can be raised as a support ticket.</span>
+        </div>
+
+        <div class="table-card">
+            <div class="card-header-row">
+                <div>
+                    <h3>Weight Dispute Deductions</h3>
+                    <p class="card-sub">Charges applied due to weight discrepancies on your shipments</p>
+                </div>
+                <div class="dispute-summary">
+                    <span class="dispute-total-label">Total Deducted</span>
+                    <span class="dispute-total-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</span>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dispute ID</th>
+                        <th>Date</th>
+                        <th>AWB Number</th>
+                        <th>Billed Weight</th>
+                        <th>Actual Weight</th>
+                        <th>Difference</th>
+                        <th>Deduction</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (d of disputes; track d.id) {
+                    <tr>
+                        <td class="id-cell">{{ d.id }}</td>
+                        <td class="date-cell">{{ d.date }}</td>
+                        <td class="awb-cell">{{ d.awb }}</td>
+                        <td>{{ d.billedWeight }} kg</td>
+                        <td>{{ d.actualWeight }} kg</td>
+                        <td class="diff-cell">+{{ d.difference }} kg</td>
+                        <td class="debit-amt amount-cell">-₹{{ d.deduction.toLocaleString('en-IN') }}</td>
+                        <td>
+                            <span class="status-badge"
+                                [class.applied]="d.status === 'Applied'"
+                                [class.pending]="d.status === 'Disputed'"
+                                [class.success]="d.status === 'Resolved'">
+                                {{ d.status }}
+                            </span>
+                        </td>
+                        <td>
+                            @if (d.status === 'Applied') {
+                            <button class="contest-btn" (click)="openContest(d)">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Contest
+                            </button>
+                            } @else if (d.status === 'Disputed') {
+                            <span class="disputed-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Under Review</span>
+                            } @else {
+                            <span class="resolved-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Resolved</span>
+                            }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+
+    </div>
+</div>
+
+<!-- ====================== CONTEST DISPUTE MODAL ====================== -->
+@if (showContestModal && contestingDispute) {
+<div class="modal-overlay" (click)="closeContest()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <div class="modal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                <div>
+                    <h3>Contest Weight Dispute</h3>
+                    <p class="modal-sub">AWB: <strong>{{ contestingDispute.awb }}</strong> &nbsp;|&nbsp; Deduction: <strong class="red-text">-₹{{ contestingDispute.deduction }}</strong></p>
+                </div>
+            </div>
+            <button class="modal-close-btn" (click)="closeContest()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+
+        <div class="modal-body">
+
+            <!-- Dispute Details Summary -->
+            <div class="dispute-detail-row">
+                <div class="detail-chip">
+                    <span class="chip-label">Billed Weight</span>
+                    <span class="chip-val">{{ contestingDispute.billedWeight }} kg</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="chip-arrow svg-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                <div class="detail-chip red">
+                    <span class="chip-label">Actual (Charged)</span>
+                    <span class="chip-val">{{ contestingDispute.actualWeight }} kg</span>
+                </div>
+                <div class="detail-chip amber">
+                    <span class="chip-label">Difference</span>
+                    <span class="chip-val">+{{ contestingDispute.difference }} kg</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="modal-field">
+                <label>Describe the Issue <span class="req">*</span></label>
+                <textarea
+                    [(ngModel)]="contestNote"
+                    name="contestNote"
+                    rows="4"
+                    placeholder="e.g. The actual package weight was 0.5 kg as stated. Please refer to the attached photos of the parcel label and weighing scale.">
+                </textarea>
+            </div>
+
+            <!-- File Upload -->
+            <div class="modal-field">
+                <label>Attach Evidence <span class="label-hint">(photos, invoice, scale screenshot)</span></label>
+                <div class="upload-zone">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path><polyline points="12 12 12 16"></polyline><polyline points="9 13 12 10 15 13"></polyline></svg>
+                    <span>Drag &amp; drop files or <label class="upload-link">browse<input type="file" multiple accept="image/*,.pdf" (change)="onFileChange($event)" hidden /></label></span>
+                    <span class="upload-hint">Supported: JPG, PNG, PDF &mdash; Max 5MB each</span>
+                </div>
+                @if (selectedFileNames.length > 0) {
+                <ul class="file-list">
+                    @for (name of selectedFileNames; track name) {
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="9.5" cy="11.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> {{ name }}</li>
+                    }
+                </ul>
+                }
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" (click)="closeContest()">Cancel</button>
+            <button class="btn-submit" (click)="submitContest()" [disabled]="!contestNote.trim()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Submit Dispute to Distributor
+            </button>
+        </div>
+
+    </div>
+</div>
+}

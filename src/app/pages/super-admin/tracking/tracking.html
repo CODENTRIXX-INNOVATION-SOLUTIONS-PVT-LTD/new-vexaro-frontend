@@ -1,0 +1,123 @@
+<div class="shipment-card">
+    <div class="header">
+        <h2>Global AWB Search</h2>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="large-search" placeholder="Enter AWB, Order ID, or Phone Number..." [(ngModel)]="searchQuery" (keyup.enter)="search()">
+        <button class="view-btn search-btn" (click)="search()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Track
+        </button>
+    </div>
+    
+    <div class="filter-bar">
+        <select [(ngModel)]="distributorFilter" class="large-search filter-select">
+            <option>All Distributors</option>
+            <option>SpeedX Logistics</option>
+            <option>FastTrack Couriers</option>
+        </select>
+        <select [(ngModel)]="dateFilter" class="large-search filter-select">
+            <option>Any Date</option>
+            <option>Today</option>
+            <option>This Week</option>
+        </select>
+        <select [(ngModel)]="statusFilter" class="large-search filter-select">
+            <option>All Statuses</option>
+            <option>Delivered</option>
+            <option>In Transit</option>
+        </select>
+        <select [(ngModel)]="carrierFilter" class="large-search filter-select">
+            <option>All Carriers</option>
+            <option>Delhivery</option>
+            <option>Bluedart</option>
+            <option>Ecom Express</option>
+        </select>
+    </div>
+
+    @if(hasSearched) {
+        @if(isLoading) {
+        <div class="loading-state">Tracking shipment...</div>
+        } @else if(error) {
+        <div class="error-state">{{error}}</div>
+        } @else if(shipment) {
+        <div class="results-grid">
+            <div class="summary-panel">
+                <div class="status-banner" [class.transit]="shipment.status === 'Out for Delivery'" [class.delivered]="shipment.status === 'Delivered'">
+                    <h3>{{shipment.status}}</h3>
+                    <p>AWB: {{shipment.awb}}</p>
+                </div>
+                
+                <div class="details-list">
+                    <div class="detail-item">
+                        <span>Customer</span>
+                        <strong>{{shipment.customerName}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Destination</span>
+                        <strong>{{shipment.pincode}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Payment</span>
+                        <strong>{{shipment.paymentType}} <span *ngIf="shipment.amount > 0">(₹{{shipment.amount}})</span></strong>
+                    </div>
+                    
+                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+                    
+                    <div class="detail-item">
+                        <span>Merchant</span>
+                        <strong>{{shipment.merchantName}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Distributor</span>
+                        <strong>{{shipment.distributorName}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Warehouse</span>
+                        <strong>{{shipment.warehouseName}}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Carrier</span>
+                        <strong>{{shipment.carrier}}</strong>
+                    </div>
+                </div>
+
+                <div class="quick-links mt-4">
+                    <button class="action-btn-outline w-100 mb-2" (click)="viewLive()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg> View Live Tracking</button>
+                    <button class="action-btn-outline w-100 mb-2" (click)="viewHistory()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> View Full Event Log</button>
+                    <button class="view-btn w-100 mt-4" style="background: #dc2626;" (click)="intervene()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 9v4M12 17h.01"></path></svg> Intervene / Escalate</button>
+                </div>
+            </div>
+
+            <div class="timeline-panel">
+                <h4 class="mb-3">Tracking Timeline</h4>
+                <div class="timeline">
+                    @for(event of timeline; track event.time) {
+                    <div class="timeline-item" [class.current]="event.isCurrent">
+                        <div class="timeline-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="time-block">
+                                <strong>{{event.date}}</strong>
+                                <span>{{event.time}}</span>
+                            </div>
+                            <div class="info-block">
+                                <strong>{{event.status}}</strong>
+                                <span class="location"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg> {{event.location}}</span>
+                                <p>{{event.description}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        } @else {
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="empty-icon svg-icon"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12h12l1-12"></path></svg>
+            <h3>No Shipment Found</h3>
+            <p>We couldn't find any global records matching "{{searchQuery}}".</p>
+        </div>
+        }
+    }
+</div>
