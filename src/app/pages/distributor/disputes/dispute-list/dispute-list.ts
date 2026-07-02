@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DisputeService } from '../../../../services/dispute.service';
 
 @Component({
   selector: 'app-dispute-list',
@@ -16,7 +17,7 @@ export class DisputeList implements OnInit {
   statusFilter: string = 'All';
   isLoading: boolean = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private disputeService: DisputeService) {}
 
   ngOnInit() {
     this.loadDisputes();
@@ -24,14 +25,30 @@ export class DisputeList implements OnInit {
 
   loadDisputes() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/disputes
-    this.disputes = [
-      { id: 'DIS1001', awb: 'AWB554321', merchantName: 'Global Traders', courier: 'Delhivery Standard', status: 'Open', appliedWeight: 0.5, chargedWeight: 1.2, weightDifference: 0.7, extraChargeAmount: 150, deadlineDate: '19 Jun 2026' },
-      { id: 'DIS1002', awb: 'AWB443102', merchantName: 'ABC Electronics', courier: 'Ekart Standard', status: 'Resolved', appliedWeight: 1.0, chargedWeight: 2.5, weightDifference: 1.5, extraChargeAmount: 320, deadlineDate: '15 Jun 2026' },
-      { id: 'DIS1003', awb: 'AWB889012', merchantName: 'Global Traders', courier: 'Delhivery Standard', status: 'Under Review', appliedWeight: 0.5, chargedWeight: 0.8, weightDifference: 0.3, extraChargeAmount: 75, deadlineDate: '20 Jun 2026' },
-    ];
-    this.isLoading = false;
-    this.applyFilters();
+    this.disputeService.listWeightDisputes().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.disputes) {
+          this.disputes = response.data.disputes.map((d: any) => ({
+            id: d.id,
+            awb: d.awb || 'N/A',
+            merchantName: d.merchantName || 'N/A',
+            courier: d.courier || 'N/A',
+            status: d.status,
+            appliedWeight: d.appliedWeight || 0,
+            chargedWeight: d.chargedWeight || 0,
+            weightDifference: d.weightDifference || 0,
+            extraChargeAmount: d.extraChargeAmount || 0,
+            deadlineDate: d.deadlineDate || 'N/A'
+          }));
+        }
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading disputes:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters() {

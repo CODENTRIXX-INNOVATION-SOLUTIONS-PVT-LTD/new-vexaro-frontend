@@ -1,49 +1,51 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FinanceService } from '../../services/finance.service';
+
+interface PaymentRow {
+  paymentId: string;
+  customer: string;
+  amount: string;
+  method: string;
+  date: string;
+}
 
 @Component({
   selector: 'app-recent-payments',
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './recent-payments.html',
   styleUrl: '../../common-css/super-admin-dashboard-page-bottom-table.css'
 })
-export class RecentPayments {
+export class RecentPayments implements OnInit {
+  private financeService = inject(FinanceService);
 
-  payments = [
-    {
-      paymentId: 'PAY001',
-      customer: 'Rahul Sharma',
-      amount: '₹12,500',
-      method: 'UPI',
-      date: '10 Jun 2026'
-    },
-    {
-      paymentId: 'PAY002',
-      customer: 'Priya Singh',
-      amount: '₹8,200',
-      method: 'Card',
-      date: '10 Jun 2026'
-    },
-    {
-      paymentId: 'PAY003',
-      customer: 'Amit Verma',
-      amount: '₹15,000',
-      method: 'Net Banking',
-      date: '09 Jun 2026'
-    },
-    {
-      paymentId: 'PAY004',
-      customer: 'Neha Gupta',
-      amount: '₹9,800',
-      method: 'UPI',
-      date: '09 Jun 2026'
-    },
-    {
-      paymentId: 'PAY005',
-      customer: 'Rohan Patel',
-      amount: '₹18,300',
-      method: 'Card',
-      date: '08 Jun 2026'
-    }
-  ];
+  payments = signal<PaymentRow[]>([]);
+  isLoading = signal(true);
+  hasError = signal(false);
 
+  ngOnInit(): void {
+    this.financeService.listTransactions({ limit: 5, page: 1 }).subscribe({
+      next: (res) => {
+        const transactions = res?.data?.transactions ?? [];
+        this.payments.set(transactions.map((t: any) => ({
+          paymentId: t._id?.substring(0, 8) || '—',
+          customer: t.userId?.companyName || t.userId?.firstName || 'Unknown',
+          amount: `₹${t.amount?.toLocaleString('en-IN') || '0'}`,
+          method: t.type || 'Wallet',
+          date: t.createdAt
+            ? new Date(t.createdAt).toLocaleDateString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric',
+              })
+            : '—',
+        })));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('[RecentPayments] API error:', err);
+        this.hasError.set(true);
+        this.isLoading.set(false);
+      },
+    });
+  }
 }

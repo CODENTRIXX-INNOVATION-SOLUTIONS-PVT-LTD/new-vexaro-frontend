@@ -1,0 +1,155 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">Refund Requests</h1>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-banner" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+      <button class="btn-close-error" (click)="errorMessage = ''" aria-label="Close error">×</button>
+    </div>
+  }
+
+  <div class="filters">
+    <div class="filter-group">
+      <label for="statusFilter">Status:</label>
+      <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()">
+        <option value="All">All</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="searchTerm">Search:</label>
+      <input 
+        type="text" 
+        id="searchTerm"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearchChange()" 
+        placeholder="Merchant name or AWB"
+        aria-label="Search requests"
+      >
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <p>Loading requests...</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredRequests.length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <p>No refund requests found.</p>
+    </div>
+  }
+
+  @if (!isLoading && filteredRequests.length > 0) {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Merchant</th>
+            <th>AWB</th>
+            <th>Amount</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (request of filteredRequests; track request.id) {
+            <tr>
+              <td><code>{{ request.id }}</code></td>
+              <td>
+                <div>{{ request.merchantName }}</div>
+                <small>{{ request.merchantEmail }}</small>
+              </td>
+              <td><code>{{ request.awb }}</code></td>
+              <td><strong>₹{{ request.amount.toLocaleString('en-IN') }}</strong></td>
+              <td>{{ request.reason }}</td>
+              <td>
+                <span class="status-badge" 
+                      [class.pending]="request.status === 'Pending'"
+                      [class.approved]="request.status === 'Approved'"
+                      [class.rejected]="request.status === 'Rejected'"
+                      role="status">
+                  {{ request.status }}
+                </span>
+              </td>
+              <td>{{ request.submittedAt | date:'medium' }}</td>
+              <td>
+                @if (request.status === 'Pending') {
+                  <button 
+                    class="btn-approve" 
+                    (click)="approveRequest(request)" 
+                    [disabled]="isProcessing"
+                    aria-label="Approve refund of ₹{{ request.amount }}">
+                    Approve
+                  </button>
+                  <button 
+                    class="btn-reject" 
+                    (click)="openRejectModal(request)" 
+                    [disabled]="isProcessing"
+                    aria-label="Reject refund of ₹{{ request.amount }}">
+                    Reject
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Reject Modal -->
+@if (showRejectModal) {
+  <div class="modal-overlay" (click)="closeRejectModal()" role="dialog" aria-modal="true" aria-labelledby="reject-modal-title">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2 id="reject-modal-title">Reject Refund Request</h2>
+      <p>Merchant: <strong>{{ selectedRequest?.merchantName }}</strong></p>
+      <p>Amount: <strong>₹{{ selectedRequest?.amount?.toLocaleString('en-IN') }}</strong></p>
+      
+      @if (errorMessage) {
+        <div class="error-message" role="alert">{{ errorMessage }}</div>
+      }
+      
+      <div class="form-group">
+        <label for="rejectionReason">Rejection Reason <span aria-hidden="true">*</span><span class="sr-only">(required)</span></label>
+        <textarea 
+          id="rejectionReason"
+          [(ngModel)]="rejectionReason" 
+          rows="4" 
+          placeholder="Enter reason for rejection..."
+          [attr.aria-invalid]="errorMessage ? 'true' : 'false'"
+        ></textarea>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeRejectModal()">Cancel</button>
+        <button 
+          class="btn-reject" 
+          (click)="rejectRequest()" 
+          [disabled]="isProcessing || !rejectionReason.trim()">
+          Reject Request
+        </button>
+      </div>
+    </div>
+  </div>
+}

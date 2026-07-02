@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DisputeService } from '../../../../services/dispute.service';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-dispute-detail',
@@ -11,9 +13,15 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrl: './dispute-detail.css'
 })
 export class DisputeDetail implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private disputeService = inject(DisputeService);
+  private authService = inject(AuthService);
+
   disputeId: string = '';
   isLoading: boolean = false;
   isSubmitting: boolean = false;
+  userRole: string = '';
 
   dispute: any = {
     id: '',
@@ -29,40 +37,58 @@ export class DisputeDetail implements OnInit {
     deadlineDate: '',
     hoursLeft: 0,
     productName: '',
-    boxDimensions: ''
+    boxDimensions: '',
+    comments: [],
+    proofImages: []
   };
 
   remarks: string = '';
-  actionType: 'accept' | 'dispute' | null = null;
+  actionType: 'RESOLVED' | 'CLOSED' | null = null;
   uploadedFiles: File[] = [];
-
-  constructor(private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit() {
     this.disputeId = this.route.snapshot.paramMap.get('id') || '';
+    this.authService.getMe().subscribe({
+      next: (user) => {
+        this.userRole = user.role;
+      },
+      error: (err) => console.error('Failed to load user profile:', err)
+    });
     this.loadDisputeDetails();
   }
 
   loadDisputeDetails() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/disputes/:disputeId
-    this.dispute = {
-      id: this.disputeId || 'DIS1001',
-      awb: 'AWB554321',
-      merchantName: 'Global Traders',
-      merchantCode: 'MER002',
-      courier: 'Delhivery Standard',
-      status: 'Open',
-      appliedWeight: 0.5,
-      chargedWeight: 1.2,
-      weightDifference: 0.7,
-      extraChargeAmount: 150,
-      deadlineDate: '19 Jun 2026',
-      hoursLeft: 36,
-      productName: 'Gaming Mouse',
-      boxDimensions: '15 x 10 x 5 cm'
-    };
-    this.isLoading = false;
+    this.disputeService.getDisputeById(this.disputeId).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.data) {
+          const d = res.data;
+          this.dispute = {
+            id: d._id,
+            awb: d.shipmentId?.awb || '—',
+            merchantName: d.raisedBy ? `${d.raisedBy.firstName || ''} ${d.raisedBy.lastName || ''}`.trim() : '—',
+            merchantCode: d.raisedBy?.email || '—',
+            courier: d.shipmentId?.carrier || '—',
+            status: d.status,
+            appliedWeight: d.billedWeight || 0,
+            chargedWeight: d.actualWeight || 0,
+            weightDifference: Math.max(0, (d.actualWeight || 0) - (d.billedWeight || 0)),
+            extraChargeAmount: d.extraCharge || 0,
+            deadlineDate: new Date(d.disputeExpiresAt).toLocaleDateString('en-IN'),
+            hoursLeft: Math.max(0, Math.ceil((new Date(d.disputeExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60))),
+            productName: d.description || '—',
+            boxDimensions: '—',
+            comments: d.comments || [],
+            proofImages: d.proofImages || []
+          };
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Failed to load dispute details:', err);
+      }
+    });
   }
 
   onFileSelected(event: any) {
@@ -78,19 +104,81 @@ export class DisputeDetail implements OnInit {
     this.uploadedFiles.splice(index, 1);
   }
 
-  submitAction() {
-    if (!this.actionType) return;
+  submitProof() {
+    if (this.uploadedFiles.length === 0) {
+      alert('Please select at least one file to upload.');
+      return;
+    }
     this.isSubmitting = true;
     
-    // TODO: 
-    // If actionType === 'accept': PUT /disputes/:id/accept
-    // If actionType === 'dispute': POST /disputes/:id/evidence (multipart/form-data)
+    // Convert files to base64 URLs (temporary solution - backend should provide upload endpoint)
+    const proofImages: string[] = [];
+    let processedFiles = 0;
     
-    console.log(`Submitting ${this.actionType} with remarks:`, this.remarks);
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.router.navigate(['/distributor/disputes']);
-    }, 1500);
+    this.uploadedFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        proofImages.push(e.target.result);
+        processedFiles++;
+        
+        if (processedFiles === this.uploadedFiles.length) {
+          this.disputeService.submitProof(this.disputeId, proofImages).subscribe({
+            next: () => {
+              this.isSubmitting = false;
+              alert('Proof submitted successfully!');
+              this.uploadedFiles = [];
+              this.loadDisputeDetails();
+            },
+            error: (err) => {
+              this.isSubmitting = false;
+              alert(err.error?.message || 'Failed to submit proof. Please try again.');
+            }
+          });
+        }
+      };
+      reader.onerror = () => {
+        this.isSubmitting = false;
+        alert('Failed to read file. Please try again.');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  submitAction() {
+    this.isSubmitting = true;
+    if (this.userRole === 'SUPER_ADMIN') {
+      const action = this.actionType;
+      if (!action) return;
+      this.disputeService.resolveWeightDispute(this.disputeId, action).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          alert(`Dispute ${action.toLowerCase()} successfully.`);
+          this.router.navigate(['/distributor/disputes']);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          alert(err.error?.message || 'Failed to resolve dispute.');
+        }
+      });
+    } else {
+      if (!this.remarks.trim()) {
+        alert('Please enter your comment.');
+        this.isSubmitting = false;
+        return;
+      }
+      this.disputeService.addComment(this.disputeId, this.remarks).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          alert('Comment added successfully.');
+          this.remarks = '';
+          this.loadDisputeDetails();
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          alert(err.error?.message || 'Failed to add comment.');
+        }
+      });
+    }
   }
 
   goBack() {

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FinanceService } from '../../../services/finance.service';
+import { DisputeService } from '../../../services/dispute.service';
 
 export interface MerchantTransaction {
   id: string;
@@ -38,7 +40,7 @@ export interface WeightDispute {
   actualWeight: number;
   difference: number;
   deduction: number;
-  status: 'Applied' | 'Disputed' | 'Resolved';
+  status: string;
   contestNote?: string;
   attachments?: string[];
 }
@@ -50,23 +52,96 @@ export interface WeightDispute {
   templateUrl: './payments.html',
   styleUrl: './payments.css',
 })
-export class Payments {
+export class Payments implements OnInit {
+  private financeService = inject(FinanceService);
+  private disputeService = inject(DisputeService);
+
   activeTab: string = 'balance';
 
   changeTab(tab: string) {
     this.activeTab = tab;
   }
 
-  // ─── Balance ──────────────────────────────────────────────────────────────
-  balance: number = 12400;
-  codEscrowBalance: number = 4500;
-  distributorName: string = 'SpeedX Logistics';
+  // Wallet
+  balance: number = 0;
+  codEscrowBalance: number = 0;
+  distributorName: string = 'Vexaro Network';
 
   // Top-up request inline form
   packages = [1000, 2500, 5000, 10000, 25000];
   selectedPackage: number | null = null;
   topUpMethod: string = 'UPI';
   topUpNote: string = '';
+
+  transactions: MerchantTransaction[] = [];
+  topUpRequests: TopUpRequest[] = [];
+  refunds: RefundRecord[] = [];
+  disputes: WeightDispute[] = [];
+
+  // Contest Dispute Modal
+  showContestModal: boolean = false;
+  contestingDispute: WeightDispute | null = null;
+  contestNote: string = '';
+  selectedFileNames: string[] = [];
+
+  ngOnInit(): void {
+    this.loadWalletDetails();
+    this.loadTransactions();
+    this.loadDisputes();
+  }
+
+  loadWalletDetails(): void {
+    this.financeService.getMyWallet().subscribe({
+      next: (res) => {
+        if (res.data) {
+          this.balance = res.data.balance;
+          this.codEscrowBalance = res.data.codEscrowBalance || 0;
+        }
+      },
+      error: (err) => console.error('Failed to load wallet:', err)
+    });
+  }
+
+  loadTransactions(): void {
+    this.financeService.listTransactions({ limit: 50 }).subscribe({
+      next: (res) => {
+        if (res.data && res.data.transactions) {
+          this.transactions = res.data.transactions.map((t: any) => ({
+            id: t._id,
+            date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            description: t.note || t.type,
+            type: t.amount >= 0 ? 'credit' : 'debit',
+            amount: Math.abs(t.amount),
+            status: 'Success',
+            reference: t.reference || '—',
+          }));
+        }
+      },
+      error: (err) => console.error('Failed to load transactions:', err)
+    });
+  }
+
+  loadDisputes(): void {
+    this.disputeService.listDisputes({ limit: 50 }).subscribe({
+      next: (res) => {
+        if (res.data && res.data.items) {
+          this.disputes = res.data.items.map((d: any) => ({
+            id: d._id,
+            date: new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            awb: d.shipmentId?.awb || '—',
+            billedWeight: d.billedWeight || 0,
+            actualWeight: d.actualWeight || 0,
+            difference: Math.max(0, (d.actualWeight || 0) - (d.billedWeight || 0)),
+            deduction: d.extraCharge || 0,
+            status: d.status,
+            contestNote: d.description || '',
+            attachments: (d.proofImages || []).map((img: string) => img.split('/').pop()),
+          }));
+        }
+      },
+      error: (err) => console.error('Failed to load disputes:', err)
+    });
+  }
 
   selectPackage(amount: number) {
     this.selectedPackage = amount;
@@ -77,20 +152,69 @@ export class Payments {
       alert('Please select an amount to request.');
       return;
     }
-    const newReq: TopUpRequest = {
-      id: 'REQ' + Math.floor(1000 + Math.random() * 9000),
-      date: 'Today',
-      amount: this.selectedPackage,
-      method: this.topUpMethod,
-      note: this.topUpNote || '—',
-      status: 'Pending'
-    };
-    this.topUpRequests.unshift(newReq);
-    alert(`Top-up request of ₹${this.selectedPackage.toLocaleString('en-IN')} sent to ${this.distributorName}!`);
-    this.selectedPackage = null;
-    this.topUpNote = '';
-    this.topUpMethod = 'UPI';
-    this.activeTab = 'requests';
+
+    this.financeService.createRazorpayOrder(this.selectedPackage).subscribe({
+      next: (res) => {
+        const order = res.data;
+        const razorpayKey = order.razorpayKey;
+        const orderId = order.orderId;
+        const paymentId = order.paymentId;
+        const amount = order.amount;
+
+        // If Razorpay object exists on window, open it; otherwise simulate success
+        const RazorpayObj = (window as any).Razorpay;
+        if (RazorpayObj) {
+          const options = {
+            key: razorpayKey,
+            amount: amount,
+            currency: 'INR',
+            name: 'Vexaro Logistics',
+            description: 'Wallet Topup',
+            order_id: orderId,
+            handler: (response: any) => {
+              this.financeService.verifyPayment({
+                paymentId,
+                orderId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+              }).subscribe({
+                next: () => {
+                  alert('Payment verified and wallet credited!');
+                  this.loadWalletDetails();
+                  this.loadTransactions();
+                },
+                error: (err) => alert(err.error?.message || 'Payment verification failed.')
+              });
+            },
+            prefill: {
+              name: 'Merchant Test',
+              email: 'merchant@test.com',
+            },
+          };
+          const rzp = new RazorpayObj(options);
+          rzp.open();
+        } else {
+          // Simulate local payment success
+          const proceed = confirm('Local environment: No active Razorpay SDK found. Do you want to simulate a successful payment?');
+          if (proceed) {
+            this.financeService.verifyPayment({
+              paymentId,
+              orderId,
+              razorpayPaymentId: 'mock_pay_id_' + Math.floor(Math.random() * 100000),
+              signature: 'mock_signature',
+            }).subscribe({
+              next: () => {
+                alert('Mock payment simulated successfully! Wallet has been credited.');
+                this.loadWalletDetails();
+                this.loadTransactions();
+              },
+              error: (err) => alert(err.error?.message || 'Mock payment simulation failed.')
+            });
+          }
+        }
+      },
+      error: (err) => alert(err.error?.message || 'Failed to initiate recharge.')
+    });
   }
 
   get totalSpent(): number {
@@ -110,48 +234,6 @@ export class Payments {
     return this.disputes.filter(d => d.status === 'Applied')
       .reduce((s, d) => s + d.deduction, 0);
   }
-
-  // ─── Transaction History ──────────────────────────────────────────────────
-  transactions: MerchantTransaction[] = [
-    { id: 'TXN2000', date: '17 Jun 2026', description: 'COD Remittance Release',          type: 'credit', amount: 8500,  status: 'Success', reference: 'COD9912' },
-    { id: 'TXN2001', date: '17 Jun 2026', description: 'Shipment Charge — AWB889012',    type: 'debit',  amount: 320,   status: 'Success', reference: 'AWB889012' },
-    { id: 'TXN2002', date: '17 Jun 2026', description: 'Wallet Top-up Approved',          type: 'credit', amount: 10000, status: 'Success', reference: 'REQ1001' },
-    { id: 'TXN2003', date: '16 Jun 2026', description: 'Shipment Charge — AWB779234',    type: 'debit',  amount: 180,   status: 'Success', reference: 'AWB779234' },
-    { id: 'TXN2004', date: '15 Jun 2026', description: 'Shipment Charge — AWB661122',    type: 'debit',  amount: 450,   status: 'Success', reference: 'AWB661122' },
-    { id: 'TXN2005', date: '15 Jun 2026', description: 'Wallet Top-up Approved',          type: 'credit', amount: 5000,  status: 'Success', reference: 'REQ1002' },
-    { id: 'TXN2006', date: '14 Jun 2026', description: 'Weight Dispute Deduction',        type: 'debit',  amount: 150,   status: 'Success', reference: 'DIS1001' },
-    { id: 'TXN2007', date: '13 Jun 2026', description: 'Shipment Charge — AWB443210',    type: 'debit',  amount: 390,   status: 'Success', reference: 'AWB443210' },
-    { id: 'TXN2008', date: '12 Jun 2026', description: 'Refund — AWB334211',             type: 'credit', amount: 320,   status: 'Success', reference: 'RFD001' },
-  ];
-
-  // ─── Recharge Requests ────────────────────────────────────────────────────
-  topUpRequests: TopUpRequest[] = [
-    { id: 'REQ1001', date: '15 Jun 2026', amount: 10000, method: 'UPI',           note: 'Monthly recharge',       status: 'Approved' },
-    { id: 'REQ1002', date: '10 Jun 2026', amount: 5000,  method: 'Bank Transfer', note: 'Low balance',            status: 'Approved' },
-    { id: 'REQ1003', date: '17 Jun 2026', amount: 25000, method: 'UPI',           note: 'Bulk shipment prepay',   status: 'Pending'  },
-  ];
-
-  // ─── Refund History ───────────────────────────────────────────────────────
-  refunds: RefundRecord[] = [
-    { id: 'RFD001', date: '12 Jun 2026', awb: 'AWB334211', reason: 'Shipment lost in transit',          amount: 320,  status: 'Processed' },
-    { id: 'RFD002', date: '09 Jun 2026', awb: 'AWB221983', reason: 'Duplicate charge correction',        amount: 180,  status: 'Processed' },
-    { id: 'RFD003', date: '17 Jun 2026', awb: 'AWB889012', reason: 'Delivery failed — merchant request', amount: 320,  status: 'Pending'   },
-    { id: 'RFD004', date: '05 Jun 2026', awb: 'AWB112234', reason: 'Wrong item delivered',               amount: 450,  status: 'Rejected'  },
-  ];
-
-  // ─── Weight Dispute Deductions ────────────────────────────────────────────
-  disputes: WeightDispute[] = [
-    { id: 'DIS1001', date: '14 Jun 2026', awb: 'AWB554321', billedWeight: 0.5, actualWeight: 1.2, difference: 0.7, deduction: 150, status: 'Applied'   },
-    { id: 'DIS1002', date: '11 Jun 2026', awb: 'AWB443102', billedWeight: 1.0, actualWeight: 2.5, difference: 1.5, deduction: 320, status: 'Applied'   },
-    { id: 'DIS1003', date: '17 Jun 2026', awb: 'AWB889012', billedWeight: 0.5, actualWeight: 0.8, difference: 0.3, deduction: 75,  status: 'Disputed'  },
-    { id: 'DIS1004', date: '08 Jun 2026', awb: 'AWB223311', billedWeight: 2.0, actualWeight: 2.2, difference: 0.2, deduction: 50,  status: 'Resolved'  },
-  ];
-
-  // ─── Contest Dispute Modal ────────────────────────────────────────────────
-  showContestModal: boolean = false;
-  contestingDispute: WeightDispute | null = null;
-  contestNote: string = '';
-  selectedFileNames: string[] = [];
 
   openContest(dispute: WeightDispute) {
     this.contestingDispute = dispute;
@@ -178,11 +260,15 @@ export class Payments {
       return;
     }
     if (this.contestingDispute) {
-      this.contestingDispute.status = 'Disputed';
-      this.contestingDispute.contestNote = this.contestNote;
-      this.contestingDispute.attachments = [...this.selectedFileNames];
+      const mockImageUrls = this.selectedFileNames.map(f => `/uploads/proofs/${f}`);
+      this.disputeService.submitProof(this.contestingDispute.id, mockImageUrls).subscribe({
+        next: (updated) => {
+          alert('Dispute proof submitted successfully!');
+          this.loadDisputes();
+          this.closeContest();
+        },
+        error: (err) => alert(err.error?.message || 'Failed to submit proof.')
+      });
     }
-    alert('Your dispute has been submitted to the distributor. They will review and respond shortly.');
-    this.closeContest();
   }
 }

@@ -541,6 +541,9 @@
 
                 <!-- Details Modal Footer -->
                 <div class="modal-footer-bar">
+                    @if (selectedShipment().status === 'ORDER_CREATED' || selectedShipment().status === 'Pending') {
+                        <button class="danger-btn" style="background-color: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500; margin-right: auto;" (click)="cancelShipment(selectedShipment().id)">Cancel Shipment</button>
+                    }
                     <button class="secondary-btn" (click)="closeDetailsModal()">Close Details</button>
                 </div>
             </div>

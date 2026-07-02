@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { FinanceService } from '../../../../services/finance.service';
 
 @Component({
   selector: 'app-all-merchant-wallets',
@@ -18,7 +19,7 @@ export class AllMerchantWallets implements OnInit {
 
   totalDistributed: number = 0;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private financeService: FinanceService) {}
 
   ngOnInit() {
     this.loadWallets();
@@ -26,16 +27,27 @@ export class AllMerchantWallets implements OnInit {
 
   loadWallets() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/merchant-wallets
-    this.merchantWallets = [
-      { id: 'M1', businessName: 'ABC Electronics', merchantCode: 'MER001', balance: 12400, codEscrow: 4500, status: 'Active' },
-      { id: 'M2', businessName: 'Global Traders', merchantCode: 'MER002', balance: 45000, codEscrow: 12000, status: 'Active' },
-      { id: 'M3', businessName: 'Prime Retail', merchantCode: 'MER003', balance: 3500, codEscrow: 0, status: 'Active' },
-      { id: 'M4', businessName: 'Mega Store', merchantCode: 'MER004', balance: 0, codEscrow: 1800, status: 'Suspended' }
-    ];
-    this.totalDistributed = this.merchantWallets.reduce((s, w) => s + w.balance, 0);
-    this.isLoading = false;
-    this.applyFilters();
+    this.financeService.listWallets().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.wallets) {
+          this.merchantWallets = response.data.wallets.map((w: any) => ({
+            id: w.userId || w.id,
+            businessName: w.businessName || w.name,
+            merchantCode: w.merchantCode || `MRC-${w.id}`,
+            balance: w.balance || 0,
+            codEscrow: w.codEscrow || 0,
+            status: w.status || 'Active'
+          }));
+          this.totalDistributed = this.merchantWallets.reduce((s, w) => s + w.balance, 0);
+        }
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading merchant wallets:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters() {

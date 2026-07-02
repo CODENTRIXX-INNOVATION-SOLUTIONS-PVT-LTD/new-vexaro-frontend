@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DisputeService } from '../../../../services/dispute.service';
 
 export interface DisputeClaim {
   id: string;
@@ -30,15 +31,15 @@ export interface DisputeClaim {
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-label">Total Disputes Raised</span>
-          <span class="stat-value">12</span>
+          <span class="stat-value">{{totalDisputes}}</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Claims Recovered</span>
-          <span class="stat-value">₹1,500</span>
+          <span class="stat-value">₹{{claimsRecovered.toLocaleString('en-IN')}}</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Dispute Success Rate</span>
-          <span class="stat-value">67%</span>
+          <span class="stat-value">{{successRate}}%</span>
         </div>
       </div>
 
@@ -103,15 +104,49 @@ export interface DisputeClaim {
   `]
 })
 export class DisputeReport implements OnInit {
-  claimsData: DisputeClaim[] = [
-    { id: 'DSP-8821', awb: 'AWB990123', merchantName: 'Fashion Hub', claimType: 'Weight Mismatch', amount: 150, status: 'Pending Review', resolvedDate: '—' },
-    { id: 'DSP-8822', awb: 'AWB771234', merchantName: 'Tech Store', claimType: 'Weight Mismatch', amount: 320, status: 'Pending Review', resolvedDate: '—' },
-    { id: 'DSP-8823', awb: 'AWB662345', merchantName: 'Home Goods', claimType: 'Lost Package', amount: 1200, status: 'Approved', resolvedDate: '15 Jun 2026' },
-    { id: 'DSP-8824', awb: 'AWB553456', merchantName: 'Beauty Co', claimType: 'Damaged Item', amount: 300, status: 'Approved', resolvedDate: '12 Jun 2026' },
-    { id: 'DSP-8825', awb: 'AWB449102', merchantName: 'ABC Electronics', claimType: 'Weight Mismatch', amount: 250, status: 'Rejected', resolvedDate: '10 Jun 2026' }
-  ];
+  claimsData: DisputeClaim[] = [];
 
-  ngOnInit() {}
+  constructor(private disputeService: DisputeService) {}
+
+  get totalDisputes(): number {
+    return this.claimsData.length;
+  }
+
+  get claimsRecovered(): number {
+    return this.claimsData
+      .filter(d => d.status === 'Approved')
+      .reduce((sum, d) => sum + d.amount, 0);
+  }
+
+  get successRate(): number {
+    const approved = this.claimsData.filter(d => d.status === 'Approved').length;
+    return this.totalDisputes > 0 ? Math.round((approved / this.totalDisputes) * 100) : 0;
+  }
+
+  ngOnInit() {
+    this.loadReport();
+  }
+
+  loadReport() {
+    this.disputeService.listWeightDisputes().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.disputes) {
+          this.claimsData = response.data.disputes.map((d: any) => ({
+            id: d.id,
+            awb: d.awb || 'N/A',
+            merchantName: d.merchantName || 'N/A',
+            claimType: d.claimType || 'Weight Mismatch',
+            amount: d.extraChargeAmount || 0,
+            status: d.status,
+            resolvedDate: d.resolvedDate || '—'
+          }));
+        }
+      },
+      error: (error) => {
+        console.error('Error loading dispute report:', error);
+      }
+    });
+  }
 
   exportPDF() {
     const printWindow = window.open('', '_blank');

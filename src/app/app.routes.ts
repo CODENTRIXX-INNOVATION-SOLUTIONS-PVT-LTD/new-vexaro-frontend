@@ -25,6 +25,7 @@ import { DistrubuterDashboardPage } from "./pages/distributor/dashboard/Distrubu
 import { DistributorMerchantList } from "./pages/distributor/merchants/merchant-list/merchant-list";
 import { CreateMerchant } from "./pages/distributor/merchants/create-merchant/create-merchant";
 import { DistributorMerchantProfile } from "./pages/distributor/merchants/merchant-profile/merchant-profile";
+import { WarehouseRequests } from "./pages/distributor/merchants/warehouse-requests/warehouse-requests";
 
 import { LiveTracking } from "./pages/distributor/tracking/live-tracking/live-tracking";
 import { TrackingHistory } from "./pages/distributor/tracking/tracking-history/tracking-history";
@@ -37,6 +38,8 @@ import { CodManagement } from "./pages/distributor/finance/cod-management/cod-ma
 import { Wallet } from "./pages/distributor/finance/wallet/wallet";
 import { Transactions } from "./pages/distributor/finance/transactions/transactions";
 import { Settlements } from "./pages/distributor/finance/settlements/settlements";
+import { RefundRequests } from "./pages/distributor/finance/refund-requests/refund-requests";
+import { PaymentHistory } from "./pages/distributor/finance/payment-history/payment-history";
 
 import { AllMerchantWallets } from "./pages/distributor/merchant-finance/all-merchant-wallets/all-merchant-wallets";
 import { TopupMerchantWallet } from "./pages/distributor/merchant-finance/topup-merchant-wallet/topup-merchant-wallet";
@@ -193,6 +196,7 @@ export const routes: Routes = [
       { path: "merchants", component: DistributorMerchantList },
       { path: "merchants/create", component: CreateMerchant },
       { path: "merchants/:id", component: DistributorMerchantProfile },
+      { path: "merchants/warehouse-requests", component: WarehouseRequests },
 
       { path: "tracking", component: AwbSearch },
       { path: "wallet", component: DistributorWallet },
@@ -217,6 +221,8 @@ export const routes: Routes = [
       { path: "finance/wallet", component: Wallet },
       { path: "finance/transactions", component: Transactions },
       { path: "finance/settlements", component: Settlements },
+      { path: "finance/refund-requests", component: RefundRequests },
+      { path: "finance/payment-history", component: PaymentHistory },
       { path: "finance", redirectTo: "finance/wallet", pathMatch: "full" },
 
       { path: "rate-margin/rate-cards", component: RateCards },

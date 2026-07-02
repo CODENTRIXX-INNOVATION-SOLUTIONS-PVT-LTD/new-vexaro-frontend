@@ -9,32 +9,38 @@
     </div>
 
     <div class="table-wrapper">
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>Payment ID</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Method</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(payment of payments; track payment.paymentId){
-                <tr>
-                    <td>{{payment.paymentId}}</td>
-                    <td>{{payment.customer}}</td>
-                    <td>{{payment.amount}}</td>
-                    <td>{{payment.method}}</td>
-                    <td>{{payment.date}}</td>
-                </tr>
-                }
-            </tbody>
-
-        </table>
-
+        @if (isLoading()) {
+            <div class="loading-state">Loading payments...</div>
+        } @else if (hasError()) {
+            <div class="error-state">Failed to load payments</div>
+        } @else {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(payment of payments(); track payment.paymentId){
+                    <tr>
+                        <td>{{payment.paymentId}}</td>
+                        <td>{{payment.customer}}</td>
+                        <td>{{payment.amount}}</td>
+                        <td>{{payment.method}}</td>
+                        <td>{{payment.date}}</td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="5" class="no-data">No payments found</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 
 </div>

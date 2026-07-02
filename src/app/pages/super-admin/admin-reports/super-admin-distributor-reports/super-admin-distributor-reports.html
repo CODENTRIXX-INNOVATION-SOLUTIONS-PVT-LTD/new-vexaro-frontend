@@ -109,11 +109,18 @@
 
         <tbody>
 
-            <tr *ngFor="let distributor of topDistributors">
+            @for (distributor of topDistributors; track distributor.distributorName) {
+            <tr>
                 <td>{{ distributor.distributorName }}</td>
                 <td>{{ distributor.deliveries }}</td>
                 <td>{{ distributor.successRate }}</td>
             </tr>
+            }
+            @if (topDistributors.length === 0) {
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+            </tr>
+            }
 
         </tbody>
 
@@ -139,11 +146,18 @@
 
         <tbody>
 
-            <tr *ngFor="let region of regionalPerformance">
+            @for (region of regionalPerformance; track region.region) {
+            <tr>
                 <td>{{ region.region }}</td>
                 <td>{{ region.deliveries }}</td>
                 <td>{{ region.successRate }}</td>
             </tr>
+            }
+            @if (regionalPerformance.length === 0) {
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+            </tr>
+            }
 
         </tbody>
 
@@ -169,11 +183,18 @@
 
         <tbody>
 
-            <tr *ngFor="let activity of recentActivities">
+            @for (activity of recentActivities; track activity.distributor) {
+            <tr>
                 <td>{{ activity.distributor }}</td>
                 <td>{{ activity.activity }}</td>
                 <td>{{ activity.date }}</td>
             </tr>
+            }
+            @if (recentActivities.length === 0) {
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+            </tr>
+            }
 
         </tbody>
 

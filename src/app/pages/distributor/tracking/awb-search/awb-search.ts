@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ShipmentService } from '../../../../services/shipment.service';
 
 export interface ShipmentSummary {
   awb: string;
@@ -31,38 +32,51 @@ export interface TrackingEvent {
 export class AwbSearch {
   searchQuery: string = '';
   hasSearched: boolean = false;
+  isLoading: boolean = false;
   
   shipment: ShipmentSummary | null = null;
   timeline: TrackingEvent[] = [];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private shipmentService: ShipmentService) {}
 
   search() {
     if (!this.searchQuery.trim()) return;
     this.hasSearched = true;
+    this.isLoading = true;
 
-    if (this.searchQuery.toUpperCase() === 'NOTFOUND') {
-      this.shipment = null;
-      this.timeline = [];
-      return;
-    }
-
-    this.shipment = {
-      awb: this.searchQuery.toUpperCase(),
-      status: 'Out for Delivery',
-      customerName: 'Rahul Sharma',
-      pincode: '400050',
-      paymentType: 'COD',
-      amount: 1500
-    };
-
-    this.timeline = [
-      { date: '16 Jun 2026', time: '08:30 AM', status: 'Out for Delivery', location: 'Bandra West Hub', description: 'Shipment dispatched with driver Ramesh Singh.', isCurrent: true },
-      { date: '16 Jun 2026', time: '06:00 AM', status: 'Sorted', location: 'Bandra West Hub', description: 'Shipment sorted and allocated to Route 4.', isCurrent: false },
-      { date: '15 Jun 2026', time: '09:45 PM', status: 'Received at Hub', location: 'Bandra West Hub', description: 'Inbound scan completed.', isCurrent: false },
-      { date: '15 Jun 2026', time: '04:15 PM', status: 'Picked Up', location: 'Andheri East', description: 'Driver Amit picked up the package.', isCurrent: false },
-      { date: '15 Jun 2026', time: '10:00 AM', status: 'Manifested', location: 'Andheri East', description: 'Merchant generated AWB.', isCurrent: false }
-    ];
+    this.shipmentService.trackAWB(this.searchQuery.trim()).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const data = response.data;
+          this.shipment = {
+            awb: data.awb || this.searchQuery.toUpperCase(),
+            status: data.status || 'Unknown',
+            customerName: data.customerName || 'N/A',
+            pincode: data.pincode || 'N/A',
+            paymentType: data.paymentType || 'N/A',
+            amount: data.amount || 0
+          };
+          this.timeline = (data.timeline || []).map((event: any) => ({
+            date: event.date || '',
+            time: event.time || '',
+            status: event.status || '',
+            location: event.location || '',
+            description: event.description || '',
+            isCurrent: event.isCurrent || false
+          }));
+        } else {
+          this.shipment = null;
+          this.timeline = [];
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error tracking AWB:', error);
+        this.shipment = null;
+        this.timeline = [];
+        this.isLoading = false;
+      }
+    });
   }
 
   viewLive() {

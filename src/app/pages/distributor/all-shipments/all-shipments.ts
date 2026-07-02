@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CsvExportService } from '../../../shared/csv-export.service';
+import { ShipmentService } from '../../../services/shipment.service';
 
 export interface Shipment {
   id: string;
@@ -35,7 +36,7 @@ export class AllShipments implements OnInit {
 
   private csvService = inject(CsvExportService);
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute, private router: Router, private shipmentService: ShipmentService) {}
 
   ngOnInit() {
     this.merchantFilterId = this.route.snapshot.queryParams['merchantId'] || '';
@@ -44,19 +45,32 @@ export class AllShipments implements OnInit {
 
   loadShipments() {
     this.isLoading = true;
-    // TODO: Replace with real API call
-    // GET /distributor/:id/shipments
-    // If this.merchantFilterId is set, add ?merchantId=...
-    this.shipments = [
-      { id: '1', awb: 'AWB990123', merchantId: 'M1', merchantName: 'ABC Electronics', destPincode: '110001', status: 'Delivered', paymentType: 'Prepaid', codAmount: 0, lastUpdated: '17 Jun 2026' },
-      { id: '2', awb: 'AWB889012', merchantId: 'M2', merchantName: 'Global Traders', destPincode: '560001', status: 'Out for Delivery', paymentType: 'COD', codAmount: 2500, lastUpdated: '17 Jun 2026' },
-      { id: '3', awb: 'AWB779234', merchantId: 'M1', merchantName: 'ABC Electronics', destPincode: '400001', status: 'Received at Hub', paymentType: 'Prepaid', codAmount: 0, lastUpdated: '16 Jun 2026' },
-      { id: '4', awb: 'AWB661122', merchantId: 'M3', merchantName: 'Prime Retail', destPincode: '700001', status: 'Manifested', paymentType: 'COD', codAmount: 1800, lastUpdated: '15 Jun 2026' },
-      { id: '5', awb: 'AWB554321', merchantId: 'M2', merchantName: 'Global Traders', destPincode: '110015', status: 'Failed Attempt', paymentType: 'COD', codAmount: 320, lastUpdated: '14 Jun 2026' },
-      { id: '6', awb: 'AWB443210', merchantId: 'M4', merchantName: 'Mega Store', destPincode: '560102', status: 'RTO', paymentType: 'Prepaid', codAmount: 0, lastUpdated: '13 Jun 2026' },
-    ];
-    this.isLoading = false;
-    this.applyFilters();
+    const params: any = {};
+    if (this.merchantFilterId) params.merchantId = this.merchantFilterId;
+    
+    this.shipmentService.listShipments(params).subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.shipments) {
+          this.shipments = response.data.shipments.map((s: any) => ({
+            id: s.id,
+            awb: s.awb,
+            merchantId: s.merchantId,
+            merchantName: s.merchantName || 'N/A',
+            destPincode: s.destination?.pincode || s.destPincode || 'N/A',
+            status: s.status,
+            paymentType: s.isCOD ? 'COD' : 'Prepaid',
+            codAmount: s.codAmount || 0,
+            lastUpdated: s.updatedAt || s.lastUpdated || 'N/A'
+          }));
+        }
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading shipments:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters() {

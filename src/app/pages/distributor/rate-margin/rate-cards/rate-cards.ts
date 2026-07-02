@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RateService } from '../../../../services/rate.service';
 
 export interface RateSlab {
   courier: string;
@@ -30,24 +31,34 @@ export class RateCards implements OnInit {
     return this.rateslabs.filter(s => this.courierFilter === 'All' || s.courier === this.courierFilter);
   }
 
+  constructor(private rateService: RateService) {}
+
   ngOnInit() {
     this.loadRates();
   }
 
   loadRates() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/rate-cards
-    // Returns: Velocity rate (hidden), Distributor cost (SA rate + SA margin), Distributor margin (set by distributor), Merchant rate
-    this.rateslabs = [
-      { courier: 'Delhivery', weightFrom: 0, weightTo: 0.5, velocityRate: 35, distributorCost: 40, distributorMargin: 10, merchantRate: 50, distributorProfit: 10 },
-      { courier: 'Delhivery', weightFrom: 0.5, weightTo: 1.0, velocityRate: 65, distributorCost: 72, distributorMargin: 18, merchantRate: 90, distributorProfit: 18 },
-      { courier: 'DTDC', weightFrom: 0, weightTo: 0.5, velocityRate: 40, distributorCost: 45, distributorMargin: 10, merchantRate: 55, distributorProfit: 10 },
-      { courier: 'DTDC', weightFrom: 0.5, weightTo: 1.0, velocityRate: 70, distributorCost: 78, distributorMargin: 17, merchantRate: 95, distributorProfit: 17 },
-      { courier: 'BlueDart', weightFrom: 0, weightTo: 0.5, velocityRate: 50, distributorCost: 55, distributorMargin: 15, merchantRate: 70, distributorProfit: 15 },
-      { courier: 'BlueDart', weightFrom: 0.5, weightTo: 1.0, velocityRate: 85, distributorCost: 93, distributorMargin: 22, merchantRate: 115, distributorProfit: 22 },
-      { courier: 'Ekart', weightFrom: 0, weightTo: 0.5, velocityRate: 38, distributorCost: 42, distributorMargin: 8, merchantRate: 50, distributorProfit: 8 },
-      { courier: 'XpressBees', weightFrom: 0, weightTo: 0.5, velocityRate: 36, distributorCost: 40, distributorMargin: 10, merchantRate: 50, distributorProfit: 10 },
-    ];
-    this.isLoading = false;
+    this.rateService.getRateCards().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.rateCards) {
+          this.rateslabs = response.data.rateCards.map((card: any) => ({
+            courier: card.courier || 'N/A',
+            weightFrom: card.weightFrom || 0,
+            weightTo: card.weightTo || 0,
+            velocityRate: card.velocityRate || 0,
+            distributorCost: card.distributorCost || 0,
+            distributorMargin: card.distributorMargin || 0,
+            merchantRate: card.merchantRate || 0,
+            distributorProfit: card.distributorMargin || 0
+          }));
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading rate cards:', error);
+        this.isLoading = false;
+      }
+    });
   }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CsvExportService } from '../../../../shared/csv-export.service';
+import { FinanceService } from '../../../../services/finance.service';
 
 export interface Transaction {
   id: string;
@@ -30,22 +31,35 @@ export class Transactions implements OnInit {
 
   private csvService = inject(CsvExportService);
 
+  constructor(private financeService: FinanceService) {}
+
   ngOnInit() {
     this.loadTransactions();
   }
 
   loadTransactions() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/transactions
-    this.transactions = [
-      { id: 'TXN8001', date: '17 Jun 2026', type: 'Credit', category: 'Wallet Topup', amount: 50000, status: 'Completed', reference: 'REQ1003' },
-      { id: 'TXN8002', date: '17 Jun 2026', type: 'Debit', category: 'Merchant Wallet Funding', amount: 10000, status: 'Completed', reference: 'MWF9901' },
-      { id: 'TXN8003', date: '16 Jun 2026', type: 'Credit', category: 'Margin Profit', amount: 4500, status: 'Completed', reference: 'MP9982' },
-      { id: 'TXN8004', date: '15 Jun 2026', type: 'Debit', category: 'Courier Charge', amount: 320, status: 'Completed', reference: 'AWB889012' },
-      { id: 'TXN8005', date: '14 Jun 2026', type: 'Debit', category: 'Dispute Deduction', amount: 150, status: 'Completed', reference: 'DIS1001' }
-    ];
-    this.isLoading = false;
-    this.applyFilters();
+    this.financeService.listTransactions().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.transactions) {
+          this.transactions = response.data.transactions.map((t: any) => ({
+            id: t.id,
+            date: t.date || t.createdAt,
+            type: t.type,
+            category: t.category,
+            amount: t.amount,
+            status: t.status,
+            reference: t.reference || t.awb || 'N/A'
+          }));
+        }
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error loading transactions:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters() {

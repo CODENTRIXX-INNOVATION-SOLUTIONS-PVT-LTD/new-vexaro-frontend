@@ -2,6 +2,7 @@ import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 interface NotificationItem {
   id: string;
@@ -31,10 +32,76 @@ interface MessageItem {
   styleUrl: './dashboard-header.css'
 })
 export class DashboardHeader implements OnInit {
+  private authService = inject(AuthService);
+
   @Input() role = '';
   @Input() userName = '';
   @Input() email = '';
   @Input() profileImage = '';
+
+
+
+  // Maps backend role enums to display strings used in notifications/filters
+  private readonly roleDisplayMap: Record<string, string> = {
+    SUPER_ADMIN: 'Super Admin',
+    DISTRIBUTOR: 'Distributor',
+    MERCHANT: 'Merchant',
+  };
+
+  ngOnInit() {
+    // ── Step 1: Show defaults from localStorage immediately (no API wait) ──
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        this.userName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+        this.email = user.email ?? '';
+        this.role = this.roleDisplayMap[user.role] ?? user.role ?? '';
+      } catch {
+        const storedRole = localStorage.getItem('userRole') ?? '';
+        this.role = this.roleDisplayMap[storedRole] ?? storedRole;
+      }
+    } else {
+      const storedRole = localStorage.getItem('userRole') ?? '';
+      this.role = this.roleDisplayMap[storedRole] ?? storedRole;
+    }
+
+    // ── Step 2: Refresh from API in background (updates if data changed) ──
+    this.authService.getMe().subscribe({
+      next: (res) => {
+        this.userName = `${res.data.firstName} ${res.data.lastName}`;
+        this.email = res.data.email;
+        this.role = this.roleDisplayMap[res.data.role] ?? res.data.role;
+      },
+      error: (err) => {
+        console.error('Could not refresh user from /me:', err);
+        // silently keep the localStorage values already shown
+      }
+    });
+
+    // Global click listener to close dropdowns on outer clicks
+    window.addEventListener('click', (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.profile') && !target.closest('.profile-dropdown')) {
+        this.isProfileOpen = false;
+      }
+      if (!target.closest('.notification') && !target.closest('.notifications-dropdown') && !target.closest('.all-notifications-modal')) {
+        this.isNotificationsOpen = false;
+      }
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
 
   private router = inject(Router);
 
@@ -76,21 +143,6 @@ export class DashboardHeader implements OnInit {
   allNotifications: NotificationItem[] = [];
   allMessages: MessageItem[] = [];
 
-  ngOnInit() {
-    this.loadData();
-    
-    // Global click listener to close dropdowns on outer clicks
-    window.addEventListener('click', (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.profile') && !target.closest('.profile-dropdown')) {
-        this.isProfileOpen = false;
-      }
-      if (!target.closest('.notification') && !target.closest('.notifications-dropdown') && !target.closest('.all-notifications-modal')) {
-        this.isNotificationsOpen = false;
-      }
-    });
-  }
-
   loadData() {
     // 0. Load Avatar
     const savedAvatar = localStorage.getItem('vexaro_avatar_' + this.role);
@@ -108,13 +160,13 @@ export class DashboardHeader implements OnInit {
         { id: 'sa-1', role: 'Super Admin', message: 'New distributor wallet topup request: Distributor D101 requested ₹50,000 topup', icon: 'account_balance_wallet', timeAgo: '5 mins ago', read: false },
         { id: 'sa-2', role: 'Super Admin', message: 'Weight dispute escalated for shipment AWB9082', icon: 'gavel', timeAgo: '2 hours ago', read: false },
         { id: 'sa-3', role: 'Super Admin', message: 'New distributor (Vexaro East) has registered', icon: 'person_add', timeAgo: '1 day ago', read: true },
-        
+
         // Distributor
         { id: 'dist-1', role: 'Distributor', message: 'Merchant Sahil Gour created a shipment (AWB8801)', icon: 'local_shipping', timeAgo: '10 mins ago', read: false },
         { id: 'dist-2', role: 'Distributor', message: 'Weight dispute raised on shipment AWB8802 by Sahil Gour', icon: 'gavel', timeAgo: '1 hour ago', read: false },
         { id: 'dist-3', role: 'Distributor', message: 'Your wallet was topped up by ₹1,00,000 by Super Admin', icon: 'account_balance_wallet', timeAgo: '4 hours ago', read: true },
         { id: 'dist-4', role: 'Distributor', message: 'Merchant Sahil Gour requested a wallet topup of ₹10,000', icon: 'account_balance_wallet', timeAgo: '5 hours ago', read: true },
-        
+
         // Merchant
         { id: 'merch-1', role: 'Merchant', message: 'Your shipment AWB8801 has been picked up', icon: 'local_shipping', timeAgo: '15 mins ago', read: false },
         { id: 'merch-2', role: 'Merchant', message: 'Your shipment AWB8801 has been delivered successfully', icon: 'check_circle', timeAgo: '3 hours ago', read: false },
@@ -340,8 +392,11 @@ export class DashboardHeader implements OnInit {
   }
 
   logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
+    localStorage.removeItem('redirectTo');
     this.router.navigate(['/login']);
   }
 

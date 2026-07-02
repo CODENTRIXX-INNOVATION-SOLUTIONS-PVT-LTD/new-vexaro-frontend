@@ -35,7 +35,11 @@
     </div>
 
     @if(hasSearched) {
-        @if(shipment) {
+        @if(isLoading) {
+        <div class="loading-state">Tracking shipment...</div>
+        } @else if(error) {
+        <div class="error-state">{{error}}</div>
+        } @else if(shipment) {
         <div class="results-grid">
             <div class="summary-panel">
                 <div class="status-banner" [class.transit]="shipment.status === 'Out for Delivery'" [class.delivered]="shipment.status === 'Delivered'">

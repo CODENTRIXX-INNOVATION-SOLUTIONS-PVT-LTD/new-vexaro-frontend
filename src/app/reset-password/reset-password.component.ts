@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -15,27 +16,36 @@ export class ResetPasswordComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private authService = inject(AuthService);
 
   token = signal('');
   newPassword = '';
   confirmPassword = '';
-  
+
   showNewPassword = signal(false);
   showConfirmPassword = signal(false);
-  
+
   passwordStrength = signal<'weak' | 'fair' | 'strong' | ''>('');
   passwordStrengthClass = signal('');
   passwordMismatch = signal(false);
-  
+
   isLoading = signal(false);
   success = signal(false);
+  errorMessage = signal('');
   countdown = signal(5);
+
+  // True when the token is missing or clearly invalid before we even submit
+  invalidToken = signal(false);
 
   ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
-        this.token.set(params['token'] || '');
+        const t = params['token'] ?? '';
+        this.token.set(t);
+        if (!t) {
+          this.invalidToken.set(true);
+        }
       });
   }
 
@@ -75,6 +85,7 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   onSubmit(): void {
+    this.errorMessage.set('');
     this.passwordMismatch.set(false);
 
     if (this.newPassword !== this.confirmPassword) {
@@ -82,17 +93,30 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
-    if (this.passwordStrength() === 'weak') {
+    if (this.passwordStrength() === 'weak' || !this.newPassword) {
       return;
     }
 
     this.isLoading.set(true);
 
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.success.set(true);
-      this.startCountdown();
-    }, 1500);
+    this.authService.resetPassword(this.token(), this.newPassword).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.success.set(true);
+        this.startCountdown();
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        const msg: string = err?.error?.message ?? '';
+        if (msg) {
+          this.errorMessage.set(msg);
+        } else if (err?.status === 400 || err?.status === 401) {
+          this.errorMessage.set('This reset link is invalid or has expired. Please request a new one.');
+        } else {
+          this.errorMessage.set('Something went wrong. Please try again.');
+        }
+      },
+    });
   }
 
   private startCountdown(): void {

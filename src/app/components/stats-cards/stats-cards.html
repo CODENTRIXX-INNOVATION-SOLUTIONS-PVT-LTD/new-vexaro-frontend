@@ -30,12 +30,16 @@
         </div>
         <div class="card-content">
             <p class="card-title">{{ card.title }}</p>
-            <h3 class="card-value">{{ card.value }}</h3>
-            @if(card.percentage){
-            <p [class.positive]="card.symbol === '+'" [class.negative]="card.symbol === '-'" class="trend">
-                <span class="arrow">{{ card.symbol }}{{ card.percentage }}%</span>
-                @if(card.compairTo){ <span class="compare-text">{{ card.compairTo }}</span> }
-            </p>
+            @if (isLoading) {
+              <div class="skeleton-value"></div>
+            } @else {
+              <h3 class="card-value">{{ card.value }}</h3>
+              @if(card.percentage){
+              <p [class.positive]="card.symbol === '+'" [class.negative]="card.symbol === '-'" class="trend">
+                  <span class="arrow">{{ card.symbol }}{{ card.percentage }}%</span>
+                  @if(card.compairTo){ <span class="compare-text">{{ card.compairTo }}</span> }
+              </p>
+              }
             }
         </div>
     </div>

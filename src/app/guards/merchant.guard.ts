@@ -3,7 +3,7 @@ import { Router, type CanActivateFn } from '@angular/router';
 
 export const merchantGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
   const role = localStorage.getItem('userRole');
 
   if (token && role === 'MERCHANT') {

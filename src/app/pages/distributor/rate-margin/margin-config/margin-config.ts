@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RateService } from '../../../../services/rate.service';
+import { AuthService } from '../../../../services/auth.service';
 
 export interface MarginSlab {
   id: string;
@@ -22,26 +24,55 @@ export interface MarginSlab {
   styleUrl: './margin-config.css'
 })
 export class MarginConfig implements OnInit {
+  distributorId: string = '';
   slabs: MarginSlab[] = [];
   isLoading: boolean = false;
   isSaving: boolean = false;
 
+  constructor(private rateService: RateService, private authService: AuthService) {}
+
   ngOnInit() {
+    this.loadDistributorId();
     this.loadSlabs();
+  }
+
+  loadDistributorId() {
+    this.authService.getMe().subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          this.distributorId = response.data.id || response.data._id || '';
+        }
+      },
+      error: (error) => {
+        console.error('Error loading distributor ID:', error);
+      }
+    });
   }
 
   loadSlabs() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/margins
-    this.slabs = [
-      { id: '1', courier: 'Delhivery', weightFrom: 0, weightTo: 0.5, distributorCost: 40, currentMargin: 10, editMargin: 10, merchantRate: 50, editing: false },
-      { id: '2', courier: 'Delhivery', weightFrom: 0.5, weightTo: 1.0, distributorCost: 72, currentMargin: 18, editMargin: 18, merchantRate: 90, editing: false },
-      { id: '3', courier: 'DTDC', weightFrom: 0, weightTo: 0.5, distributorCost: 45, currentMargin: 10, editMargin: 10, merchantRate: 55, editing: false },
-      { id: '4', courier: 'DTDC', weightFrom: 0.5, weightTo: 1.0, distributorCost: 78, currentMargin: 17, editMargin: 17, merchantRate: 95, editing: false },
-      { id: '5', courier: 'BlueDart', weightFrom: 0, weightTo: 0.5, distributorCost: 55, currentMargin: 15, editMargin: 15, merchantRate: 70, editing: false },
-      { id: '6', courier: 'BlueDart', weightFrom: 0.5, weightTo: 1.0, distributorCost: 93, currentMargin: 22, editMargin: 22, merchantRate: 115, editing: false },
-    ];
-    this.isLoading = false;
+    this.rateService.getMargins().subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.margins) {
+          this.slabs = response.data.margins.map((m: any) => ({
+            id: m.id,
+            courier: m.courier || 'N/A',
+            weightFrom: m.weightFrom || 0,
+            weightTo: m.weightTo || 0,
+            distributorCost: m.distributorCost || 0,
+            currentMargin: m.marginPercent || 0,
+            editMargin: m.marginPercent || 0,
+            merchantRate: m.merchantRate || 0,
+            editing: false
+          }));
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading margins:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   startEdit(slab: MarginSlab) {
@@ -56,13 +87,28 @@ export class MarginConfig implements OnInit {
 
   saveMargin(slab: MarginSlab) {
     if (slab.editMargin < 0) return;
+    if (!this.distributorId) {
+      alert('Distributor ID not found. Please refresh the page.');
+      return;
+    }
     this.isSaving = true;
-    // TODO: PUT /distributor/:id/margins/:slabId { margin: slab.editMargin }
-    // Response updates: merchantRate = distributorCost + editMargin
-    slab.currentMargin = slab.editMargin;
-    slab.merchantRate = slab.distributorCost + slab.editMargin;
-    slab.editing = false;
-    this.isSaving = false;
+    this.rateService.saveMarginConfig(this.distributorId, {
+      rateCardId: slab.id,
+      marginPercent: slab.editMargin,
+      flatMargin: slab.editMargin
+    }).subscribe({
+      next: (response) => {
+        slab.currentMargin = slab.editMargin;
+        slab.merchantRate = slab.distributorCost + slab.editMargin;
+        slab.editing = false;
+        this.isSaving = false;
+      },
+      error: (error) => {
+        console.error('Error saving margin:', error);
+        this.isSaving = false;
+        alert(error.error?.message || 'Failed to save margin. Please try again.');
+      }
+    });
   }
 
   getProfit(slab: MarginSlab): number {
