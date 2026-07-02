@@ -1,0 +1,99 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg> Profit Analysis</h1>
+    <p class="page-subtitle">Track your franchise margin profits across merchants and couriers</p>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg><p>Loading profit data...</p></div>
+  }
+
+  @if (!isLoading) {
+    <div class="stats-row">
+      <div class="stat-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon green svg-icon"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+        <div>
+          <div class="stat-value">₹{{ profitSummary.totalRevenue | number }}</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon red svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        <div>
+          <div class="stat-value">₹{{ profitSummary.totalCost | number }}</div>
+          <div class="stat-label">Total Cost</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon purple svg-icon"><circle cx="8" cy="8" r="6"></circle><circle cx="18" cy="14" r="6"></circle></svg>
+        <div>
+          <div class="stat-value">₹{{ profitSummary.totalProfit | number }}</div>
+          <div class="stat-label">Net Margin Profit</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="stat-icon blue svg-icon"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>
+        <div>
+          <div class="stat-value">{{ profitSummary.marginPercentage | number:'1.2-2' }}%</div>
+          <div class="stat-label">Avg. Margin Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Courier Profit Table -->
+      <div class="card">
+        <h3 class="card-title">Profit by Courier</h3>
+        @if (courierProfits.length === 0) {
+          <div class="empty-state-small">No data available</div>
+        } @else {
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>Courier</th>
+                <th>Shipments</th>
+                <th>Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of courierProfits; track c.courier) {
+                <tr>
+                  <td><strong>{{ c.courier }}</strong></td>
+                  <td>{{ c.count }}</td>
+                  <td class="profit">₹{{ c.profit | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- Merchant Profit Table -->
+      <div class="card">
+        <h3 class="card-title">Top Merchants by Profit</h3>
+        @if (merchantProfits.length === 0) {
+          <div class="empty-state-small">No data available</div>
+        } @else {
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>Merchant</th>
+                <th>Shipments</th>
+                <th>Profit Generated</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of merchantProfits; track m.merchantId) {
+                <tr>
+                  <td><strong>{{ m.businessName }}</strong></td>
+                  <td>{{ m.count }}</td>
+                  <td class="profit">₹{{ m.profit | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  }
+</div>

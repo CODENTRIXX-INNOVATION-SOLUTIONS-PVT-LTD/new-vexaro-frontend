@@ -1,0 +1,123 @@
+<div class="page-container">
+  <div class="page-header">
+    <button class="btn-back" (click)="goBack()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> All Disputes</button>
+    <div class="header-info">
+      <h1 class="page-title">Dispute #{{ disputeId }}</h1>
+      <div class="header-meta">
+        <code>{{ dispute.awb }}</code>
+        <span class="status-badge" [class.status-open]="dispute.status === 'Open'">{{ dispute.status }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg><p>Loading dispute details...</p></div>
+  }
+
+  @if (!isLoading) {
+    <div class="dispute-grid">
+      <!-- Left Column: Details -->
+      <div class="details-column">
+        <div class="card warning-card" *ngIf="dispute.status === 'Open'">
+          <div class="warning-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 9v4M12 17h.01"></path></svg></div>
+          <div class="warning-content">
+            <h3>Action Required</h3>
+            <p>Courier has reported a weight discrepancy. You must accept or dispute this charge within <strong>{{ dispute.hoursLeft }} hours</strong>, otherwise the extra charge will be automatically deducted from your wallet.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Discrepancy Details</h3>
+          <div class="detail-row"><span>Merchant</span><strong>{{ dispute.merchantName }} ({{ dispute.merchantCode }})</strong></div>
+          <div class="detail-row"><span>Courier</span><strong><span class="courier-badge">{{ dispute.courier }}</span></strong></div>
+          <div class="detail-row"><span>Product Content</span><strong>{{ dispute.productName }}</strong></div>
+          <div class="detail-row"><span>Box Dimensions</span><strong>{{ dispute.boxDimensions }}</strong></div>
+          
+          <div class="weight-compare">
+            <div class="weight-box applied">
+              <span>Applied Weight</span>
+              <strong>{{ dispute.appliedWeight }} kg</strong>
+            </div>
+            <div class="weight-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+            <div class="weight-box charged">
+              <span>Courier Charged Weight</span>
+              <strong>{{ dispute.chargedWeight }} kg</strong>
+            </div>
+          </div>
+
+          <div class="impact-box">
+            <div class="impact-row"><span>Weight Difference</span><strong>+{{ dispute.weightDifference }} kg</strong></div>
+            <div class="impact-row total"><span>Extra Charge Impact</span><strong class="text-danger">₹{{ dispute.extraChargeAmount | number }}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Action Form -->
+      <div class="action-column">
+        <div class="card" *ngIf="dispute.status === 'Open' || dispute.status === 'UNDER_REVIEW'">
+          <h3 class="card-title">Take Action</h3>
+          
+          @if (userRole === 'SUPER_ADMIN') {
+            <div class="action-selector">
+              <label class="radio-card" [class.selected]="actionType === 'APPROVED'">
+                <input type="radio" name="action" value="APPROVED" [(ngModel)]="actionType">
+                <div class="radio-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-success svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <div>
+                    <strong>Approve & Refund</strong>
+                    <p>Confirm discrepancy. Revert shipping charge difference to merchant and distributor wallets.</p>
+                  </div>
+                </div>
+              </label>
+              
+              <label class="radio-card" [class.selected]="actionType === 'REJECTED'">
+                <input type="radio" name="action" value="REJECTED" [(ngModel)]="actionType">
+                <div class="radio-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-danger svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  <div>
+                    <strong>Reject Dispute</strong>
+                    <p>Decline discrepancy request. Maintain original weight charge deduction.</p>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            @if (actionType) {
+              <div class="form-group" style="margin-top: 20px;">
+                <label>Resolution Note</label>
+                <textarea [(ngModel)]="remarks" rows="3" placeholder="Enter reason for approval or rejection..."></textarea>
+              </div>
+            }
+
+            <div class="action-footer">
+              <button class="btn-primary" [disabled]="!actionType || isSubmitting" (click)="submitAction()">
+                @if (isSubmitting) { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Resolving... }
+                @else { Submit Resolution }
+              </button>
+            </div>
+          } @else {
+            <div class="form-group">
+              <label>Add Reply / Comment</label>
+              <textarea [(ngModel)]="remarks" rows="4" placeholder="Enter remarks to reply to this dispute..."></textarea>
+            </div>
+            
+            <div class="action-footer" style="margin-top: 15px;">
+              <button class="btn-primary" [disabled]="!remarks.trim() || isSubmitting" (click)="submitAction()">
+                @if (isSubmitting) { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Posting... }
+                @else { Post Reply }
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="card" *ngIf="dispute.status !== 'Open' && dispute.status !== 'UNDER_REVIEW'">
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-muted svg-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <h3>Dispute Resolved</h3>
+            <p>This dispute is currently in <strong>{{ dispute.status }}</strong> status and no further action can be taken.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

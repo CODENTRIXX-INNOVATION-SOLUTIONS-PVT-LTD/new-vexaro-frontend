@@ -1,0 +1,57 @@
+<section #section class="relative" [style.height]="sectionHeight()">
+  <div
+    class="sticky top-0 h-screen flex flex-col justify-center items-start overflow-hidden bg-paper"
+  >
+    <div class="container-custom mb-10 w-full text-left">
+      <div class="max-w-2xl text-left">
+        <span
+          class="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-brand-blue"
+        >
+          <span class="h-px w-6 bg-brand-blue"></span> How It Works
+        </span>
+        <h2
+          class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight"
+        >
+          Book. Track. Deliver.
+          <span class="font-display italic font-medium text-accent"
+            >Reconcile.</span
+          >
+        </h2>
+      </div>
+    </div>
+
+    <div
+      #track
+      class="flex gap-5 pl-custom will-change-transform transition-transform duration-100 ease-out"
+      [style.transform]="'translateX(' + translateX() + 'px)'"
+    >
+      @for (s of steps; track s.title) {
+      <div
+        class="shrink-0 w-[82vw] sm:w-[420px] lg:w-[440px] rounded-3xl border border-white/10 bg-gradient-to-br from-[#0c1b2a] via-[#0f2c44] to-[#0b4a6f] text-white p-8 lg:p-10 flex flex-col"
+      >
+        <div class="flex items-start justify-between">
+          <span
+            class="text-6xl lg:text-7xl font-extrabold text-gray-400 tabular-nums"
+            >{{ s.index }}</span
+          >
+          <span
+            class="rounded-full border border-white/20 bg-white/10 text-[11px] font-bold uppercase tracking-widest px-3 py-1 text-white"
+            >{{ s.step }}</span
+          >
+        </div>
+        <h3 class="mt-6 text-2xl lg:text-3xl font-extrabold">{{ s.title }}</h3>
+        <p class="mt-4 text-sm lg:text-base text-gray-50 leading-relaxed">
+          {{ s.body }}
+        </p>
+        <div
+          class="mt-auto pt-8 flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest"
+        >
+          <span class="h-px w-6 bg-accent"></span> {{ s.tag }}
+        </div>
+      </div>
+      }
+      <!-- spacer so the last card can fully clear the viewport edge -->
+      <div class="shrink-0 w-[5vw]"></div>
+    </div>
+  </div>
+</section>

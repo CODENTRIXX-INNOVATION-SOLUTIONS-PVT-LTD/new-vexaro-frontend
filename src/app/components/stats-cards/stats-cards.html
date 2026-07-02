@@ -1,0 +1,47 @@
+<div class="stats-container">
+    @for(card of cards; track card.title){
+    <div class="card glass-panel">
+        <div class="icon-box" [style.background]="card.bgColor" [style.color]="card.iconColor">
+            @if (card.icon) {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;" class="svg-icon">
+                    @if (card.icon.includes('fa-box')) {
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    } @else if (card.icon.includes('fa-user')) {
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+                    } @else if (card.icon.includes('fa-wallet') || card.icon.includes('rupee')) {
+                        <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
+                    } @else if (card.icon.includes('fa-chart') || card.icon.includes('line')) {
+                        <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                    } @else if (card.icon.includes('scale') || card.icon.includes('dispute')) {
+                        <circle cx="12" cy="12" r="10"></circle><path d="M12 9v4M12 17h.01"></path>
+                    } @else if (card.icon.includes('check')) {
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    } @else if (card.icon.includes('truck') || card.icon.includes('shipping') || card.icon.includes('delivery')) {
+                        <rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>
+                    } @else if (card.icon.includes('clock') || card.icon.includes('history')) {
+                        <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+                    } @else if (card.icon.includes('store')) {
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    } @else {
+                        <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line>
+                    }
+                </svg>
+            }
+        </div>
+        <div class="card-content">
+            <p class="card-title">{{ card.title }}</p>
+            @if (isLoading) {
+              <div class="skeleton-value"></div>
+            } @else {
+              <h3 class="card-value">{{ card.value }}</h3>
+              @if(card.percentage){
+              <p [class.positive]="card.symbol === '+'" [class.negative]="card.symbol === '-'" class="trend">
+                  <span class="arrow">{{ card.symbol }}{{ card.percentage }}%</span>
+                  @if(card.compairTo){ <span class="compare-text">{{ card.compairTo }}</span> }
+              </p>
+              }
+            }
+        </div>
+    </div>
+    }
+</div>

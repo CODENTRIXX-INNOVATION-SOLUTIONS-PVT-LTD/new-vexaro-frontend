@@ -1,0 +1,77 @@
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h2>Core Shipment Console</h2>
+            <div class="breadcrumb">
+                <a routerLink="/super-admin/dashboard">Dashboard</a>
+                <span>›</span>
+                <span class="active">Shipments</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="filters-row">
+            <div class="search-box">
+                <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></i>
+                <input type="text" [(ngModel)]="searchTerm" placeholder="Search by AWB or Merchant...">
+            </div>
+            
+            <div class="status-filter">
+                <select [(ngModel)]="filterStatus">
+                    <option value="All">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Transit">In Transit</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Failed">Failed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+
+        <div *ngIf="loading" class="loading-state">
+            Loading shipments...
+        </div>
+
+        <div *ngIf="error" class="error-state">
+            {{ error }}
+        </div>
+
+        <table *ngIf="!loading && !error">
+            <thead>
+                <tr>
+                    <th>AWB Number</th>
+                    <th>Merchant</th>
+                    <th>Distributor</th>
+                    <th>Carrier</th>
+                    <th>Weight</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let shipment of filteredShipments">
+                    <td class="awb-cell"><i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></i> {{ shipment.awb }}</td>
+                    <td>{{ shipment.merchant }}</td>
+                    <td>{{ shipment.distributor }}</td>
+                    <td><span class="carrier-badge">{{ shipment.carrier }}</span></td>
+                    <td>{{ shipment.weight }}</td>
+                    <td>{{ shipment.date }}</td>
+                    <td>
+                        <span class="status-badge"
+                            [class.success]="shipment.status === 'Delivered'"
+                            [class.pending]="shipment.status === 'Pending'"
+                            [class.transit]="shipment.status === 'In Transit'"
+                            [class.failed]="shipment.status === 'Failed' || shipment.status === 'Cancelled'">
+                            {{ shipment.status }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div *ngIf="!loading && !error && filteredShipments.length === 0" class="no-results">
+            No shipments found matching your filters.
+        </div>
+    </div>
+</div>

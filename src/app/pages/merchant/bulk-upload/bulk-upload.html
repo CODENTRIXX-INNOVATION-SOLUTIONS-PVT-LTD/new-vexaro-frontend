@@ -1,0 +1,124 @@
+<div class="bulk-upload-container">
+
+  @if (notificationMessage()) {
+  <div class="notification-toast">
+    <span class="material-icons">check_circle</span>
+    <span>{{ notificationMessage() }}</span>
+  </div>
+  }
+
+  <header class="page-header">
+    <div class="header-info">
+      <h1>Bulk Shipment Upload</h1>
+      <p>
+        Upload a CSV spreadsheet to book hundreds of delivery shipments concurrently.
+      </p>
+    </div>
+
+    <button class="secondary-btn" (click)="downloadSampleTemplate()">
+      <span class="material-icons">download</span>
+      Download Sample CSV Template
+    </button>
+  </header>
+
+  <input #fileInput type="file" accept=".csv" hidden (change)="onFileSelected($event)" />
+
+  <div class="card dropzone-card animated-fade" (click)="fileInput.click()">
+    <span class="material-icons cloud-icon">cloud_upload</span>
+
+    <h3>Click here to select CSV file</h3>
+
+    <p>or drag and drop your shipment spreadsheet document here</p>
+
+    <span class="upload-hint">
+      Supported format: CSV (UTF-8). Max size 5 MB.
+    </span>
+
+    @if (selectedFile()) {
+
+    <div style="margin-top:20px">
+
+      <strong>Selected File:</strong>
+
+      {{ fileName() }}
+
+      <br><br>
+
+      <strong>Size:</strong>
+
+      {{ getFileSize() }}
+
+    </div>
+
+    }
+
+  </div>
+
+  @if (csvPreview().length > 0) {
+
+  <div class="card table-card">
+
+    <div class="card-header">
+
+      <div>
+
+        <h3>CSV Preview</h3>
+
+        <p style="margin-top:6px;color:#6b7280;">
+          Showing first {{ csvPreview().length }} rows only
+        </p>
+
+      </div>
+
+      <button class="secondary-btn" (click)="clearUpload()">
+        <span class="material-icons">delete</span>
+        Discard CSV
+      </button>
+
+    </div>
+
+    <div class="table-responsive">
+
+      <table class="data-table">
+
+        <thead>
+
+          <tr>
+
+            @for(header of csvHeaders(); track header){
+
+            <th>{{ header }}</th>
+
+            }
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          @for(row of csvPreview(); track $index){
+
+          <tr>
+
+            @for(header of csvHeaders(); track header){
+
+            <td>{{ row[header] }}</td>
+
+            }
+
+          </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  }
+
+</div>

@@ -1,0 +1,36 @@
+@use 'sass:map';
+
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+);
+
+@function _bp($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error "Unknown breakpoint `#{$name}`.";
+  }
+  @return map.get($breakpoints, $name);
+}
+
+// Mobile-first: styles apply at $name and up
+@mixin respond-up($name) {
+  $min: _bp($name);
+  @if $min == 0 { @content; }
+  @else { @media (min-width: #{$min}) { @content; } }
+}
+
+// Styles apply BELOW $name (use sparingly)
+@mixin respond-down($name) {
+  $max: _bp($name) - 0.02px;
+  @media (max-width: #{$max}) { @content; }
+}
+
+@mixin respond-between($lower, $upper) {
+  $min: _bp($lower);
+  $max: _bp($upper) - 0.02px;
+  @media (min-width: #{$min}) and (max-width: #{$max}) { @content; }
+}

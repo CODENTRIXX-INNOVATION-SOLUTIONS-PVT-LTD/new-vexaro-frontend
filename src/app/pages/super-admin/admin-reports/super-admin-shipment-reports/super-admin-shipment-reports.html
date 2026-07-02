@@ -1,0 +1,129 @@
+<app-stats-cards [cards]="shipmentCards"></app-stats-cards>
+<div class="filter-card">
+
+    <select>
+        <option>Today</option>
+        <option>Last 7 Days</option>
+        <option>Last 30 Days</option>
+    </select>
+
+    <select>
+        <option>All Status</option>
+        <option>Delivered</option>
+        <option>Pending</option>
+        <option>Failed</option>
+    </select>
+
+    <button class="btn-primary">
+        Apply Filters
+    </button>
+
+</div>
+<div class="analytics-grid">
+
+    <div class="analytics-card">
+        <h4>Delivery Success Rate</h4>
+        <h2>{{ shipmentAnalytics.deliverySuccessRate }}%</h2>
+    </div>
+
+    <div class="analytics-card">
+        <h4>Average Delivery Time</h4>
+        <h2>{{ shipmentAnalytics.averageDeliveryTime }} Days</h2>
+    </div>
+
+    <div class="analytics-card">
+        <h4>Delayed Shipments</h4>
+        <h2>{{ shipmentAnalytics.delayedShipments }}</h2>
+    </div>
+
+</div>
+<div class="charts-grid">
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <h3>Shipment Trend</h3>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="shipmentTrendChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <div class="card-header">
+            <h3>Status Distribution</h3>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="shipmentStatusChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Top Merchants By Shipments</h3>
+    </div>
+
+    <table>
+
+        <tr>
+            <th>Merchant</th>
+            <th>Shipments</th>
+            <th>Delivered</th>
+        </tr>
+
+        @for (merchant of topMerchantsByShipments; track merchant.merchantName) {
+        <tr>
+            <td>{{ merchant.merchantName }}</td>
+            <td>{{ merchant.totalShipments }}</td>
+            <td>{{ merchant.delivered }}</td>
+        </tr>
+        }
+        @if (topMerchantsByShipments.length === 0) {
+        <tr>
+            <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+        </tr>
+        }
+
+    </table>
+
+</div>
+
+<div class="table-card">
+
+    <div class="card-header">
+        <h3>Recent Shipments</h3>
+    </div>
+
+    <table>
+
+        <tr>
+            <th>Tracking ID</th>
+            <th>Merchant</th>
+            <th>Status</th>
+            <th>Date</th>
+        </tr>
+
+        @for (shipment of recentShipments; track shipment.trackingId) {
+        <tr>
+            <td>{{ shipment.trackingId }}</td>
+            <td>{{ shipment.merchant }}</td>
+            <td><span class="badge {{ getStatusClass(shipment.status) }}">{{ shipment.status }}</span></td>
+            <td>{{ shipment.date }}</td>
+        </tr>
+        }
+        @if (recentShipments.length === 0) {
+        <tr>
+            <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+        </tr>
+        }
+
+    </table>
+
+</div>

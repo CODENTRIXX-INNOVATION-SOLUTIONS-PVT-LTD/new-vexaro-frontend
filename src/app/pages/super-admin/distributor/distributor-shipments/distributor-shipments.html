@@ -1,0 +1,51 @@
+<div class="page">
+
+    <div class="page-header">
+        <h1>Shipments</h1>
+        <p>Track and monitor distributor shipments</p>
+    </div>
+
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Shipment ID</th>
+                    <th>Destination</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr *ngFor="let shipment of shipments">
+
+                    <td>{{ shipment.shipmentId }}</td>
+                    <td>{{ shipment.destination }}</td>
+                    <td>{{ shipment.date }}</td>
+                    <td>₹{{ shipment.amount }}</td>
+
+                    <td>
+                        <span
+                            class="badge"
+                            [class.delivered]="shipment.status === 'Delivered'"
+                            [class.transit]="shipment.status === 'In Transit'"
+                            [class.pending]="shipment.status === 'Pending'">
+
+                            {{ shipment.status }}
+
+                        </span>
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

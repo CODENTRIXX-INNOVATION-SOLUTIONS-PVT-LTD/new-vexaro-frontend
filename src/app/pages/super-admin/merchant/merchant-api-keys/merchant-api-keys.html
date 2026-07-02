@@ -1,0 +1,51 @@
+<div class="page">
+
+    <div class="page-header">
+        <h1>API Keys</h1>
+        <p>Manage merchant API credentials</p>
+    </div>
+
+    <div class="table-card">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Key Name</th>
+                    <th>API Key</th>
+                    <th>Created Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @for (key of apiKeys; track key.name) {
+
+                <tr>
+
+                    <td>{{ key.name }}</td>
+
+                    <td>
+                        <code>{{ key.key }}</code>
+                    </td>
+
+                    <td>{{ key.createdAt }}</td>
+
+                    <td>
+                        <span class="badge active">
+                            {{ key.status }}
+                        </span>
+                    </td>
+
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

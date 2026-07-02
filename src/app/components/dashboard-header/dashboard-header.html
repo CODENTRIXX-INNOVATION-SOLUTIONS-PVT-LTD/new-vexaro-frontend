@@ -1,0 +1,327 @@
+<div class="header">
+
+    <div class="search-box">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="Search anything..." />
+    </div>
+
+    <div class="header-right">
+
+        <!-- Message Envelope Icon Button -->
+        <div style="position: relative;">
+            <button class="icon-btn" (click)="toggleMessages($event)">
+                <span class="material-icons">mail_outline</span>
+                <span class="badge" *ngIf="unreadMessagesCount > 0">{{ unreadMessagesCount }}</span>
+            </button>
+        </div>
+
+        <!-- Notification Bell Icon Button -->
+        <div style="position: relative;">
+            <button class="icon-btn notification" (click)="toggleNotifications($event)">
+                <span class="material-icons">notifications_none</span>
+                <span class="badge" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount }}</span>
+            </button>
+
+            <!-- Notifications Dropdown -->
+            <div class="notifications-dropdown" *ngIf="isNotificationsOpen" (click)="$event.stopPropagation()">
+                <div class="dropdown-header">
+                    <h3>Notifications</h3>
+                    <button class="btn-text" (click)="markAllNotificationsRead()" [disabled]="unreadNotificationsCount === 0">Mark all as read</button>
+                </div>
+                <div class="dropdown-list">
+                    <div class="no-notifications" *ngIf="filteredNotifications.length === 0">
+                        <span class="material-icons">notifications_off</span>
+                        <p>No notifications yet</p>
+                    </div>
+                    <div class="notification-item" *ngFor="let notif of filteredNotifications.slice(0, 10)" [class.unread]="!notif.read" (click)="markNotificationRead(notif.id, $event)">
+                        <div class="notif-icon-wrapper" [ngClass]="notif.icon">
+                            <span class="material-icons">{{ notif.icon }}</span>
+                        </div>
+                        <div class="notif-content">
+                            <p class="notif-message">{{ notif.message }}</p>
+                            <span class="notif-time">{{ notif.timeAgo }}</span>
+                        </div>
+                        <span class="unread-dot" *ngIf="!notif.read"></span>
+                    </div>
+                </div>
+                <div class="dropdown-footer">
+                    <button class="btn-footer-link" (click)="viewAllNotifications()">View all notifications</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Wrapper Dropdown -->
+        <div style="position: relative;">
+            <div class="profile" (click)="toggleProfile($event)">
+                <div class="profile-image-container" (click)="openAvatarModal(); $event.stopPropagation()">
+                    <img [src]="profileImage" [alt]="userName">
+                    <div class="camera-overlay">
+                        <span class="material-icons">photo_camera</span>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <span class="role">{{ role }}</span>
+                    <h4>{{ userName }}</h4>
+                    <p>{{ email }}</p>
+                </div>
+                <span class="material-icons dropdown" [class.rotate]="isProfileOpen">
+                    expand_more
+                </span>
+            </div>
+
+            <!-- Profile Dropdown Menu -->
+            <div class="profile-dropdown" *ngIf="isProfileOpen" (click)="$event.stopPropagation()">
+                <div class="profile-dropdown-header">
+                    <h4>{{ userName }}</h4>
+                    <p>{{ email }}</p>
+                    <button class="btn-edit-avatar" (click)="openAvatarModal()">Change Photo</button>
+                </div>
+                <div class="divider"></div>
+                <ul class="dropdown-menu-list">
+                    <!-- Super Admin Menu -->
+                    <ng-container *ngIf="role === 'Super Admin'">
+                        <li>
+                            <button (click)="navigateTo('/super-admin/settings')">
+                                <span class="material-icons">person</span> My Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/change-credentials')">
+                                <span class="material-icons">lock</span> Change Password
+                            </button>
+                        </li>
+                    </ng-container>
+
+                    <!-- Distributor Menu -->
+                    <ng-container *ngIf="role === 'Distributor'">
+                        <li>
+                            <button (click)="navigateTo('/distributor/settings/profile')">
+                                <span class="material-icons">person</span> My Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/distributor/settings/company-details')">
+                                <span class="material-icons">business</span> Company Details
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/distributor/settings/security')">
+                                <span class="material-icons">lock</span> Change Password
+                            </button>
+                        </li>
+                    </ng-container>
+
+                    <!-- Merchant Menu -->
+                    <ng-container *ngIf="role === 'Merchant'">
+                        <li>
+                            <button (click)="navigateTo('/merchant/profile')">
+                                <span class="material-icons">person</span> My Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/merchant/warehouse')">
+                                <span class="material-icons">warehouse</span> My Warehouse
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="openChangePasswordModal()">
+                                <span class="material-icons">lock</span> Change Password
+                            </button>
+                        </li>
+                    </ng-container>
+
+                    <div class="divider"></div>
+                    <li class="logout-item">
+                        <button (click)="logout()">
+                            <span class="material-icons">logout</span> Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Messages Slide-over Panel -->
+<div class="slide-over-backdrop" *ngIf="isMessagesOpen" (click)="isMessagesOpen = false"></div>
+<div class="slide-over-panel" [class.open]="isMessagesOpen">
+    <div class="panel-header">
+        <div class="panel-header-title">
+            <span class="material-icons text-primary">mail</span>
+            <h3>Announcements</h3>
+        </div>
+        <button class="close-btn" (click)="isMessagesOpen = false">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+
+    <!-- Super Admin specific tab toggle -->
+    <div class="panel-tabs" *ngIf="role === 'Super Admin'">
+        <button class="tab-btn" [class.active]="activeMessagesTab === 'history'" (click)="activeMessagesTab = 'history'">History</button>
+        <button class="tab-btn" [class.active]="activeMessagesTab === 'send'" (click)="activeMessagesTab = 'send'">Send New</button>
+    </div>
+
+    <div class="panel-content">
+        <!-- Announcements list (visible to everyone, tab history for Super Admin) -->
+        <div class="messages-tab-content" *ngIf="role !== 'Super Admin' || activeMessagesTab === 'history'">
+            <div class="no-messages" *ngIf="visibleAnnouncements.length === 0">
+                <span class="material-icons">announcement</span>
+                <p>No announcements yet</p>
+            </div>
+            <div class="message-card" *ngFor="let msg of visibleAnnouncements" [class.unread]="role !== 'Super Admin' && !msg.readBy.includes(role)" (click)="toggleMessageExpand(msg)">
+                <div class="message-card-header">
+                    <div class="message-meta">
+                        <span class="sender">{{ msg.sender }}</span>
+                        <span class="time">{{ msg.timestamp }}</span>
+                    </div>
+                    <h4>{{ msg.title }}</h4>
+                </div>
+                <div class="message-card-body" [class.expanded]="msg.expanded">
+                    <p>{{ msg.body }}</p>
+                    <div class="recipient-tag" *ngIf="role === 'Super Admin'">
+                        <span class="material-icons">person</span>
+                        To: {{ msg.recipient }}
+                    </div>
+                </div>
+                <div class="expand-indicator">
+                    <span class="material-icons">{{ msg.expanded ? 'expand_less' : 'expand_more' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Send announcement form (Super Admin tab send) -->
+        <div class="announcement-form" *ngIf="role === 'Super Admin' && activeMessagesTab === 'send'">
+            <div class="form-group">
+                <label>Target Audience</label>
+                <select class="form-control" [(ngModel)]="announcementTarget">
+                    <option value="All">All Distributors & Merchants</option>
+                    <option value="All Distributors">All Distributors Only</option>
+                    <option value="Merchant:Sahil Gour">Merchant Sahil Gour Only</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Announcement Title</label>
+                <input type="text" class="form-control" placeholder="Enter title" [(ngModel)]="announcementTitle">
+            </div>
+            <div class="form-group">
+                <label>Announcement Body</label>
+                <textarea class="form-control" rows="8" placeholder="Type announcement details here..." [(ngModel)]="announcementBody"></textarea>
+            </div>
+            <button class="btn-primary-action" (click)="sendAnnouncement()">
+                <span class="material-icons">send</span> Send Announcement
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal-backdrop" *ngIf="isPasswordModalOpen" (click)="closeChangePasswordModal()"></div>
+<div class="password-modal" *ngIf="isPasswordModalOpen">
+    <div class="modal-header">
+        <h3>Change Password</h3>
+        <button class="close-btn" (click)="closeChangePasswordModal()">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" class="form-control" [(ngModel)]="currentPassword" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" class="form-control" [(ngModel)]="newPassword" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" class="form-control" [(ngModel)]="confirmPassword" placeholder="••••••••">
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeChangePasswordModal()">Cancel</button>
+        <button class="btn-primary-action" (click)="submitPasswordChange()">Update Password</button>
+    </div>
+</div>
+
+<!-- All Notifications Modal -->
+<div class="modal-backdrop" *ngIf="isAllNotificationsModalOpen" (click)="closeAllNotificationsModal()"></div>
+<div class="all-notifications-modal" *ngIf="isAllNotificationsModalOpen">
+    <div class="modal-header">
+        <h3>All Notifications ({{ role }})</h3>
+        <button class="close-btn" (click)="closeAllNotificationsModal()">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+    <div class="modal-body scrollable-body">
+        <div class="no-notifications" *ngIf="filteredNotifications.length === 0">
+            <span class="material-icons">notifications_off</span>
+            <p>No notifications yet</p>
+        </div>
+        <div class="full-notification-item" *ngFor="let notif of filteredNotifications" [class.unread]="!notif.read" (click)="markNotificationRead(notif.id)">
+            <div class="notif-icon-wrapper" [ngClass]="notif.icon">
+                <span class="material-icons">{{ notif.icon }}</span>
+            </div>
+            <div class="notif-detail-content">
+                <p class="notif-text">{{ notif.message }}</p>
+                <span class="notif-time">{{ notif.timeAgo }}</span>
+            </div>
+            <span class="unread-dot-badge" *ngIf="!notif.read"></span>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeAllNotificationsModal()">Close</button>
+    </div>
+</div>
+
+<!-- Avatar Update Modal -->
+<div class="modal-backdrop" *ngIf="isAvatarModalOpen" (click)="closeAvatarModal()"></div>
+<div class="avatar-modal" *ngIf="isAvatarModalOpen">
+    <div class="modal-header">
+        <h3>Update Profile Picture</h3>
+        <button class="close-btn" (click)="closeAvatarModal()">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div class="current-avatar-preview">
+            <img [src]="selectedAvatar || 'https://i.pravatar.cc/150?img=12'" alt="Avatar Preview">
+            <span class="preview-label">Preview</span>
+        </div>
+        
+        <div class="preset-avatars-section">
+            <label>Select Preset Avatar</label>
+            <div class="avatars-grid">
+                <div class="avatar-grid-item" 
+                     *ngFor="let avatar of presetAvatars" 
+                     [class.selected]="selectedAvatar === avatar"
+                     (click)="selectPresetAvatar(avatar)">
+                    <img [src]="avatar" alt="Preset Avatar">
+                    <span class="check-overlay" *ngIf="selectedAvatar === avatar">
+                        <span class="material-icons">check</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="custom-avatar-upload-section">
+            <label>Or Upload Custom Image</label>
+            <div class="file-upload-wrapper">
+                <input type="file" 
+                       id="avatar-file-input" 
+                       accept="image/*" 
+                       (change)="onFileSelected($event)" 
+                       style="display: none;">
+                <button type="button" class="btn-secondary btn-upload-trigger" onclick="document.getElementById('avatar-file-input').click()">
+                    <span class="material-icons">cloud_upload</span> Choose Image File
+                </button>
+                <span class="file-name" *ngIf="uploadedFileName" style="margin-left: 10px; font-size: 12px; color: #475569;">{{ uploadedFileName }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeAvatarModal()">Cancel</button>
+        <button class="btn-primary-action" (click)="updateProfileImage()">Save Changes</button>
+    </div>
+</div>
