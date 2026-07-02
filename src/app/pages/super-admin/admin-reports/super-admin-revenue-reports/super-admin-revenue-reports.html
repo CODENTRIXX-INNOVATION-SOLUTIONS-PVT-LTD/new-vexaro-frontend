@@ -155,43 +155,6 @@
 <div class="table-card">
 
     <div class="card-header">
-        <h3>Payment Method Performance</h3>
-    </div>
-
-    <table>
-
-        <thead>
-            <tr>
-                <th>Payment Method</th>
-                <th>Transactions</th>
-                <th>Revenue</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            @for (payment of paymentMethods; track payment.method) {
-
-                <td>{{ payment.method }}</td>
-                <td>{{ payment.transactions }}</td>
-                <td>{{ payment.revenue }}</td>
-
-            }
-            @if (paymentMethods.length === 0) {
-            <tr>
-                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
-            </tr>
-            }
-
-        </tbody>
-
-    </table>
-
-</div>
-
-<div class="table-card">
-
-    <div class="card-header">
         <h3>Recent Transactions</h3>
     </div>
 

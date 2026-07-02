@@ -131,43 +131,6 @@
 <div class="table-card">
 
     <div class="card-header">
-        <h3>Regional Performance</h3>
-    </div>
-
-    <table>
-
-        <thead>
-            <tr>
-                <th>Region</th>
-                <th>Deliveries</th>
-                <th>Success Rate</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            @for (region of regionalPerformance; track region.region) {
-            <tr>
-                <td>{{ region.region }}</td>
-                <td>{{ region.deliveries }}</td>
-                <td>{{ region.successRate }}</td>
-            </tr>
-            }
-            @if (regionalPerformance.length === 0) {
-            <tr>
-                <td colspan="3" style="text-align: center; padding: 20px; color: #666;">No data available</td>
-            </tr>
-            }
-
-        </tbody>
-
-    </table>
-
-</div>
-
-<div class="table-card">
-
-    <div class="card-header">
         <h3>Recent Activities</h3>
     </div>
 

@@ -76,4 +76,12 @@ export class ShipmentService {
   bulkUpload(formData: FormData): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/shipments/bulk-upload`, formData);
   }
+
+  getShipmentsByMerchant(merchantId: string, params: any = {}): Observable<ShipmentListResponse> {
+    let httpParams = new HttpParams().set('merchant', merchantId);
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    return this.http.get<ShipmentListResponse>(`${this.baseUrl}/shipments`, { params: httpParams });
+  }
 }

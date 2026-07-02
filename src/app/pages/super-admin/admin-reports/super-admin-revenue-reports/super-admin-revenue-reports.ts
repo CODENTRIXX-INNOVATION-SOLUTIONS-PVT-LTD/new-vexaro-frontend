@@ -69,7 +69,6 @@ export class SuperAdminRevenueReports implements OnInit {
   ];
 
   topRevenueMerchants: any[] = [];
-  paymentMethods: any[] = [];
   recentTransactions: any[] = [];
 
   ngOnInit() {
@@ -130,23 +129,6 @@ export class SuperAdminRevenueReports implements OnInit {
       }
     });
 
-    // Load payment methods
-    this.reportsService.getRevenueByPaymentMethod().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.paymentMethods = (res.data.methods || []).map((m: any) => ({
-            method: m.method || 'Unknown',
-            transactions: m.transactions || 0,
-            revenue: '₹' + (m.revenue || 0).toLocaleString('en-IN')
-          }));
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error loading payment methods:', err);
-      }
-    });
-
     // Load recent transactions
     this.reportsService.getRecentRevenueTransactions({ limit: 3 }).subscribe({
       next: (res) => {
@@ -194,19 +176,28 @@ export class SuperAdminRevenueReports implements OnInit {
     const ctx = document.getElementById('revenueTrendChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { trend: [{ _id: '2024-01-01', totalRevenue: 1000 }] }
+    const trendData = data.trend || [];
+    const labels = trendData.map((item: any) => item._id);
+    const values = trendData.map((item: any) => item.totalRevenue);
+
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: labels,
         datasets: [
           {
             label: 'Revenue',
-            data: data.values || [120000, 180000, 150000, 220000, 280000, 350000],
+            data: values,
             borderColor: 'rgb(11, 74, 111)',
             backgroundColor: 'rgb(11, 74, 111)',
             tension: 0.4
           }
         ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     });
   }
@@ -215,16 +206,35 @@ export class SuperAdminRevenueReports implements OnInit {
     const ctx = document.getElementById('revenueSourceChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { revenueSources: [{ _id: 'CREDIT', totalAmount: 1000, count: 10 }] }
+    const sourceData = data.revenueSources || [];
+    const labels = sourceData.map((item: any) => item._id);
+    const values = sourceData.map((item: any) => item.totalAmount);
+
+    // Color mapping for transaction types
+    const colorMap: Record<string, string> = {
+      'CREDIT': 'rgb(11, 74, 111)',
+      'TOPUP': '#16a34a',
+      'COD_CREDIT': '#d97706',
+      'DEBIT': '#dc2626',
+      'REFUND': '#9333ea'
+    };
+    const colors = sourceData.map((item: any) => colorMap[item._id] || '#6b7280');
+
     new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: data.labels || ['Merchant Sales', 'Subscriptions', 'Commissions', 'Delivery Charges'],
+        labels: labels,
         datasets: [
           {
-            data: data.values || [55, 15, 20, 10],
-            backgroundColor: data.colors || ['rgb(11, 74, 111)', '#16a34a', '#d97706', '#9333ea']
+            data: values,
+            backgroundColor: colors
           }
         ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     });
   }

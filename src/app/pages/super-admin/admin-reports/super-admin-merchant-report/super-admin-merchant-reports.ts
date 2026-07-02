@@ -67,7 +67,6 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
   ];
 
   topMerchants: any[] = [];
-  merchantCategories: any[] = [];
   recentMerchants: any[] = [];
 
   ngOnInit() {
@@ -126,22 +125,6 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
       }
     });
 
-    // Load merchant categories
-    this.reportsService.getMerchantsByCategory().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.merchantCategories = (res.data.categories || []).map((c: any) => ({
-            category: c.category || 'Unknown',
-            merchants: c.count || 0
-          }));
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error loading merchant categories:', err);
-      }
-    });
-
     // Load recent merchants
     this.reportsService.getRecentMerchants({ limit: 3 }).subscribe({
       next: (res) => {
@@ -174,17 +157,6 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
       }
     });
 
-    // Load category distribution
-    this.reportsService.getMerchantCategoryDistribution().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.renderCategoryChart(res.data);
-        }
-      },
-      error: (err) => {
-        console.error('Error loading category distribution:', err);
-      }
-    });
   }
 
   ngAfterViewInit(): void {
@@ -195,13 +167,18 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
     const ctx = document.getElementById('merchantGrowthChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { growth: [{ _id: '2024-01-01', count: 10 }] }
+    const growthData = data.growth || [];
+    const labels = growthData.map((item: any) => item._id);
+    const values = growthData.map((item: any) => item.count);
+
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: labels,
         datasets: [{
           label: 'Merchants',
-          data: data.values || [55, 65, 78, 88, 102, 120],
+          data: values,
           borderColor: 'rgb(11, 74, 111)',
           backgroundColor: 'rgb(11, 74, 111)',
           tension: 0.4
@@ -214,22 +191,4 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
     });
   }
 
-  renderCategoryChart(data: any) {
-    const ctx = document.getElementById('merchantCategoryChart') as HTMLCanvasElement;
-    if (!ctx) return;
-
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: data.labels || ['Fashion', 'Electronics', 'Home Decor', 'Beauty'],
-        datasets: [{
-          data: data.values || [42, 28, 19, 12]
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
-    });
-  }
 }

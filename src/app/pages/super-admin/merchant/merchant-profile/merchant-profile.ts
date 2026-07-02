@@ -3,10 +3,6 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-import { MerchantApiKeys } from '../merchant-api-keys/merchant-api-keys';
-import { MerchantDocuments } from '../merchant-documents/merchant-documents';
-import { MerchantInvoices } from '../merchant-invoices/merchant-invoices';
-import { MerchantPayments } from '../merchant-payments/merchant-payments';
 import { MerchantShipments } from '../merchant-shipments/merchant-shipments';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
 
@@ -85,8 +81,7 @@ function toViewModel(user: MerchantUser): MerchantViewModel {
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterLink,
-    MerchantApiKeys, MerchantDocuments, MerchantInvoices,
-    MerchantPayments, MerchantShipments,
+    MerchantShipments,
   ],
   templateUrl: './merchant-profile.html',
   styleUrl: './merchant-profile.css'
@@ -123,7 +118,6 @@ export class MerchantProfile implements OnInit {
     weightDisputes: 0,
   };
 
-  trackingData: any[] = [];
 
   ngOnInit(): void {
     this.merchantId = this.route.snapshot.paramMap.get('id') ?? '';

@@ -73,7 +73,6 @@ export class SuperAdminDistributorReports implements OnInit, AfterViewInit {
   ];
 
   topDistributors: any[] = [];
-  regionalPerformance: any[] = [];
   recentActivities: any[] = [];
 
   ngOnInit() {
@@ -134,23 +133,6 @@ export class SuperAdminDistributorReports implements OnInit, AfterViewInit {
       }
     });
 
-    // Load regional performance
-    this.reportsService.getRegionalPerformance().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.regionalPerformance = (res.data.regions || []).map((r: any) => ({
-            region: r.region || 'Unknown',
-            deliveries: r.deliveries || 0,
-            successRate: (r.successRate || 0) + '%'
-          }));
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error loading regional performance:', err);
-      }
-    });
-
     // Load recent activities
     this.reportsService.getDistributorActivities({ limit: 3 }).subscribe({
       next: (res) => {
@@ -203,14 +185,20 @@ export class SuperAdminDistributorReports implements OnInit, AfterViewInit {
     const ctx = document.getElementById('distributorPerformanceChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { performance: [{ distributorName: 'Name', totalShipments: 100, deliveredShipments: 80, deliveryRate: 80 }] }
+    const performanceData = data.performance || [];
+    const labels = performanceData.map((item: any) => item.distributorName);
+    const values = performanceData.map((item: any) => item.totalShipments);
+
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: data.labels || ['Raj Logistics', 'FastTrack', 'QuickMove', 'ExpressGo', 'BlueShip'],
+        labels: labels,
         datasets: [
           {
             label: 'Deliveries',
-            data: data.values || [420, 380, 340, 290, 240]
+            data: values,
+            backgroundColor: 'rgb(11, 74, 111)'
           }
         ]
       },
@@ -225,15 +213,25 @@ export class SuperAdminDistributorReports implements OnInit, AfterViewInit {
     const ctx = document.getElementById('regionalChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { regionalDistribution: [{ _id: 'CityName', count: 100 }] }
+    const regionalData = data.regionalDistribution || [];
+    const labels = regionalData.map((item: any) => item._id);
+    const values = regionalData.map((item: any) => item.count);
+
+    // Color mapping for regions
+    const colors = regionalData.map((_: any, index: number) => {
+      const colorPalette = ['rgb(11, 74, 111)', '#16a34a', '#d97706', '#9333ea', '#dc2626', '#f59e0b', '#06b6d4', '#8b5cf6'];
+      return colorPalette[index % colorPalette.length];
+    });
+
     new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: data.labels || ['North', 'South', 'West', 'East'],
-        datasets: [
-          {
-            data: data.values || [35, 28, 22, 15]
-          }
-        ]
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors
+        }]
       },
       options: {
         responsive: true,

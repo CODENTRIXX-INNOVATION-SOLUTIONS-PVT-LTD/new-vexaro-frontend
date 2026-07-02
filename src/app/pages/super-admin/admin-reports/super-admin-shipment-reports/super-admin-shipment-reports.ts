@@ -199,14 +199,19 @@ export class SuperAdminShipmentReports implements OnInit {
     const ctx = document.getElementById('shipmentTrendChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { trend: [{ _id: '2024-01-01', count: 10 }] }
+    const trendData = data.trend || [];
+    const labels = trendData.map((item: any) => item._id);
+    const values = trendData.map((item: any) => item.count);
+
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        labels: labels,
         datasets: [
           {
             label: 'Shipments',
-            data: data.values || [120, 180, 160, 240, 210, 280, 300],
+            data: values,
             borderColor: 'rgb(11, 74, 111)',
             backgroundColor: 'rgb(11, 74, 111)',
             tension: 0.4
@@ -224,14 +229,32 @@ export class SuperAdminShipmentReports implements OnInit {
     const ctx = document.getElementById('shipmentStatusChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    // Parse backend data: { statusBreakdown: [{ _id: 'DELIVERED', count: 10 }] }
+    const statusData = data.statusBreakdown || [];
+    const labels = statusData.map((item: any) => this.getStatusLabel(item._id));
+    const values = statusData.map((item: any) => item.count);
+
+    // Color mapping for statuses
+    const colorMap: Record<string, string> = {
+      'Delivered': '#22c55e',
+      'Pending': 'rgb(232, 116, 58)',
+      'Picked Up': 'rgb(59, 130, 246)',
+      'At Hub': 'rgb(59, 130, 246)',
+      'Out for Delivery': 'rgb(59, 130, 246)',
+      'Failed': 'rgb(239, 68, 68)',
+      'RTO': '#f59e0b',
+      'Cancelled': '#6b7280'
+    };
+    const colors = statusData.map((item: any) => colorMap[this.getStatusLabel(item._id)] || '#9333ea');
+
     new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: data.labels || ['Delivered', 'Pending', 'Failed', 'Returned'],
+        labels: labels,
         datasets: [
           {
-            data: data.values || [980, 180, 45, 45],
-            backgroundColor: data.colors || ['#22c55e', 'rgb(232, 116, 58)', 'rgb(239, 68, 68)', '#9333ea']
+            data: values,
+            backgroundColor: colors
           }
         ]
       },

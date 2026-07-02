@@ -76,16 +76,6 @@
 
     </div>
 
-    <div class="chart-card">
-
-        <h3>Merchant Categories</h3>
-
-        <div class="chart-wrapper">
-            <canvas id="merchantCategoryChart"></canvas>
-        </div>
-
-    </div>
-
 </div>
 
 <div class="table-card">
@@ -114,41 +104,6 @@
             </tr>
             }
             @if (topMerchants.length === 0) {
-            <tr>
-                <td colspan="2" style="text-align: center; padding: 20px; color: #666;">No data available</td>
-            </tr>
-            }
-
-        </tbody>
-
-    </table>
-
-</div>
-
-<div class="table-card">
-
-    <div class="card-header">
-        <h3>Merchant Categories Performance</h3>
-    </div>
-
-    <table>
-
-        <thead>
-            <tr>
-                <th>Category</th>
-                <th>Merchants</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            @for (category of merchantCategories; track category.category) {
-            <tr>
-                <td>{{ category.category }}</td>
-                <td>{{ category.merchants }}</td>
-            </tr>
-            }
-            @if (merchantCategories.length === 0) {
             <tr>
                 <td colspan="2" style="text-align: center; padding: 20px; color: #666;">No data available</td>
             </tr>
