@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FinanceService } from '../../../../services/finance.service';
 
 @Component({
   selector: 'app-wallet',
@@ -10,19 +11,17 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './wallet.css'
 })
 export class Wallet implements OnInit {
+  private financeService = inject(FinanceService);
+
   balance: number = 0;
   lockedFunds: number = 0;
   transactions: any[] = [];
   isLoading: boolean = false;
-  
+
   isTopupModalOpen: boolean = false;
-  paymentMethod: 'bank' | 'razorpay' = 'bank';
+  paymentMethod: 'checkout' | 'upi_qr' = 'checkout';
   topupAmount: number = 0;
-  topupReference: string = '';
-  
-  // Razorpay simulation state
-  onlineStep: 'input' | 'gateway' | 'success' = 'input';
-  selectedOnlineMethod: 'card' | 'upi' | 'netbanking' = 'upi';
+  isPaymentProcessing: boolean = false;
 
   ngOnInit() {
     this.loadWalletData();
@@ -30,76 +29,71 @@ export class Wallet implements OnInit {
 
   loadWalletData() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/wallet
-    this.balance = 850000;
-    this.lockedFunds = 150000;
-    this.transactions = [
-      { id: 'TXN8001', date: '17 Jun 2026', type: 'Credit', amount: 50000, status: 'Completed', description: 'Bank Transfer Topup' },
-      { id: 'TXN8002', date: '17 Jun 2026', type: 'Debit', amount: 10000, status: 'Completed', description: 'Merchant Wallet Funding (ABC Electronics)' },
-      { id: 'TXN8003', date: '16 Jun 2026', type: 'Credit', amount: 4500, status: 'Completed', description: 'Margin Profit' }
-    ];
-    this.isLoading = false;
+
+    this.financeService.getMyWallet().subscribe({
+      next: (res) => {
+        this.balance = res?.data?.balance ?? 0;
+        this.lockedFunds = res?.data?.lockedFunds ?? 0;
+      },
+      error: (err) => alert(err?.error?.message || 'Failed to load wallet.'),
+    });
+
+    this.financeService.listTransactions({ limit: 25 }).subscribe({
+      next: (res) => {
+        const items = res?.data?.transactions ?? [];
+        this.transactions = items.map((trx: any) => ({
+          id: trx._id,
+          date: trx.createdAt ? new Date(trx.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+          type: this.isCreditType(trx.type) ? 'Credit' : 'Debit',
+          amount: Math.abs(trx.amount || 0),
+          description: trx.note || trx.type,
+        }));
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        alert(err?.error?.message || 'Failed to load transactions.');
+      },
+    });
   }
 
   openTopupModal() {
     this.isTopupModalOpen = true;
-    this.paymentMethod = 'bank';
+    this.paymentMethod = 'checkout';
     this.topupAmount = 0;
-    this.topupReference = '';
-    this.onlineStep = 'input';
+    this.isPaymentProcessing = false;
   }
 
   closeTopupModal() {
+    if (this.isPaymentProcessing) return;
     this.isTopupModalOpen = false;
   }
 
-  setPaymentMethod(method: 'bank' | 'razorpay') {
+  setPaymentMethod(method: 'checkout' | 'upi_qr') {
     this.paymentMethod = method;
-    this.topupAmount = 0;
-    this.topupReference = '';
-    this.onlineStep = 'input';
   }
 
-  submitTopupRequest() {
-    if (this.topupAmount <= 0 || !this.topupReference) return;
-    // TODO: POST /distributor/:id/wallet/topup-request
-    console.log(`Requested UTR topup of ₹${this.topupAmount} with ref: ${this.topupReference}`);
-    alert(`UTR Topup Request of ₹${this.topupAmount.toLocaleString('en-IN')} submitted! Status will update once approved by Admin.`);
-    this.closeTopupModal();
-  }
-
-  startRazorpayPayment() {
-    if (this.topupAmount < 1000) {
-      alert('Minimum online topup amount is ₹1,000');
+  async startRazorpayPayment() {
+    if (!this.topupAmount || this.topupAmount < 1000) {
+      alert('Minimum online top-up amount is ₹1,000');
       return;
     }
-    this.onlineStep = 'gateway';
-  }
 
-  selectOnlineMethod(method: 'card' | 'upi' | 'netbanking') {
-    this.selectedOnlineMethod = method;
-  }
-
-  completeRazorpayPayment() {
-    this.onlineStep = 'success';
-    
-    // Simulate updating backend wallet state
-    setTimeout(() => {
-      this.balance += this.topupAmount;
-      const newTxnId = 'TXN' + Math.floor(8004 + Math.random() * 1000);
-      const currentDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      
-      this.transactions.unshift({
-        id: newTxnId,
-        date: currentDate,
-        type: 'Credit',
-        amount: this.topupAmount,
-        status: 'Completed',
-        description: 'Razorpay Online Topup'
-      });
-      
+    this.isPaymentProcessing = true;
+    try {
+      const result = await this.financeService.startRazorpayWalletTopup(this.topupAmount, this.paymentMethod);
+      this.balance = result.balance ?? this.balance;
+      this.isPaymentProcessing = false;
       this.closeTopupModal();
-      alert(`Payment Successful! ₹${this.topupAmount.toLocaleString('en-IN')} has been added to your Available Balance.`);
-    }, 1200);
+      alert(`Payment successful. ₹${this.topupAmount.toLocaleString('en-IN')} has been added to your wallet.`);
+      this.loadWalletData();
+    } catch (err: any) {
+      alert(err?.error?.message || err?.message || 'Payment could not be completed.');
+      this.isPaymentProcessing = false;
+    }
+  }
+
+  private isCreditType(type: string): boolean {
+    return ['CREDIT', 'TOPUP', 'REFUND', 'COD_CREDIT', 'TRANSFER_CREDIT'].includes(type);
   }
 }

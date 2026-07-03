@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { UserService } from '../../../../services/user.service';
 
 @Component({
@@ -51,7 +52,8 @@ export class CreateMerchant {
       this.firstName.trim() &&
       this.lastName.trim() &&
       this.email.trim() &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim()) &&
+      /^[6-9]\d{9}$/.test(this.phone.trim())
     );
   }
 
@@ -79,6 +81,7 @@ export class CreateMerchant {
   }
 
   submitMerchant() {
+    if (this.isSubmitting) return;
     if (!this.isStep1Valid() || !this.isStep2Valid()) return;
 
     this.isSubmitting = true;
@@ -99,22 +102,27 @@ export class CreateMerchant {
       }
     };
 
-    if (this.phone?.trim()) payload.phone = this.phone.trim();
+    payload.phone = this.phone.trim();
     if (this.companyName?.trim()) payload.companyName = this.companyName.trim();
     if (this.warehouseName?.trim()) payload.warehouse.name = this.warehouseName.trim();
     if (this.warehouseGstNo?.trim()) payload.warehouse.gstNo = this.warehouseGstNo.trim();
 
-    this.userService.inviteUser(payload).subscribe({
-      next: () => {
+    this.userService.inviteUser(payload).pipe(
+      finalize(() => {
         this.isSubmitting = false;
+      })
+    ).subscribe({
+      next: () => {
         this.successMessage = 'Merchant invited successfully! An email has been sent to set their password.';
         setTimeout(() => this.router.navigate(['/distributor/merchants']), 2000);
       },
       error: (err) => {
-        this.isSubmitting = false;
         let msg = err.error?.message || 'Failed to invite merchant. Please try again.';
         if (err.error?.errors && Array.isArray(err.error.errors)) {
           msg = err.error.errors.map((e: any) => `${e.field}: ${e.message}`).join(' | ');
+        }
+        if (err.status === 409) {
+          msg = `${msg} Use a different email address, or check the Merchant List for this existing merchant.`;
         }
         this.errorMessage = msg;
         console.error('Create Merchant Error:', err.error);

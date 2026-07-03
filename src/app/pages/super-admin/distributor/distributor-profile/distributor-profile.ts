@@ -7,54 +7,29 @@ import { DistributorMerchants } from '../distributor-merchants/distributor-merch
 import { DistributorPayments } from '../distributor-payments/distributor-payments';
 import { DistributorPerformance } from '../distributor-performance/distributor-performance';
 import { DistributorShipments } from '../distributor-shipments/distributor-shipments';
-import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
 import { UserService } from '../../../../services/user.service';
 
-// The shape the HTML template already binds to — kept identical so the template
-// needs zero changes. Fields absent from the DB are filled with '—'.
+// The shape the HTML template binds to — only fields available in backend
 interface DistributorViewModel {
   distributorName: string;
-  displayName: string;
   email: string;
   phone: string;
   address: string;
-  region: string;
-  city: string;
-  state: string;
-  pincode: string;
   contactPerson: string;
   contactPhone: string;
   contactEmail: string;
-  gstNumber: string;
-  panNumber: string;
-  paymentTerms: string;
-  creditLimit: string | number;
   status: string;
 }
 
-function toViewModel(user: MerchantUser): DistributorViewModel {
+function toViewModel(user: any): DistributorViewModel {
   return {
-    // companyName is the closest field to "distributor name"
     distributorName: user.companyName || `${user.firstName} ${user.lastName}`,
-    displayName: user.companyName || '—',
     email: user.email,
     phone: user.phone || '—',
     address: user.address || '—',
-    // No region/city/state/pincode at the top-level user document for distributors
-    // (warehouse is only on MERCHANTs). Show '—' for missing structured fields.
-    region: '—',
-    city: '—',
-    state: '—',
-    pincode: '—',
-    // contact details — distributor has no separate contact sub-document
     contactPerson: `${user.firstName} ${user.lastName}`,
     contactPhone: user.phone || '—',
     contactEmail: user.email,
-    // No GST/PAN/payment terms/credit limit columns on the user model
-    gstNumber: '—',
-    panNumber: '—',
-    paymentTerms: '—',
-    creditLimit: '—',
     status: user.isActive ? 'Active' : 'Inactive',
   };
 }
@@ -73,7 +48,6 @@ function toViewModel(user: MerchantUser): DistributorViewModel {
 export class DistributorProfile implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private merchantService = inject(MerchantService);
   private userService = inject(UserService);
 
   activeTab = 'merchants';
@@ -84,10 +58,8 @@ export class DistributorProfile implements OnInit {
 
   // Initialised blank so template bindings never throw before data arrives
   distributor: DistributorViewModel = {
-    distributorName: '', displayName: '', email: '', phone: '',
-    address: '', region: '', city: '', state: '', pincode: '',
-    contactPerson: '', contactPhone: '', contactEmail: '',
-    gstNumber: '', panNumber: '', paymentTerms: '', creditLimit: '',
+    distributorName: '', email: '', phone: '',
+    address: '', contactPerson: '', contactPhone: '', contactEmail: '',
     status: 'Active',
   };
 
@@ -113,7 +85,7 @@ export class DistributorProfile implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.merchantService.getDistributorById(this.distributorId).subscribe({
+    this.userService.getUserById(this.distributorId).subscribe({
       next: (res) => {
         this.distributor = toViewModel(res.data);
         this.isLoading.set(false);

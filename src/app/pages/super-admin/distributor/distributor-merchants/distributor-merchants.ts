@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, input, signal } from '@angular/core';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
 
 interface DistributorMerchant {
@@ -14,41 +13,34 @@ interface DistributorMerchant {
 
 @Component({
   selector: 'app-distributor-merchants',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './distributor-merchants.html',
 
   styleUrl: '../../../../common-css/super-admin-distrubutore-tabs.css'
 })
-export class DistributorMerchants implements OnInit {
-  distributorId = '';
+export class DistributorMerchants {
+  distributorId = input.required<string>();
   merchants: DistributorMerchant[] = [];
-  isLoading = false;
-  error = '';
+  isLoading = signal(false);
+  error = signal('');
 
   constructor(
-    private route: ActivatedRoute,
     private merchantService: MerchantService,
-  ) { }
-
-  ngOnInit(): void {
-    const currentId = this.route.snapshot.paramMap.get('id');
-    const parentId = this.route.parent?.snapshot.paramMap.get('id');
-    this.distributorId = currentId ?? parentId ?? '';
-
-    if (!this.distributorId) {
-      this.error = 'Distributor not found.';
-      return;
-    }
-    this.loadMerchants();
+  ) {
+    // Use setTimeout to ensure input is bound before loading
+    setTimeout(() => {
+      this.loadMerchants();
+    }, 0);
   }
 
   private userBelongsToDistributor(user: MerchantUser): boolean {
     const invitedBy = user.invitedBy as any;
     if (!invitedBy) return false;
     if (typeof invitedBy === 'string') {
-      return invitedBy === this.distributorId;
+      return invitedBy === this.distributorId();
     }
-    return invitedBy._id?.toString?.() === this.distributorId;
+    return invitedBy._id?.toString?.() === this.distributorId();
   }
 
   private mapMerchant(user: MerchantUser): DistributorMerchant {
@@ -63,20 +55,19 @@ export class DistributorMerchants implements OnInit {
   }
 
   loadMerchants(): void {
-    this.isLoading = true;
-    this.error = '';
+    this.isLoading.set(true);
+    this.error.set('');
 
     this.merchantService.listMerchants({ page: 1, limit: 100 }).subscribe({
       next: (res) => {
         this.merchants = (res.data.users ?? [])
           .filter((user) => this.userBelongsToDistributor(user))
           .map((user) => this.mapMerchant(user));
-        console.log('Merchants loaded:', this.merchants);
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.isLoading = false;
-        this.error = err?.error?.message || 'Failed to load merchants.';
+        this.isLoading.set(false);
+        this.error.set(err?.error?.message || 'Failed to load merchants.');
       },
     });
   }

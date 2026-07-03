@@ -37,4 +37,8 @@ export class UserService {
       headers: this.jsonHeaders,
     });
   }
+
+  getUserById(id: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/users/${id}`);
+  }
 }

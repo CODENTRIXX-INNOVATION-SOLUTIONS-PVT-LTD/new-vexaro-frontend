@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../../services/finance.service';
@@ -14,22 +14,24 @@ export interface MerchantTransaction {
   reference: string;
 }
 
-export interface TopUpRequest {
+export interface RazorpayPaymentRecord {
   id: string;
   date: string;
   amount: number;
-  method: string;
-  note: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  method: string | null;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+  razorpayOrderId: string;
+  razorpayPaymentId: string | null;
 }
 
-export interface RefundRecord {
+export interface RefundRequest {
   id: string;
   date: string;
   awb: string;
-  reason: string;
   amount: number;
-  status: 'Processed' | 'Pending' | 'Rejected';
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewNote: string;
 }
 
 export interface WeightDispute {
@@ -56,75 +58,158 @@ export class Payments implements OnInit {
   private financeService = inject(FinanceService);
   private disputeService = inject(DisputeService);
 
-  activeTab: string = 'balance';
+  // ── Active Tab ────────────────────────────────────────────────────────────
+  activeTab = 'balance';
 
-  changeTab(tab: string) {
+  changeTab(tab: string): void {
     this.activeTab = tab;
+    this.topupSuccess = '';
+    this.topupError = '';
+    // Lazy-load per tab — only fetch when user actually opens it
+    if (tab === 'payments')      this.loadRazorpayPayments();
+    if (tab === 'disputes')      this.loadDisputes();
+    if (tab === 'transactions')  this.loadTransactions();
+    if (tab === 'refunds' || tab === 'requests') this.loadRefundRequests();
   }
 
-  // Wallet
-  balance: number = 0;
-  codEscrowBalance: number = 0;
-  distributorName: string = 'Vexaro Network';
+  // ── Wallet ────────────────────────────────────────────────────────────────
+  balance = 0;
+  codEscrowBalance = 0;
 
-  // Top-up request inline form
+  // ── Razorpay Top-up ───────────────────────────────────────────────────────
   packages = [1000, 2500, 5000, 10000, 25000];
   selectedPackage: number | null = null;
-  topUpMethod: string = 'UPI';
-  topUpNote: string = '';
+  topUpMethod: 'checkout' | 'upi_qr' = 'checkout';
+  isPaymentProcessing = false;
+  topupSuccess = '';
+  topupError = '';
 
+  // ── Transaction History ───────────────────────────────────────────────────
   transactions: MerchantTransaction[] = [];
-  topUpRequests: TopUpRequest[] = [];
-  refunds: RefundRecord[] = [];
+  txLoading = false;
+
+  // ── Razorpay Payment History ──────────────────────────────────────────────
+  razorpayPayments: RazorpayPaymentRecord[] = [];
+  paymentsLoading = false;
+  paymentsTotal = 0;
+  paymentsPage = 1;
+  paymentsLimit = 10;
+  paymentsFilter: '' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED' = '';
+
+  // ── Refund Requests (shipment refunds submitted to distributor) ───────────
+  refundRequests: RefundRequest[] = [];
+  refundRequestsLoading = false;
+
+  // ── Submit Refund Request form ────────────────────────────────────────────
+  showRefundForm = false;
+  newRefund = { shipmentId: '', amount: null as number | null, reason: '' };
+  refundSubmitting = false;
+  refundFormError = '';
+  refundFormSuccess = '';
+
+  // ── Weight Disputes ───────────────────────────────────────────────────────
   disputes: WeightDispute[] = [];
 
-  // Contest Dispute Modal
-  showContestModal: boolean = false;
+  // ── Contest Dispute Modal ─────────────────────────────────────────────────
+  showContestModal = false;
   contestingDispute: WeightDispute | null = null;
-  contestNote: string = '';
+  contestNote = '';
   selectedFileNames: string[] = [];
 
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
+    // Only load what's needed for the default tab (balance) + critical data
     this.loadWalletDetails();
-    this.loadTransactions();
-    this.loadDisputes();
+    this.loadTransactions();   // needed for summary stats
+    this.loadRefundRequests(); // needed for badge counts on tabs
+    // Disputes loaded lazily when tab is opened
   }
+
+  // ── Loaders ───────────────────────────────────────────────────────────────
 
   loadWalletDetails(): void {
     this.financeService.getMyWallet().subscribe({
       next: (res) => {
-        if (res.data) {
-          this.balance = res.data.balance;
-          this.codEscrowBalance = res.data.codEscrowBalance || 0;
+        if (res?.data) {
+          this.balance = res.data.balance ?? 0;
+          this.codEscrowBalance = res.data.codEscrowBalance ?? 0;
         }
       },
-      error: (err) => console.error('Failed to load wallet:', err)
+      error: (err) => console.error('Wallet load failed', err),
     });
   }
 
   loadTransactions(): void {
+    if (this.txLoading || this.transactions.length > 0) return; // already loaded
+    this.txLoading = true;
     this.financeService.listTransactions({ limit: 50 }).subscribe({
       next: (res) => {
-        if (res.data && res.data.transactions) {
-          this.transactions = res.data.transactions.map((t: any) => ({
-            id: t._id,
-            date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-            description: t.note || t.type,
-            type: t.amount >= 0 ? 'credit' : 'debit',
-            amount: Math.abs(t.amount),
-            status: 'Success',
-            reference: t.reference || '—',
-          }));
-        }
+        const raw: any[] = res?.data?.transactions ?? [];
+        this.transactions = raw.map((t: any) => ({
+          id: t._id,
+          date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          description: t.note || this.formatTxType(t.type),
+          type: t.amount >= 0 ? 'credit' : 'debit',
+          amount: Math.abs(t.amount ?? 0),
+          status: 'Success',
+          reference: t.reference || '—',
+        }));
+        this.txLoading = false;
       },
-      error: (err) => console.error('Failed to load transactions:', err)
+      error: (err) => { console.error('Transactions load failed', err); this.txLoading = false; },
+    });
+  }
+
+  loadRazorpayPayments(): void {
+    if (this.paymentsLoading) return;
+    this.paymentsLoading = true;
+    const params: any = { page: this.paymentsPage, limit: this.paymentsLimit };
+    if (this.paymentsFilter) params.status = this.paymentsFilter;
+
+    this.financeService.listPayments(params).subscribe({
+      next: (res) => {
+        const raw: any[] = res?.data?.payments ?? [];
+        this.paymentsTotal = res?.meta?.total ?? raw.length;
+        this.razorpayPayments = raw.map((p: any) => ({
+          id: p._id,
+          date: new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          amount: p.amountRupees ?? p.amount,
+          method: p.paymentMethod ?? null,
+          status: p.status,
+          razorpayOrderId: p.razorpayOrderId,
+          razorpayPaymentId: p.razorpayPaymentId ?? null,
+        }));
+        this.paymentsLoading = false;
+      },
+      error: () => { this.paymentsLoading = false; },
+    });
+  }
+
+  loadRefundRequests(): void {
+    if (this.refundRequestsLoading) return;
+    this.refundRequestsLoading = true;
+    this.financeService.listRefundRequests({ limit: 50 }).subscribe({
+      next: (res) => {
+        const raw: any[] = res?.data?.refundRequests ?? res?.data?.requests ?? [];
+        this.refundRequests = raw.map((r: any) => ({
+          id: r._id,
+          date: new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          awb: r.shipmentId?.awb ?? r.awb ?? '—',
+          amount: r.amount ?? 0,
+          reason: r.reason ?? '—',
+          status: r.status ?? 'PENDING',
+          reviewNote: r.reviewNote ?? '—',
+        }));
+        this.refundRequestsLoading = false;
+      },
+      error: (err) => { console.error('Refund requests load failed', err); this.refundRequestsLoading = false; },
     });
   }
 
   loadDisputes(): void {
     this.disputeService.listDisputes({ limit: 50 }).subscribe({
       next: (res) => {
-        if (res.data && res.data.items) {
+        if (res.data?.items) {
           this.disputes = res.data.items.map((d: any) => ({
             id: d._id,
             date: new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -139,122 +224,142 @@ export class Payments implements OnInit {
           }));
         }
       },
-      error: (err) => console.error('Failed to load disputes:', err)
+      error: (err) => console.error('Disputes load failed', err),
     });
   }
 
-  selectPackage(amount: number) {
+  // ── Top-up ────────────────────────────────────────────────────────────────
+
+  selectPackage(amount: number): void {
     this.selectedPackage = amount;
+    this.topupSuccess = '';
+    this.topupError = '';
   }
 
-  submitTopUp() {
+  async submitTopUp(): Promise<void> {
     if (!this.selectedPackage) {
-      alert('Please select an amount to request.');
+      this.topupError = 'Please select an amount to add.';
       return;
     }
+    this.isPaymentProcessing = true;
+    this.topupSuccess = '';
+    this.topupError = '';
+    try {
+      const result = await this.financeService.startRazorpayWalletTopup(this.selectedPackage, this.topUpMethod);
+      this.balance = result.balance;
+      this.topupSuccess = `₹${this.selectedPackage.toLocaleString('en-IN')} added to your wallet successfully!`;
+      this.selectedPackage = null;
+      // Force refresh after successful payment
+      this.transactions = [];
+      this.loadTransactions();
+      this.razorpayPayments = [];
+      this.paymentsLoading = false; // reset guard so refresh works
+    } catch (err: any) {
+      this.topupError = err?.error?.message || err?.message || 'Payment could not be completed.';
+    } finally {
+      this.isPaymentProcessing = false;
+    }
+  }
 
-    this.financeService.createRazorpayOrder(this.selectedPackage).subscribe({
-      next: (res) => {
-        const order = res.data;
-        const razorpayKey = order.razorpayKey;
-        const orderId = order.orderId;
-        const paymentId = order.paymentId;
-        const amount = order.amount;
+  // ── Refund Request Form ───────────────────────────────────────────────────
 
-        // If Razorpay object exists on window, open it; otherwise simulate success
-        const RazorpayObj = (window as any).Razorpay;
-        if (RazorpayObj) {
-          const options = {
-            key: razorpayKey,
-            amount: amount,
-            currency: 'INR',
-            name: 'Vexaro Logistics',
-            description: 'Wallet Topup',
-            order_id: orderId,
-            handler: (response: any) => {
-              this.financeService.verifyPayment({
-                paymentId,
-                orderId,
-                razorpayPaymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
-              }).subscribe({
-                next: () => {
-                  alert('Payment verified and wallet credited!');
-                  this.loadWalletDetails();
-                  this.loadTransactions();
-                },
-                error: (err) => alert(err.error?.message || 'Payment verification failed.')
-              });
-            },
-            prefill: {
-              name: 'Merchant Test',
-              email: 'merchant@test.com',
-            },
-          };
-          const rzp = new RazorpayObj(options);
-          rzp.open();
-        } else {
-          // Simulate local payment success
-          const proceed = confirm('Local environment: No active Razorpay SDK found. Do you want to simulate a successful payment?');
-          if (proceed) {
-            this.financeService.verifyPayment({
-              paymentId,
-              orderId,
-              razorpayPaymentId: 'mock_pay_id_' + Math.floor(Math.random() * 100000),
-              signature: 'mock_signature',
-            }).subscribe({
-              next: () => {
-                alert('Mock payment simulated successfully! Wallet has been credited.');
-                this.loadWalletDetails();
-                this.loadTransactions();
-              },
-              error: (err) => alert(err.error?.message || 'Mock payment simulation failed.')
-            });
-          }
-        }
+  openRefundForm(): void {
+    this.showRefundForm = true;
+    this.newRefund = { shipmentId: '', amount: null, reason: '' };
+    this.refundFormError = '';
+    this.refundFormSuccess = '';
+  }
+
+  closeRefundForm(): void {
+    this.showRefundForm = false;
+  }
+
+  submitRefundRequest(): void {
+    if (!this.newRefund.shipmentId.trim() || !this.newRefund.amount || !this.newRefund.reason.trim()) {
+      this.refundFormError = 'All fields are required.';
+      return;
+    }
+    this.refundSubmitting = true;
+    this.refundFormError = '';
+    this.financeService.submitRefundRequest({
+      shipmentId: this.newRefund.shipmentId.trim(),
+      amount: this.newRefund.amount,
+      reason: this.newRefund.reason.trim(),
+    }).subscribe({
+      next: () => {
+        this.refundFormSuccess = 'Refund request submitted successfully.';
+        this.refundSubmitting = false;
+        this.newRefund = { shipmentId: '', amount: null, reason: '' };
+        this.loadRefundRequests();
+        setTimeout(() => { this.showRefundForm = false; this.refundFormSuccess = ''; }, 2000);
       },
-      error: (err) => alert(err.error?.message || 'Failed to initiate recharge.')
+      error: (err: any) => {
+        this.refundFormError = err?.error?.message ?? 'Failed to submit refund request.';
+        this.refundSubmitting = false;
+      },
     });
   }
 
+  // ── Payments pagination / filter ──────────────────────────────────────────
+
+  applyPaymentsFilter(): void {
+    this.paymentsPage = 1;
+    this.loadRazorpayPayments();
+  }
+
+  get paymentsTotalPages(): number {
+    return Math.ceil(this.paymentsTotal / this.paymentsLimit);
+  }
+
+  prevPaymentsPage(): void {
+    if (this.paymentsPage > 1) { this.paymentsPage--; this.loadRazorpayPayments(); }
+  }
+
+  nextPaymentsPage(): void {
+    if (this.paymentsPage < this.paymentsTotalPages) { this.paymentsPage++; this.loadRazorpayPayments(); }
+  }
+
+  // ── Computed badges ───────────────────────────────────────────────────────
+
   get totalSpent(): number {
-    return this.transactions.filter(t => t.type === 'debit' && t.status === 'Success')
-      .reduce((s, t) => s + t.amount, 0);
+    return this.transactions.filter(t => t.type === 'debit').reduce((s, t) => s + t.amount, 0);
   }
 
   get pendingRequestsCount(): number {
-    return this.topUpRequests.filter(r => r.status === 'Pending').length;
+    // Recharge requests tab repurposed — show pending refund requests count
+    return this.refundRequests.filter(r => r.status === 'PENDING').length;
   }
 
   get pendingRefundsCount(): number {
-    return this.refunds.filter(r => r.status === 'Pending').length;
+    return this.refundRequests.filter(r => r.status === 'PENDING').length;
   }
 
   get totalDisputeDeductions(): number {
-    return this.disputes.filter(d => d.status === 'Applied')
-      .reduce((s, d) => s + d.deduction, 0);
+    return this.disputes.filter(d => d.status === 'Applied').reduce((s, d) => s + d.deduction, 0);
   }
 
-  openContest(dispute: WeightDispute) {
+  // ── Contest Dispute ───────────────────────────────────────────────────────
+
+  openContest(dispute: WeightDispute): void {
     this.contestingDispute = dispute;
     this.contestNote = '';
     this.selectedFileNames = [];
     this.showContestModal = true;
   }
 
-  closeContest() {
+  closeContest(): void {
     this.showContestModal = false;
     this.contestingDispute = null;
   }
 
-  onFileChange(event: Event) {
+  onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files) {
       this.selectedFileNames = Array.from(input.files).map(f => f.name);
     }
   }
 
-  submitContest() {
+  submitContest(): void {
     if (!this.contestNote.trim()) {
       alert('Please describe why you believe this deduction is incorrect.');
       return;
@@ -262,13 +367,24 @@ export class Payments implements OnInit {
     if (this.contestingDispute) {
       const mockImageUrls = this.selectedFileNames.map(f => `/uploads/proofs/${f}`);
       this.disputeService.submitProof(this.contestingDispute.id, mockImageUrls).subscribe({
-        next: (updated) => {
+        next: () => {
           alert('Dispute proof submitted successfully!');
           this.loadDisputes();
           this.closeContest();
         },
-        error: (err) => alert(err.error?.message || 'Failed to submit proof.')
+        error: (err) => alert(err.error?.message || 'Failed to submit proof.'),
       });
     }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  private formatTxType(type: string): string {
+    const map: Record<string, string> = {
+      TOPUP: 'Wallet Top-up', CHARGE: 'Shipment Charge', REFUND: 'Refund',
+      COD_CREDIT: 'COD Credit', TRANSFER_CREDIT: 'Transfer In',
+      TRANSFER_DEBIT: 'Transfer Out', DISPUTE_CHARGE: 'Dispute Deduction', RTO_CHARGE: 'RTO Charge',
+    };
+    return map[type] ?? type;
   }
 }

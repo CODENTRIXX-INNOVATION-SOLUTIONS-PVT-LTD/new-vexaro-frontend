@@ -1215,3 +1215,14 @@ tbody tr:hover {
         font-size: 13px;
     }
 }
+
+/* ===== Spinner used in pay button ===== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* status badge – refunded variant */
+.status-badge.refunded {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
