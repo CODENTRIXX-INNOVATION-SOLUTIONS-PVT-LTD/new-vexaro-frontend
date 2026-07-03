@@ -54,7 +54,7 @@ export class DistributorDashboard {
       expanded: false,
       children: [
         { label: 'My Wallet (Razorpay)', route: '/distributor/wallet' },
-        { label: 'My Wallet', route: '/distributor/finance/wallet' },
+        // { label: 'My Wallet', route: '/distributor/finance/wallet' },
         { label: 'Transactions', route: '/distributor/finance/transactions' },
         { label: 'Settlements', route: '/distributor/finance/settlements' }
       ]
@@ -106,7 +106,7 @@ export class DistributorDashboard {
       children: [
         { label: 'Profile', route: '/distributor/settings/profile' },
         { label: 'Company Details', route: '/distributor/settings/company-details' },
-        { label: 'Notifications', route: '/distributor/settings/notifications' },
+        // { label: 'Notifications', route: '/distributor/settings/notifications' },
         { label: 'Security', route: '/distributor/settings/security' }
       ]
     },
