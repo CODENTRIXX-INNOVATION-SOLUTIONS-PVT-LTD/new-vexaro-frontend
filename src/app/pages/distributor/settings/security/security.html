@@ -38,49 +38,6 @@
             </button>
         </div>
 
-        <!-- 2FA Settings -->
-        <div class="section-title mt-4">
-            <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Two-Factor Authentication (2FA)</h4>
-        </div>
-
-        <div class="two-factor-box">
-            <div class="info">
-                <h5>Protect your account with 2-Step Verification</h5>
-                <p>When enabled, you'll need to enter a code sent to your registered mobile number during login.</p>
-                <div class="status-badge" [class.active]="twoFactorEnabled">
-                    {{twoFactorEnabled ? '2FA is Currently Enabled' : '2FA is Currently Disabled'}}
-                </div>
-            </div>
-            <div class="action">
-                <button class="toggle-btn" [class.off]="twoFactorEnabled" (click)="toggle2FA()">
-                    {{twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}}
-                </button>
-            </div>
-        </div>
-
-        <!-- Active Sessions -->
-        <div class="section-title mt-4">
-            <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Active Sessions</h4>
-        </div>
-        
-        <div class="session-list">
-            <div class="session-item active">
-                <div class="device-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="20" x2="22" y2="20"></line><line x1="12" y1="17" x2="12" y2="20"></line></svg></div>
-                <div class="device-info">
-                    <h5>Windows 11 &bull; Chrome Browser</h5>
-                    <p>Mumbai, India &bull; IP: 103.112.x.x</p>
-                    <span class="current-badge">Current Session</span>
-                </div>
-            </div>
-            <div class="session-item">
-                <div class="device-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18"></line></svg></div>
-                <div class="device-info">
-                    <h5>iPhone 14 Pro &bull; Vexaro App</h5>
-                    <p>Mumbai, India &bull; Last active: 2 hours ago</p>
-                </div>
-                <button class="logout-btn">Log out</button>
-            </div>
-        </div>
-
+       
     </div>
 </div>
