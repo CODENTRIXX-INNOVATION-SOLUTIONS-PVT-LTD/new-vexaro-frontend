@@ -83,7 +83,7 @@
             </div>
             <div class="form-group">
               <input type="tel" id="phone" [(ngModel)]="phone" placeholder=" " name="phone" maxlength="10">
-              <label for="phone">Mobile Number (10 digits)</label>
+              <label for="phone">Mobile Number (10 digits) <span class="required">*</span></label>
             </div>
             <div class="form-group">
               <input type="text" id="companyName" [(ngModel)]="companyName" placeholder=" " name="companyName">
@@ -166,6 +166,11 @@
       }
 
       <!-- Wizard Footer -->
+      @if (errorMessage) {
+        <div class="footer-error" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
       <div class="wizard-footer">
         <button class="btn-cancel" (click)="cancel()">Cancel</button>
         <div class="footer-actions">
