@@ -21,7 +21,7 @@ export class Faqs {
   searchTerm: string = '';
   activeCategory: string = 'All';
 
-  categories = ['All', 'Getting Started', 'Merchants', 'Finance & Margins', 'Technical Support'];
+  categories = ['All', 'Getting Started', 'Merchants', 'Finance & Margins'];
 
   faqs: FAQ[] = [
     { question: 'How do I onboard a new merchant?', answer: 'Go to Merchants -> Manage Merchants -> Onboard Merchant. Fill in their details. Once they verify their email, you can assign them a Rate Card.', category: 'Getting Started', expanded: false },

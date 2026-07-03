@@ -34,7 +34,7 @@ import { DistributorWallet } from "./pages/distributor/wallet/wallet";
 
 import { AllShipments } from "./pages/distributor/all-shipments/all-shipments";
 import { CodManagement } from "./pages/distributor/finance/cod-management/cod-management";
-import { Wallet } from "./pages/distributor/finance/wallet/wallet";
+// import { Wallet } from "./pages/distributor/finance/wallet/wallet";
 import { Transactions } from "./pages/distributor/finance/transactions/transactions";
 import { Settlements } from "./pages/distributor/finance/settlements/settlements";
 
@@ -214,7 +214,7 @@ export const routes: Routes = [
       { path: "merchant-finance/transactions", component: Transactions },
 
       { path: "finance/cod-management", component: CodManagement },
-      { path: "finance/wallet", component: Wallet },
+      // { path: "finance/wallet", component: Wallet },
       { path: "finance/transactions", component: Transactions },
       { path: "finance/settlements", component: Settlements },
       { path: "finance", redirectTo: "finance/wallet", pathMatch: "full" },
@@ -247,7 +247,7 @@ export const routes: Routes = [
 
       { path: "settings/profile", component: ProfileSettings },
       { path: "settings/company-details", component: CompanyDetails },
-      { path: "settings/notifications", component: NotificationsSettings },
+      // { path: "settings/notifications", component: NotificationsSettings },
       { path: "settings/security", component: SecuritySettings },
       { path: "settings/api-settings", component: ApiSettings },
       { path: "settings", redirectTo: "settings/profile", pathMatch: "full" },
