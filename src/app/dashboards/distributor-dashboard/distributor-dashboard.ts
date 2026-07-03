@@ -53,6 +53,7 @@ export class DistributorDashboard {
       icon: 'fa-wallet',
       expanded: false,
       children: [
+        { label: 'My Wallet (Razorpay)', route: '/distributor/wallet' },
         { label: 'My Wallet', route: '/distributor/finance/wallet' },
         { label: 'Transactions', route: '/distributor/finance/transactions' },
         { label: 'Settlements', route: '/distributor/finance/settlements' }

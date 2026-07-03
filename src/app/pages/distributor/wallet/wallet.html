@@ -1,116 +1,295 @@
 <div class="page-container">
-    <div class="page-header">
-        <div>
-            <h2>My Wallet</h2>
-            <div class="breadcrumb">
-                <span>Distributor</span>
-                <span>›</span>
-                <span class="active">Wallet</span>
-            </div>
-        </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="hdr-icon">
+          <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6" />
+        </svg>
+        My Wallet
+      </h2>
+      <div class="breadcrumb">
+        <span>Distributor</span><span>›</span><span class="active">Wallet</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Balance Banner -->
+  <div class="balance-hero">
+    <div class="balance-left">
+      <div class="balance-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em">
+          <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6" />
+        </svg>
+      </div>
+      <div>
+        <div class="balance-label">Current Wallet Balance</div>
+        <div class="balance-amount">₹{{ balance.toLocaleString('en-IN') }}</div>
+      </div>
     </div>
 
-    <!-- Balance & Quick Overview -->
-    <div class="wallet-overview">
-        <div class="card balance-card">
-            <div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg></div>
-            <div class="card-info">
-                <span class="card-label">Current Wallet Balance</span>
-                <h2 class="card-value">₹{{ balance.toLocaleString('en-IN') }}</h2>
-            </div>
-        </div>
+    <!-- Summary chips -->
+    <div class="balance-chips">
+      <div class="bchip">
+        <span class="bchip-val">{{ successPaymentsCount }}</span>
+        <span class="bchip-label">Successful Top-ups</span>
+      </div>
+      <div class="bchip">
+        <span class="bchip-val">₹{{ totalTopupAmount.toLocaleString('en-IN') }}</span>
+        <span class="bchip-label">Total Added via Razorpay</span>
+      </div>
     </div>
 
-    <div class="wallet-grid">
-        <!-- Recharge Request Form -->
-        <div class="card form-card">
-            <div class="card-title">
-                <div class="icon-circle blue">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                </div>
-                <span>Request Wallet Recharge</span>
-            </div>
+    <button class="hero-topup-btn" (click)="changeTab('topup')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      Add Funds
+    </button>
+  </div>
 
-            <form (ngSubmit)="submitRequest()" #rechargeForm="ngForm">
-                <!-- Package Chips Selector -->
-                <div class="form-group">
-                    <label>Select Recharge Amount <span class="required">*</span></label>
-                    <div class="package-chips">
-                        <button type="button" 
-                            *ngFor="let amt of packages" 
-                            class="chip-btn" 
-                            [class.selected]="selectedPackage === amt" 
-                            (click)="selectPackage(amt)">
-                            ₹{{ amt.toLocaleString('en-IN') }}
-                        </button>
-                    </div>
-                </div>
+  <!-- Tabs -->
+  <div class="wallet-tabs">
+    <button class="tab-btn" [class.active]="activeTab === 'topup'" (click)="changeTab('topup')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+      Add Money via Razorpay
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'history'" (click)="changeTab('history')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      </svg>
+      Payment History
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="changeTab('transactions')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" />
+        <polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" />
+      </svg>
+      Transaction History
+    </button>
+  </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="paymentMethod">Payment Method</label>
-                        <select id="paymentMethod" [(ngModel)]="paymentMethod" name="paymentMethod">
-                            <option value="UPI">UPI</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Card">Card</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="referenceId">Payment Reference ID</label>
-                        <input type="text" id="referenceId" [(ngModel)]="referenceId" name="referenceId" placeholder="e.g. UPI Ref ID">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit" [disabled]="!selectedPackage">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Submit Request
-                </button>
-            </form>
-        </div>
-
-        <!-- Request History Table -->
-        <div class="card table-card">
-            <div class="card-title">
-                <div class="icon-circle green">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline><line x1="12" y1="7" x2="12" y2="12"></line><line x1="12" y1="12" x2="16" y2="14"></line></svg>
-                </div>
-                <span>Request History</span>
-            </div>
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Method</th>
-                            <th>Reference</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let req of myRequests">
-                            <td class="req-id">{{ req.requestId }}</td>
-                            <td class="date-cell">{{ req.date }}</td>
-                            <td class="amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
-                            <td><span class="method-badge">{{ req.method }}</span></td>
-                            <td class="ref-cell">{{ req.reference }}</td>
-                            <td>
-                                <span class="badge" 
-                                    [class.success]="req.status === 'Approved'"
-                                    [class.pending]="req.status === 'Pending'"
-                                    [class.failed]="req.status === 'Rejected'">
-                                    {{ req.status }}
-                                </span>
-                            </td>
-                        </tr>
-                        <tr *ngIf="myRequests.length === 0">
-                            <td colspan="6" class="empty-state">No requests found.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- ======== TAB: ADD MONEY ======== -->
+  @if (activeTab === 'topup') {
+  <div class="form-card">
+    <div class="card-header">
+      <h3>Add Money to Wallet</h3>
+      <p class="card-sub">Securely pay via Razorpay — wallet is credited instantly after payment capture.</p>
     </div>
+
+    <!-- Alerts -->
+    @if (successMessage) {
+    <div class="alert alert-success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      {{ successMessage }}
+    </div>
+    }
+    @if (errorMessage) {
+    <div class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em">
+        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+      </svg>
+      {{ errorMessage }}
+    </div>
+    }
+
+    <label class="form-label">Select Amount</label>
+    <div class="packages-grid">
+      @for (pkg of packages; track pkg) {
+      <button class="pkg-chip" [class.selected]="selectedPackage === pkg" (click)="selectPackage(pkg)">
+        ₹{{ pkg.toLocaleString('en-IN') }}
+      </button>
+      }
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select [(ngModel)]="topUpMode" name="topUpMode">
+          <option value="checkout">Razorpay Checkout (Card / UPI / Net Banking)</option>
+          <option value="upi_qr">UPI / QR via Razorpay</option>
+        </select>
+      </div>
+    </div>
+
+    @if (selectedPackage) {
+    <div class="selected-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      Paying <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via
+      <strong>{{ topUpMode === 'upi_qr' ? 'UPI / QR' : 'Razorpay Checkout' }}</strong>
+    </div>
+    }
+
+    <div class="form-actions">
+      <button class="btn-submit" (click)="startTopup()" [disabled]="!selectedPackage || isProcessing">
+        @if (isProcessing) {
+        <span class="spinner"></span> Opening Razorpay…
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+          <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+        </svg>
+        Pay with Razorpay
+        }
+      </button>
+    </div>
+
+    <!-- Razorpay badge -->
+    <div class="rzp-badge">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px">
+        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#072654"/>
+        <path d="M9.5 7L15.5 12L9.5 17" stroke="#3395FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Secured by Razorpay · 256-bit SSL encryption
+    </div>
+  </div>
+  }
+
+  <!-- ======== TAB: PAYMENT HISTORY ======== -->
+  @if (activeTab === 'history') {
+  <div class="table-card">
+    <div class="card-header-row">
+      <div>
+        <h3>Razorpay Payment History</h3>
+        <p class="card-sub">All wallet top-up attempts via Razorpay</p>
+      </div>
+    </div>
+
+    @if (paymentsLoading) {
+    <div class="loading-state">
+      <span class="spinner dark"></span> Loading payments…
+    </div>
+    } @else if (payments.length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:2.5em;height:2.5em;color:#cbd5e1">
+        <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+      <p>No payments yet. Add money via Razorpay to get started.</p>
+    </div>
+    } @else {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Payment ID</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of payments; track p.id) {
+          <tr>
+            <td class="id-cell">{{ p.razorpayOrderId }}</td>
+            <td class="date-cell">{{ p.date }}</td>
+            <td class="amount-cell" [class.credit-amt]="p.status === 'SUCCESS'">
+              ₹{{ p.amount.toLocaleString('en-IN') }}
+            </td>
+            <td>
+              @if (p.method) {
+              <span class="method-badge">{{ p.method | uppercase }}</span>
+              } @else {
+              <span class="text-muted">—</span>
+              }
+            </td>
+            <td class="id-cell small">{{ p.razorpayPaymentId || '—' }}</td>
+            <td>
+              <span class="status-badge"
+                [class.success]="p.status === 'SUCCESS'"
+                [class.pending]="p.status === 'PENDING'"
+                [class.failed]="p.status === 'FAILED'"
+                [class.refunded]="p.status === 'REFUNDED'">
+                {{ p.status }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+    <div class="pagination">
+      <button class="page-btn" (click)="prevPage()" [disabled]="paymentsPage === 1">← Prev</button>
+      <span class="page-info">Page {{ paymentsPage }} of {{ totalPages }}</span>
+      <button class="page-btn" (click)="nextPage()" [disabled]="paymentsPage === totalPages">Next →</button>
+    </div>
+    }
+    }
+  </div>
+  }
+
+  <!-- ======== TAB: TRANSACTION HISTORY ======== -->
+  @if (activeTab === 'transactions') {
+  <div class="table-card">
+    <div class="card-header">
+      <h3>Transaction History</h3>
+      <p class="card-sub">All wallet credits and debits</p>
+    </div>
+
+    @if (txLoading) {
+    <div class="loading-state">
+      <span class="spinner dark"></span> Loading transactions…
+    </div>
+    } @else if (transactions.length === 0) {
+    <div class="empty-state">
+      <p>No transactions found.</p>
+    </div>
+    } @else {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Txn ID</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of transactions; track t.id) {
+          <tr>
+            <td class="id-cell small">{{ t.id }}</td>
+            <td class="date-cell">{{ t.date }}</td>
+            <td>{{ t.description }}</td>
+            <td>
+              <span class="type-badge" [class.credit]="t.type === 'credit'" [class.debit]="t.type === 'debit'">
+                {{ t.type === 'credit' ? '↓ Credit' : '↑ Debit' }}
+              </span>
+            </td>
+            <td class="amount-cell" [class.credit-amt]="t.type === 'credit'" [class.debit-amt]="t.type === 'debit'">
+              {{ t.type === 'credit' ? '+' : '-' }}₹{{ t.amount.toLocaleString('en-IN') }}
+            </td>
+            <td class="date-cell">{{ t.reference }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
 </div>

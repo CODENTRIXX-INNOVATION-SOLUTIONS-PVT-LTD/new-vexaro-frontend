@@ -74,17 +74,18 @@ export class Wallet implements OnInit {
   }
 
   async startRazorpayPayment() {
-    if (this.topupAmount < 1000) {
-      alert('Minimum online topup amount is INR 1,000');
+    if (!this.topupAmount || this.topupAmount < 1000) {
+      alert('Minimum online top-up amount is ₹1,000');
       return;
     }
 
     this.isPaymentProcessing = true;
     try {
-      await this.financeService.startRazorpayWalletTopup(this.topupAmount, this.paymentMethod);
+      const result = await this.financeService.startRazorpayWalletTopup(this.topupAmount, this.paymentMethod);
+      this.balance = result.balance ?? this.balance;
       this.isPaymentProcessing = false;
       this.closeTopupModal();
-      alert(`Payment successful. INR ${this.topupAmount.toLocaleString('en-IN')} has been added to your available balance.`);
+      alert(`Payment successful. ₹${this.topupAmount.toLocaleString('en-IN')} has been added to your wallet.`);
       this.loadWalletData();
     } catch (err: any) {
       alert(err?.error?.message || err?.message || 'Payment could not be completed.');
