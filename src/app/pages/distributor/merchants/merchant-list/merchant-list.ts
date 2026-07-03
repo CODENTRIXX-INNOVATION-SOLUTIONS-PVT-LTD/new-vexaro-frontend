@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
 
 export interface DistributorMerchant {
   id: string;
@@ -25,42 +27,59 @@ export interface DistributorMerchant {
   templateUrl: './merchant-list.html',
   styleUrl: './merchant-list.css'
 })
-export class DistributorMerchantList implements OnInit {
+export class DistributorMerchantList implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   merchants: DistributorMerchant[] = [];
   filteredMerchants: DistributorMerchant[] = [];
   searchTerm: string = '';
   statusFilter: string = 'All';
   isLoading: boolean = false;
+  errorMessage: string = '';
   viewMode: 'table' | 'grid' = 'grid';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private merchantService: MerchantService,
+  ) {}
 
   ngOnInit() {
     this.loadMerchants();
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadMerchants() {
     this.isLoading = true;
-    // Mocking real-world load with dummy data for UI display
-    setTimeout(() => {
-      this.merchants = [
-        { id: '1', merchantCode: 'MRC-1001', businessName: 'Fashion Hub Pvt Ltd', contactPerson: 'Ramesh Sharma', phone: '9876543210', email: 'ramesh@fashionhub.com', city: 'Mumbai', warehouseId: 'WH-001', walletBalance: 45000, totalShipments: 1250, status: 'Active', createdAt: '2026-01-15' },
-        { id: '2', merchantCode: 'MRC-1002', businessName: 'Tech Electro', contactPerson: 'Suresh Patil', phone: '9876543211', email: 'suresh@techelectro.in', city: 'Pune', warehouseId: 'WH-002', walletBalance: 12500, totalShipments: 420, status: 'Active', createdAt: '2026-02-20' },
-        { id: '3', merchantCode: 'MRC-1003', businessName: 'Organic Grocers', contactPerson: 'Anita Desai', phone: '9876543212', email: 'anita@organicgrocers.com', city: 'Delhi', warehouseId: 'WH-003', walletBalance: 0, totalShipments: 50, status: 'Inactive', createdAt: '2026-05-10' },
-        { id: '4', merchantCode: 'MRC-1004', businessName: 'Sneaker World', contactPerson: 'Karan Singh', phone: '9876543213', email: 'karan@sneakerworld.in', city: 'Bangalore', warehouseId: 'WH-004', walletBalance: -500, totalShipments: 320, status: 'Suspended', createdAt: '2026-03-05' }
-      ];
-      this.isLoading = false;
-      this.applyFilters();
-    }, 800);
+    this.errorMessage = '';
+
+    this.merchantService.listMerchants({ limit: 100 }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.merchants = res.data.users.map((merchant) => this.toDistributorMerchant(merchant));
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (err) => {
+        this.merchants = [];
+        this.filteredMerchants = [];
+        this.errorMessage = err?.error?.message || 'Failed to load merchants. Please try again.';
+        this.isLoading = false;
+      },
+    });
   }
 
   applyFilters() {
+    const search = this.searchTerm.trim().toLowerCase();
     this.filteredMerchants = this.merchants.filter(m => {
       const matchesSearch =
-        m.businessName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        m.merchantCode.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        m.contactPerson.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        m.phone.includes(this.searchTerm);
+        !search ||
+        m.businessName.toLowerCase().includes(search) ||
+        m.merchantCode.toLowerCase().includes(search) ||
+        m.contactPerson.toLowerCase().includes(search) ||
+        m.email.toLowerCase().includes(search) ||
+        m.phone.includes(this.searchTerm.trim());
       const matchesStatus = this.statusFilter === 'All' || m.status === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -85,5 +104,25 @@ export class DistributorMerchantList implements OnInit {
 
   setViewMode(mode: 'table' | 'grid') {
     this.viewMode = mode;
+  }
+
+  private toDistributorMerchant(merchant: MerchantUser): DistributorMerchant {
+    const fullName = `${merchant.firstName || ''} ${merchant.lastName || ''}`.trim();
+    const warehouse = merchant.warehouse;
+
+    return {
+      id: merchant.id,
+      merchantCode: merchant.id ? `MRC-${merchant.id.slice(-6).toUpperCase()}` : 'MRC',
+      businessName: merchant.companyName || fullName || merchant.email,
+      contactPerson: fullName || merchant.email,
+      phone: merchant.phone || '',
+      email: merchant.email,
+      city: warehouse?.city || '',
+      warehouseId: warehouse?.warehouseId || '',
+      walletBalance: 0,
+      totalShipments: 0,
+      status: merchant.isActive ? 'Active' : 'Inactive',
+      createdAt: merchant.createdAt,
+    };
   }
 }

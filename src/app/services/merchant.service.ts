@@ -21,6 +21,8 @@ export interface MerchantUser {
 }
 
 export interface MerchantWarehouse {
+  _id?: string;
+  id?: string;
   warehouseId: string;
   address: string;
   pincode: string;
@@ -59,6 +61,12 @@ export interface MerchantDetailResponse {
   data: MerchantUser;
 }
 
+export interface MerchantWarehousesResponse {
+  success: boolean;
+  message: string;
+  data: { warehouses: MerchantWarehouse[] };
+}
+
 export interface MerchantListQuery {
   search?: string;
   page?: number;
@@ -87,6 +95,14 @@ export class MerchantService {
    */
   getMerchantById(id: string): Observable<MerchantDetailResponse> {
     return this.http.get<MerchantDetailResponse>(`${this.baseUrl}/users/${id}`);
+  }
+
+  /**
+   * GET /users/warehouses
+   * Returns active warehouses for the authenticated merchant.
+   */
+  listMyWarehouses(): Observable<MerchantWarehousesResponse> {
+    return this.http.get<MerchantWarehousesResponse>(`${this.baseUrl}/users/warehouses`);
   }
 
   /**
