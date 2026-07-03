@@ -36,6 +36,8 @@ export class ShipmentService {
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.search) httpParams = httpParams.set('search', params.search);
+    if (params.merchant) httpParams = httpParams.set('merchant', params.merchant);
+    if (params.distributor) httpParams = httpParams.set('distributor', params.distributor);
     return this.http.get<ShipmentListResponse>(`${this.baseUrl}/shipments`, { params: httpParams });
   }
 

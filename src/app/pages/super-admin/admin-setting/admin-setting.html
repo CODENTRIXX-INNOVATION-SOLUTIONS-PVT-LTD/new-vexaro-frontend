@@ -5,118 +5,160 @@
         <p>Manage company, notification, and business rule configurations</p>
     </div>
 
-    <!-- Company Settings -->
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading settings...</p>
+    </div>
 
-    <div class="card">
+    <!-- Success Message -->
+    <div *ngIf="saveMessage()" class="success-state" role="alert" aria-live="polite">
+        <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <p>{{ saveMessage() }}</p>
+    </div>
 
-        <h2>Company Settings</h2>
+    <!-- Error Message -->
+    <div *ngIf="error()" class="error-state" role="alert" aria-live="assertive">
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <circle cx="12" cy="16" r=".5" fill="currentColor"></circle>
+        </svg>
+        <p>{{ error() }}</p>
+    </div>
 
-        <div class="form-grid">
+    <!-- Company Settings Card -->
+    <div class="card" *ngIf="!isLoading()">
 
+        <div class="card-header">
+            <h2>Company Settings</h2>
+            <div class="button-group">
+                <button 
+                    *ngIf="!isEditing()" 
+                    class="edit-btn" 
+                    (click)="enableEdit()"
+                    type="button"
+                    aria-label="Edit company settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Edit
+                </button>
+                
+                <button 
+                    *ngIf="isEditing()" 
+                    class="cancel-btn" 
+                    (click)="cancelEdit()"
+                    type="button"
+                    aria-label="Cancel editing">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Form Grid -->
+        <form class="form-grid" *ngIf="!isLoading()">
+
+            <!-- Company Name -->
             <div class="form-group">
-                <label>Company Name</label>
-                <input type="text"
-                    [(ngModel)]="settings.companySettings.companyName">
+                <label for="companyName">Company Name <span class="required" aria-label="required">*</span></label>
+                <input 
+                    id="companyName"
+                    type="text" 
+                    [(ngModel)]="settings.companyName" 
+                    [disabled]="!isEditing()"
+                    name="companyName"
+                    placeholder="Enter company name"
+                    [attr.aria-readonly]="!isEditing()">
             </div>
 
+            <!-- Logo -->
             <div class="form-group">
-                <label>Logo</label>
-                <input type="file">
+                <label for="logo">Logo</label>
+                <input 
+                    id="logo"
+                    type="file" 
+                    [disabled]="!isEditing()"
+                    name="logo"
+                    accept="image/*"
+                    [attr.aria-readonly]="!isEditing()">
+                <small class="form-hint" *ngIf="isEditing()">Accepted formats: JPG, PNG, GIF (max 5MB)</small>
             </div>
 
+            <!-- GST Number -->
             <div class="form-group">
-                <label>GST Number</label>
-                <input type="text"
-                    [(ngModel)]="settings.companySettings.gstNumber">
+                <label for="gstNumber">GST Number</label>
+                <input 
+                    id="gstNumber"
+                    type="text" 
+                    [(ngModel)]="settings.gstNumber" 
+                    [disabled]="!isEditing()"
+                    name="gstNumber"
+                    placeholder="Enter GST number"
+                    [attr.aria-readonly]="!isEditing()">
             </div>
 
+            <!-- Address -->
             <div class="form-group full-width">
-                <label>Address</label>
-                <textarea rows="4"
-                    [(ngModel)]="settings.companySettings.address">
+                <label for="address">Address <span class="required" aria-label="required">*</span></label>
+                <textarea 
+                    id="address"
+                    rows="4" 
+                    [(ngModel)]="settings.address" 
+                    [disabled]="!isEditing()"
+                    name="address"
+                    placeholder="Enter company address"
+                    [attr.aria-readonly]="!isEditing()">
                 </textarea>
             </div>
 
+            <!-- Support Email -->
             <div class="form-group">
-                <label>Support Email</label>
-                <input type="email"
-                    [(ngModel)]="settings.companySettings.supportEmail">
+                <label for="supportEmail">Support Email <span class="required" aria-label="required">*</span></label>
+                <input 
+                    id="supportEmail"
+                    type="email" 
+                    [(ngModel)]="settings.supportEmail" 
+                    [disabled]="!isEditing()"
+                    name="supportEmail"
+                    placeholder="Enter support email"
+                    [attr.aria-readonly]="!isEditing()">
+                <small class="form-hint" *ngIf="isEditing()">Example: support@company.com</small>
             </div>
 
+        </form>
+
+        <!-- Save Button Container -->
+        <div class="button-container" *ngIf="isEditing()">
+            <button 
+                class="save-btn" 
+                (click)="saveSettings()" 
+                [disabled]="isLoading()"
+                type="button"
+                [attr.aria-busy]="isLoading()"
+                aria-label="Save company settings">
+                <span *ngIf="!isLoading()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save Settings
+                </span>
+                <span *ngIf="isLoading()" class="loading-text">
+                    <span class="spinner-small"></span>
+                    Saving...
+                </span>
+            </button>
         </div>
 
     </div>
-
-    <!-- Notification Settings -->
-
-    <div class="card">
-
-        <h2>Notification Settings</h2>
-
-        <div class="setting-row">
-            <span>SMS Notifications</span>
-            <input type="checkbox"
-                [(ngModel)]="settings.notificationSettings.smsEnabled">
-        </div>
-
-        <div class="setting-row">
-            <span>Email Notifications</span>
-            <input type="checkbox"
-                [(ngModel)]="settings.notificationSettings.emailEnabled">
-        </div>
-
-        <div class="setting-row">
-            <span>WhatsApp Notifications</span>
-            <input type="checkbox"
-                [(ngModel)]="settings.notificationSettings.whatsappEnabled">
-        </div>
-
-    </div>
-
-    <!-- Platform Business Rules Configuration -->
-    <div class="card">
-        <h2>Business Rules Configuration</h2>
-        
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Platform Rate Markup (%)</label>
-                <div class="input-with-symbol">
-                    <input type="number" [(ngModel)]="settings.platformRateConfig.markupPercentage" step="0.1">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Base Weight Limit (kg)</label>
-                <div class="input-with-symbol">
-                    <input type="number" [(ngModel)]="settings.weightSlabManagement.baseWeightLimit" step="0.5">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Extra Weight Step (kg)</label>
-                <div class="input-with-symbol">
-                    <input type="number" [(ngModel)]="settings.weightSlabManagement.extraWeightStep" step="0.5">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Max Compensation Ceiling (₹)</label>
-                <div class="input-with-symbol">
-                    <input type="number" [(ngModel)]="settings.compensationCeiling.defaultCapPerShipment">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Weight Dispute Window (days)</label>
-                <div class="input-with-symbol">
-                    <input type="number" [(ngModel)]="settings.weightDisputeWindow.defaultDaysAllowed">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <button class="save-btn" (click)="saveSettings()">
-        Save Settings
-    </button>
 
 </div>
