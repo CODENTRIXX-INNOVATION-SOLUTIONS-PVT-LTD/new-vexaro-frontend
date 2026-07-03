@@ -27,7 +27,7 @@ export interface ShipmentListResponse {
 
 @Injectable({ providedIn: 'root' })
 export class ShipmentService {
-  private readonly baseUrl = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
+  private readonly baseUrl = (window as any).__env?.apiUrl ?? '/api/v1';
   private http = inject(HttpClient);
 
   listShipments(params: any = {}): Observable<ShipmentListResponse> {

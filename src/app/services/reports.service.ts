@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
-  private readonly baseUrl = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
+  private readonly baseUrl = (window as any).__env?.apiUrl ?? '/api/v1';
   private http = inject(HttpClient);
 
   // Main Reports Overview

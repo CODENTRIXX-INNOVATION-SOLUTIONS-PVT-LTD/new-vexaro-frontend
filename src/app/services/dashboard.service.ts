@@ -28,7 +28,7 @@ export interface PieChartData {
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   // Use /api/ instead of /api/v1/ (backend rewrites /api/ to /api/v1/)
-  private readonly baseUrl = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api';
+  private readonly baseUrl = (window as any).__env?.apiUrl ?? '/api';
   private http = inject(HttpClient);
 
   /**

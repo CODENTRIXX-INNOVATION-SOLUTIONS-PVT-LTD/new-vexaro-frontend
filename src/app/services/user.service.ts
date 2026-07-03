@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class UserService {
-  private readonly baseUrl = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
+  private readonly baseUrl = (window as any).__env?.apiUrl ?? '/api/v1';
 
   private readonly jsonHeaders = new HttpHeaders({
     'Content-Type': 'application/json',

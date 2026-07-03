@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
   // Base URL can be overridden via a global __env variable (set in index.html) or fallback to localhost.
-  private readonly baseUrl = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
+  private readonly baseUrl = (window as any).__env?.apiUrl ?? '/api/v1';
 
   private readonly jsonHeaders = new HttpHeaders({
     'Content-Type': 'application/json',
