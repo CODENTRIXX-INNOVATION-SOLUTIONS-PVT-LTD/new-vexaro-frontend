@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FinanceService } from '../../../../services/finance.service';
 
 @Component({
   selector: 'app-topup-merchant-wallet',
@@ -11,6 +12,8 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrl: './topup-merchant-wallet.css'
 })
 export class TopupMerchantWallet implements OnInit {
+  private financeService = inject(FinanceService);
+
   selectedMerchantId: string = '';
   amount: number | null = null;
   remarks: string = '';
@@ -32,18 +35,29 @@ export class TopupMerchantWallet implements OnInit {
   }
 
   loadData() {
-    // TODO: GET /distributor/:id/merchants (for dropdown)
-    // TODO: GET /wallet/distributor/:id (for balance check)
-    this.distributorBalance = 850000;
-    this.merchants = [
-      { id: 'M1', businessName: 'ABC Electronics', merchantCode: 'MER001', balance: 12400 },
-      { id: 'M2', businessName: 'Global Traders', merchantCode: 'MER002', balance: 45000 },
-      { id: 'M3', businessName: 'Prime Retail', merchantCode: 'MER003', balance: 3500 },
-      { id: 'M4', businessName: 'Mega Store', merchantCode: 'MER004', balance: 0 }
-    ];
-    if (this.selectedMerchantId) {
-      this.onMerchantChange();
-    }
+    this.financeService.getMyWallet().subscribe({
+      next: (res) => {
+        this.distributorBalance = res?.data?.balance ?? 0;
+      },
+      error: (err) => console.error('Failed to load distributor wallet:', err)
+    });
+
+    this.financeService.listWallets({ limit: 100 }).subscribe({
+      next: (res) => {
+        this.merchants = (res?.data?.wallets || [])
+          .filter((w: any) => w.userId?.role === 'MERCHANT')
+          .map((w: any) => ({
+            id: w.userId?._id,
+            businessName: w.userId?.companyName || w.userId?.firstName || 'Unknown',
+            merchantCode: w.userId?.merchantCode || '—',
+            walletBalance: w.balance || 0
+          }));
+        if (this.selectedMerchantId) {
+          this.onMerchantChange();
+        }
+      },
+      error: (err) => console.error('Failed to load merchants:', err)
+    });
   }
 
   onMerchantChange() {
@@ -63,14 +77,21 @@ export class TopupMerchantWallet implements OnInit {
     if (this.isInsufficient) return;
 
     this.isSubmitting = true;
-    // TODO: POST /wallet/merchant/:merchantId/topup
-    // Body: { amount, remarks, distributorId }
-    // This deducts from distributor wallet and credits merchant wallet atomically
-    console.log('Topup:', { merchantId: this.selectedMerchantId, amount: this.amount, remarks: this.remarks });
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.router.navigate(['/distributor/merchant-finance/wallets']);
-    }, 1500);
+    this.financeService.transferToMerchant({
+      merchantId: this.selectedMerchantId,
+      amount: this.amount,
+      note: this.remarks
+    }).subscribe({
+      next: (res) => {
+        alert(`₹${this.amount} transferred successfully to merchant wallet.`);
+        this.isSubmitting = false;
+        this.router.navigate(['/distributor/merchant-finance/wallets']);
+      },
+      error: (err) => {
+        alert(err?.error?.message || 'Failed to transfer funds. Please check your balance and try again.');
+        this.isSubmitting = false;
+      }
+    });
   }
 
   cancel() {

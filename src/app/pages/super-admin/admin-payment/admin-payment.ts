@@ -134,7 +134,9 @@ export class AdminPayment implements OnInit {
   loadDistributors() {
     this.financeService.listWallets({ limit: 100 }).subscribe({
       next: (res) => {
-        this.distributors = (res?.data?.wallets || []).map((w: any) => ({
+        this.distributors = (res?.data?.wallets || [])
+          .filter((w: any) => w.userId?.role === 'DISTRIBUTOR')
+          .map((w: any) => ({
           id: w.userId?._id || w._id,
           name: w.userId?.companyName || w.userId?.firstName || 'Unknown',
           balance: w.balance || 0,
