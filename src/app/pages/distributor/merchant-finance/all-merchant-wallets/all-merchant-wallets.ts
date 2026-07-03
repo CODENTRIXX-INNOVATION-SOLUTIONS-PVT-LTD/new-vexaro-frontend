@@ -1,60 +1,71 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { FinanceService } from '../../../../services/finance.service';
 
 @Component({
   selector: 'app-all-merchant-wallets',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './all-merchant-wallets.html',
-  styleUrl: './all-merchant-wallets.css'
+  styleUrl: './all-merchant-wallets.css',
 })
 export class AllMerchantWallets implements OnInit {
+  private financeService = inject(FinanceService);
+
   merchantWallets: any[] = [];
   filteredWallets: any[] = [];
-  searchTerm: string = '';
-  isLoading: boolean = false;
-
-  totalDistributed: number = 0;
+  searchTerm = '';
+  isLoading = false;
+  totalBalance = 0;
 
   constructor(private router: Router) {}
 
-  ngOnInit() {
-    this.loadWallets();
-  }
+  ngOnInit() { this.loadWallets(); }
 
   loadWallets() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/merchant-wallets
-    this.merchantWallets = [
-      { id: 'M1', businessName: 'ABC Electronics', merchantCode: 'MER001', balance: 12400, codEscrow: 4500, status: 'Active' },
-      { id: 'M2', businessName: 'Global Traders', merchantCode: 'MER002', balance: 45000, codEscrow: 12000, status: 'Active' },
-      { id: 'M3', businessName: 'Prime Retail', merchantCode: 'MER003', balance: 3500, codEscrow: 0, status: 'Active' },
-      { id: 'M4', businessName: 'Mega Store', merchantCode: 'MER004', balance: 0, codEscrow: 1800, status: 'Suspended' }
-    ];
-    this.totalDistributed = this.merchantWallets.reduce((s, w) => s + w.balance, 0);
-    this.isLoading = false;
-    this.applyFilters();
+    this.financeService.listWallets({ limit: 200 }).subscribe({
+      next: (res) => {
+        const all: any[] = res?.data?.wallets ?? [];
+        this.merchantWallets = all
+          .filter((w: any) => w.userId?.role === 'MERCHANT')
+          .map((w: any) => ({
+            id: w.userId?._id ?? w._id,
+            businessName: w.userId?.companyName ?? w.userId?.firstName ?? 'Unknown',
+            merchantCode: w.userId?.merchantCode ?? w.userId?._id?.slice(-6)?.toUpperCase() ?? '—',
+            balance: w.balance ?? 0,
+            codEscrow: w.codEscrowBalance ?? 0,
+            status: w.isActive === false ? 'Suspended' : 'Active',
+            email: w.userId?.email ?? '—',
+          }));
+        this.totalBalance = this.merchantWallets.reduce((s, w) => s + w.balance, 0);
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (err) => {
+        console.error('Failed to load merchant wallets', err);
+        this.isLoading = false;
+      },
+    });
   }
 
   applyFilters() {
-    this.filteredWallets = this.merchantWallets.filter(w =>
-      w.businessName?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      w.merchantCode?.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
+    const q = this.searchTerm.toLowerCase();
+    this.filteredWallets = q
+      ? this.merchantWallets.filter(
+          w => w.businessName.toLowerCase().includes(q) || w.merchantCode.toLowerCase().includes(q) || w.email.toLowerCase().includes(q),
+        )
+      : [...this.merchantWallets];
   }
 
   topupMerchant(merchantId: string) {
-    this.router.navigate(['/distributor/merchant-finance/topup'], {
-      queryParams: { merchantId }
-    });
+    this.router.navigate(['/distributor/merchant-finance/topup'], { queryParams: { merchantId } });
   }
 
   viewTransactions(merchantId: string) {
-    this.router.navigate(['/distributor/merchant-finance/transactions'], {
-      queryParams: { merchantId }
-    });
+    this.router.navigate(['/distributor/merchant-finance/transactions'], { queryParams: { merchantId } });
   }
 
   viewMerchant(merchantId: string) {

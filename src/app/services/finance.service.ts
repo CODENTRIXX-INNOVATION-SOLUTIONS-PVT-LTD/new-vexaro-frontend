@@ -59,33 +59,24 @@ export class FinanceService {
 
   listWallets(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
-    if (params.page) httpParams = httpParams.set('page', params.page.toString());
-    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.page)   httpParams = httpParams.set('page',   params.page.toString());
+    if (params.limit)  httpParams = httpParams.set('limit',  params.limit.toString());
+    if (params.userId) httpParams = httpParams.set('userId', params.userId);
     return this.http.get<any>(`${this.baseUrl}/finance/wallets`, { params: httpParams });
   }
 
   listTransactions(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
-    if (params.page) httpParams = httpParams.set('page', params.page.toString());
-    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.page)   httpParams = httpParams.set('page',   params.page.toString());
+    if (params.limit)  httpParams = httpParams.set('limit',  params.limit.toString());
+    if (params.userId) httpParams = httpParams.set('userId', params.userId);
+    if (params.type)   httpParams = httpParams.set('type',   params.type);
     return this.http.get<any>(`${this.baseUrl}/finance/transactions`, { params: httpParams });
-  }
-
-  createRazorpayOrder(amount: number): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/wallet/razorpay/create-order`, { amount });
-  }
-
-  verifyPayment(payload: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  }): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/wallet/razorpay/verify`, payload);
   }
 
   async startRazorpayWalletTopup(amount: number, mode: RazorpayMode = 'checkout'): Promise<WalletTopupResult> {
     const orderResponse = await firstValueFrom(
-      this.http.post<any>(`${this.baseUrl}/wallet/razorpay/create-order`, { amount, source: mode }),
+      this.http.post<any>(`${this.baseUrl}/finance/razorpay/create-order`, { amount, source: mode }),
     );
     const order = orderResponse?.data;
     if (!order?.keyId || !order?.razorpayOrderId) {
@@ -140,6 +131,19 @@ export class FinanceService {
     return verifyResponse.data as WalletTopupResult;
   }
 
+  // Remove the old stubs that had wrong URLs and replace with corrected ones:
+  createRazorpayOrder(amount: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/razorpay/create-order`, { amount });
+  }
+
+  verifyPayment(payload: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/razorpay/verify`, payload);
+  }
+
   transferToMerchant(payload: {
     merchantId: string;
     amount: number;
@@ -184,7 +188,7 @@ export class FinanceService {
   rechargeDistributorWallet(payload: {
     distributorId: string;
     amount: number;
-    paymentMethod: string;
+    paymentMethod: 'UPI' | 'NEFT' | 'IMPS' | 'RTGS' | 'Cash' | 'Cheque';
     referenceId?: string;
   }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/finance/wallets/recharge`, payload);
@@ -209,9 +213,53 @@ export class FinanceService {
   // List recharge requests
   listRechargeRequests(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
-    if (params.page) httpParams = httpParams.set('page', params.page.toString());
-    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.page)   httpParams = httpParams.set('page',   params.page.toString());
+    if (params.limit)  httpParams = httpParams.set('limit',  params.limit.toString());
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.userId) httpParams = httpParams.set('userId', params.userId);
     return this.http.get<any>(`${this.baseUrl}/finance/recharge-requests`, { params: httpParams });
+  }
+
+  // List Razorpay payments (wallet top-ups)
+  listPayments(params: {
+    page?: number;
+    limit?: number;
+    status?: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+    dateFrom?: string;
+    dateTo?: string;
+    userId?: string;
+  } = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page)     httpParams = httpParams.set('page',     params.page.toString());
+    if (params.limit)    httpParams = httpParams.set('limit',    params.limit.toString());
+    if (params.status)   httpParams = httpParams.set('status',   params.status);
+    if (params.dateFrom) httpParams = httpParams.set('dateFrom', params.dateFrom);
+    if (params.dateTo)   httpParams = httpParams.set('dateTo',   params.dateTo);
+    if (params.userId)   httpParams = httpParams.set('userId',   params.userId);
+    return this.http.get<any>(`${this.baseUrl}/finance/payments`, { params: httpParams });
+  }
+
+  // Get single Razorpay payment detail
+  getPayment(paymentId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/finance/payments/${paymentId}`);
+  }
+
+  // Submit refund for a Razorpay payment (SA / payment owner)
+  refundRazorpayPayment(paymentId: string, reason: string, amount?: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/payments/${paymentId}/refund`, { reason, ...(amount ? { amount } : {}) });
+  }
+
+  // Submit refund request for a shipment (merchant)
+  submitRefundRequest(payload: { shipmentId: string; amount: number; reason: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/refund-requests`, payload);
+  }
+
+  // List refund requests (scoped by role)
+  listRefundRequests(params: any = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page)  httpParams = httpParams.set('page',  params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    return this.http.get<any>(`${this.baseUrl}/finance/refund-requests`, { params: httpParams });
   }
 
   // Approve recharge request
@@ -222,6 +270,29 @@ export class FinanceService {
   // Reject recharge request
   rejectRechargeRequest(requestId: string, reason?: string): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/finance/recharge-requests/${requestId}/reject`, { reason });
+  }
+
+  // SA: manually add funds to any wallet (topup)
+  topupWallet(payload: { userId: string; amount: number; note?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/topup`, payload);
+  }
+
+  // SA: manually refund a wallet
+  manualRefundWallet(payload: { userId: string; amount: number; note?: string; shipmentId?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/refund`, payload);
+  }
+
+  // Process refund request (SA/Distributor approve or reject)
+  processRefundRequest(
+    id: string,
+    payload: { status: 'APPROVED' | 'REJECTED'; reviewNote?: string },
+  ): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/finance/refund-requests/${id}/process`, payload);
+  }
+
+  // Process settlement (SA marks as COMPLETED or FAILED)
+  processSettlementById(id: string, payload: { success: boolean; note?: string }): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/finance/settlements/${id}/process`, payload);
   }
 
   private loadRazorpayCheckout(): Promise<void> {

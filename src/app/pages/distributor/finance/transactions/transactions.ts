@@ -1,15 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { FinanceService } from '../../../../services/finance.service';
 import { CsvExportService } from '../../../../shared/csv-export.service';
 
 export interface Transaction {
   id: string;
   date: string;
   type: 'Credit' | 'Debit';
-  category: 'Wallet Topup' | 'Merchant Wallet Funding' | 'Courier Charge' | 'Dispute Deduction' | 'Margin Profit';
+  category: string;
   amount: number;
-  status: 'Completed' | 'Pending' | 'Failed';
+  status: string;
   reference: string;
 }
 
@@ -18,38 +20,80 @@ export interface Transaction {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './transactions.html',
-  styleUrl: './transactions.css'
+  styleUrl: './transactions.css',
 })
 export class Transactions implements OnInit {
+  private financeService = inject(FinanceService);
+  private csvService = inject(CsvExportService);
+  private route = inject(ActivatedRoute);
+
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
-  isLoading: boolean = false;
+  isLoading = false;
 
-  dateFilter: string = '';
-  typeFilter: string = 'All';
+  // Filters
+  dateFilter = '';
+  typeFilter = 'All';
 
-  private csvService = inject(CsvExportService);
+  // Optional: scope to a specific merchant when coming from merchant-finance route
+  private merchantId = '';
+
+  private readonly CREDIT_TYPES = ['CREDIT', 'TOPUP', 'REFUND', 'COD_CREDIT', 'TRANSFER_CREDIT', 'COMMISSION'];
 
   ngOnInit() {
+    this.merchantId = this.route.snapshot.queryParams['merchantId'] || '';
     this.loadTransactions();
   }
 
   loadTransactions() {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/transactions
-    this.transactions = [
-      { id: 'TXN8001', date: '17 Jun 2026', type: 'Credit', category: 'Wallet Topup', amount: 50000, status: 'Completed', reference: 'REQ1003' },
-      { id: 'TXN8002', date: '17 Jun 2026', type: 'Debit', category: 'Merchant Wallet Funding', amount: 10000, status: 'Completed', reference: 'MWF9901' },
-      { id: 'TXN8003', date: '16 Jun 2026', type: 'Credit', category: 'Margin Profit', amount: 4500, status: 'Completed', reference: 'MP9982' },
-      { id: 'TXN8004', date: '15 Jun 2026', type: 'Debit', category: 'Courier Charge', amount: 320, status: 'Completed', reference: 'AWB889012' },
-      { id: 'TXN8005', date: '14 Jun 2026', type: 'Debit', category: 'Dispute Deduction', amount: 150, status: 'Completed', reference: 'DIS1001' }
-    ];
-    this.isLoading = false;
-    this.applyFilters();
+    const params: any = { limit: 100 };
+    if (this.merchantId) params.userId = this.merchantId;
+
+    this.financeService.listTransactions(params).subscribe({
+      next: (res) => {
+        const raw: any[] = res?.data?.transactions ?? [];
+        this.transactions = raw.map((t: any) => ({
+          id: t._id,
+          date: t.createdAt
+            ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            : '—',
+          type: this.CREDIT_TYPES.includes(t.type) ? 'Credit' : 'Debit',
+          category: this.formatCategory(t.type),
+          amount: Math.abs(t.amount ?? 0),
+          status: 'Completed',
+          reference: t.reference || '—',
+        }));
+        this.isLoading = false;
+        this.applyFilters();
+      },
+      error: (err) => {
+        console.error('Failed to load transactions', err);
+        this.isLoading = false;
+      },
+    });
+  }
+
+  private formatCategory(type: string): string {
+    const map: Record<string, string> = {
+      CREDIT: 'Wallet Credit',
+      DEBIT: 'Wallet Debit',
+      TOPUP: 'Wallet Top-up',
+      REFUND: 'Refund',
+      CHARGE: 'Courier Charge',
+      COD_CREDIT: 'COD Credit',
+      TRANSFER_DEBIT: 'Merchant Funding',
+      TRANSFER_CREDIT: 'Wallet Transfer',
+      DISPUTE_CHARGE: 'Dispute Deduction',
+      RTO_CHARGE: 'RTO Charge',
+      SETTLEMENT: 'Settlement',
+      COMMISSION: 'Margin Profit',
+    };
+    return map[type] ?? type;
   }
 
   applyFilters() {
-    this.filteredTransactions = this.transactions.filter(t => {
+    this.filteredTransactions = this.transactions.filter((t) => {
       const matchesDate = !this.dateFilter || t.date.includes(this.dateFilter);
       const matchesType = this.typeFilter === 'All' || t.type === this.typeFilter;
       return matchesDate && matchesType;
@@ -58,110 +102,51 @@ export class Transactions implements OnInit {
 
   exportCSV() {
     const headers = ['Date', 'Transaction ID', 'Type', 'Category', 'Amount', 'Status', 'Reference'];
-    const rows = this.filteredTransactions.map(t => [
-      t.date,
-      t.id,
-      t.type,
-      t.category,
-      t.amount,
-      t.status,
-      t.reference
+    const rows = this.filteredTransactions.map((t) => [
+      t.date, t.id, t.type, t.category, t.amount, t.status, t.reference,
     ]);
     this.csvService.export('transactions_export', headers, rows);
   }
 
   downloadStatement() {
-    if (this.filteredTransactions.length === 0) {
-      alert('No transactions to generate statement.');
+    if (!this.filteredTransactions.length) {
+      alert('No transactions to generate a statement.');
       return;
     }
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow popups to view statement.');
-      return;
-    }
+    const win = window.open('', '_blank');
+    if (!win) { alert('Pop-up blocked. Please allow pop-ups to view the statement.'); return; }
 
-    const rowsHtml = this.filteredTransactions.map(t => `
+    const rowsHtml = this.filteredTransactions.map((t) => `
       <tr>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${t.date}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${t.id}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${t.type}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${t.category}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: ${t.type === 'Credit' ? '#16a34a' : '#dc2626'}">${t.type === 'Credit' ? '+' : '-'}₹${t.amount}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${t.status}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #64748b;">${t.reference}</td>
-      </tr>
-    `).join('');
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${t.date}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-weight:bold;">${t.id}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${t.type}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${t.category}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-weight:600;color:${t.type === 'Credit' ? '#16a34a' : '#dc2626'};">
+          ${t.type === 'Credit' ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}
+        </td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${t.status}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b;">${t.reference}</td>
+      </tr>`).join('');
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Account Statement - Vexaro</title>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 40px; }
-            .header-table { width: 100%; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: 800; color: rgb(11, 74, 111); }
-            .title { text-align: right; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #64748b; }
-            .meta-section { margin-bottom: 30px; font-size: 14px; color: #475569; }
-            .meta-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .meta-table td { padding: 6px 0; }
-            .trx-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-            .trx-table th { background: #f8fafc; padding: 12px 10px; font-weight: 600; color: #64748b; border-bottom: 2px solid #cbd5e1; }
-            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-            @media print {
-              .no-print { display: none; }
-              body { padding: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <table class="header-table">
-            <tr>
-              <td class="logo">VEXARO</td>
-              <td class="title">Account Statement</td>
-            </tr>
-          </table>
-
-          <div class="meta-section">
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 20px;" />
-            <table class="meta-table">
-              <tr>
-                <td><strong>Statement Date:</strong> ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                <td style="text-align: right;"><strong>Filtered By:</strong> ${this.typeFilter === 'All' ? 'All Transactions' : this.typeFilter}</td>
-              </tr>
-            </table>
-          </div>
-
-          <table class="trx-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Transaction ID</th>
-                <th>Type</th>
-                <th>Category</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Reference</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <p>This is a computer-generated account statement and does not require a physical signature.</p>
-            <p>Vexaro Courier Solutions &copy; ${new Date().getFullYear()}</p>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    win.document.write(`<html><head><title>Statement – Vexaro</title></head><body style="font-family:sans-serif;padding:40px;">
+      <h2 style="color:rgb(11,74,111);">VEXARO – Account Statement</h2>
+      <p style="color:#64748b;">Generated: ${new Date().toLocaleString('en-IN')}</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead><tr style="background:#f8fafc;">
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Date</th>
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Txn ID</th>
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Type</th>
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Category</th>
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Amount</th>
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Status</th>
+          <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Reference</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <p style="margin-top:40px;text-align:center;color:#94a3b8;font-size:12px;">Vexaro Courier Solutions © ${new Date().getFullYear()}</p>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body></html>`);
+    win.document.close();
   }
 }

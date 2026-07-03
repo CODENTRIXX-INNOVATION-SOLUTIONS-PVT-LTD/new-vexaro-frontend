@@ -55,8 +55,8 @@ export class CodManagement implements OnInit {
     this.financeService.listCOD({ limit: 100 }).subscribe({
       next: (res) => {
         this.isLoading = false;
-        if (res.data && res.data.codRecords) {
-          this.records = res.data.codRecords.map((c: any) => {
+        if (res.data && (res.data.cods || res.data.codRecords)) {
+          this.records = (res.data.cods || res.data.codRecords).map((c: any) => {
             let uiStatus = 'Pending Remittance';
             if (c.status === 'SETTLED_TO_VEXARO') uiStatus = 'Ready for Release';
             else if (c.status === 'REMITTED') uiStatus = 'Remitted';
