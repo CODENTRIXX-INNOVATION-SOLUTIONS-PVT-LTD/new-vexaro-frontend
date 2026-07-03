@@ -70,8 +70,9 @@ export class Payments implements OnInit {
   // Top-up request inline form
   packages = [1000, 2500, 5000, 10000, 25000];
   selectedPackage: number | null = null;
-  topUpMethod: string = 'UPI';
+  topUpMethod: 'checkout' | 'upi_qr' = 'checkout';
   topUpNote: string = '';
+  isPaymentProcessing: boolean = false;
 
   transactions: MerchantTransaction[] = [];
   topUpRequests: TopUpRequest[] = [];
@@ -147,74 +148,24 @@ export class Payments implements OnInit {
     this.selectedPackage = amount;
   }
 
-  submitTopUp() {
+  async submitTopUp() {
     if (!this.selectedPackage) {
-      alert('Please select an amount to request.');
+      alert('Please select an amount to add.');
       return;
     }
 
-    this.financeService.createRazorpayOrder(this.selectedPackage).subscribe({
-      next: (res) => {
-        const order = res.data;
-        const razorpayKey = order.razorpayKey;
-        const orderId = order.orderId;
-        const paymentId = order.paymentId;
-        const amount = order.amount;
-
-        // If Razorpay object exists on window, open it; otherwise simulate success
-        const RazorpayObj = (window as any).Razorpay;
-        if (RazorpayObj) {
-          const options = {
-            key: razorpayKey,
-            amount: amount,
-            currency: 'INR',
-            name: 'Vexaro Logistics',
-            description: 'Wallet Topup',
-            order_id: orderId,
-            handler: (response: any) => {
-              this.financeService.verifyPayment({
-                paymentId,
-                orderId,
-                razorpayPaymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
-              }).subscribe({
-                next: () => {
-                  alert('Payment verified and wallet credited!');
-                  this.loadWalletDetails();
-                  this.loadTransactions();
-                },
-                error: (err) => alert(err.error?.message || 'Payment verification failed.')
-              });
-            },
-            prefill: {
-              name: 'Merchant Test',
-              email: 'merchant@test.com',
-            },
-          };
-          const rzp = new RazorpayObj(options);
-          rzp.open();
-        } else {
-          // Simulate local payment success
-          const proceed = confirm('Local environment: No active Razorpay SDK found. Do you want to simulate a successful payment?');
-          if (proceed) {
-            this.financeService.verifyPayment({
-              paymentId,
-              orderId,
-              razorpayPaymentId: 'mock_pay_id_' + Math.floor(Math.random() * 100000),
-              signature: 'mock_signature',
-            }).subscribe({
-              next: () => {
-                alert('Mock payment simulated successfully! Wallet has been credited.');
-                this.loadWalletDetails();
-                this.loadTransactions();
-              },
-              error: (err) => alert(err.error?.message || 'Mock payment simulation failed.')
-            });
-          }
-        }
-      },
-      error: (err) => alert(err.error?.message || 'Failed to initiate recharge.')
-    });
+    this.isPaymentProcessing = true;
+    try {
+      await this.financeService.startRazorpayWalletTopup(this.selectedPackage, this.topUpMethod);
+      alert('Payment verified and wallet credited.');
+      this.selectedPackage = null;
+      this.loadWalletDetails();
+      this.loadTransactions();
+    } catch (err: any) {
+      alert(err?.error?.message || err?.message || 'Payment could not be completed.');
+    } finally {
+      this.isPaymentProcessing = false;
+    }
   }
 
   get totalSpent(): number {

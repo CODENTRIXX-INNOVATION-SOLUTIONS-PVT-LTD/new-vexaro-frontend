@@ -70,7 +70,7 @@
 
             <div style="display: flex; align-items: center; ">
                 <button class="hero-topup-btn" (click)="changeTab('requests')" style="background: rgba(255,255,255,0.18); color: white; border: 1.5px solid rgba(255,255,255,0.35); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Request Top-up
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Funds
                 </button>
             </div>
         </div>
@@ -107,11 +107,11 @@
             </div>
         </div>
 
-        <!-- Quick Top-up Request Form -->
+        <!-- Quick Top-up Form -->
         <div class="form-card">
             <div class="card-header">
-                <h3>Request Wallet Top-up</h3>
-                <p class="card-sub">Choose an amount and send a request to your distributor (<strong>{{ distributorName }}</strong>)</p>
+                <h3>Add Funds to Wallet</h3>
+                <p class="card-sub">Pay securely through Vexaro Razorpay checkout. Wallet credit is applied only after verified captured payment.</p>
             </div>
 
             <label class="form-label">Select Amount</label>
@@ -127,10 +127,8 @@
                 <div class="form-group">
                     <label class="form-label">Payment Method</label>
                     <select [(ngModel)]="topUpMethod" name="method">
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Card">Card Payment</option>
-                        <option value="Cash">Cash</option>
+                        <option value="checkout">Razorpay Checkout</option>
+                        <option value="upi_qr">UPI / QR via Razorpay</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -142,13 +140,13 @@
             @if (selectedPackage) {
             <div class="selected-preview">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                Requesting <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via <strong>{{ topUpMethod }}</strong>
+                Paying <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via <strong>{{ topUpMethod === 'upi_qr' ? 'UPI / QR via Razorpay' : 'Razorpay Checkout' }}</strong>
             </div>
             }
 
             <div class="form-actions">
-                <button class="btn-submit" (click)="submitTopUp()" [disabled]="!selectedPackage">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Send Request to Distributor
+                <button class="btn-submit" (click)="submitTopUp()" [disabled]="!selectedPackage || isPaymentProcessing">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> {{ isPaymentProcessing ? 'Opening Razorpay...' : 'Pay with Razorpay' }}
                 </button>
             </div>
         </div>
