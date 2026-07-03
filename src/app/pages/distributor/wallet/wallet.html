@@ -31,7 +31,6 @@
       </div>
     </div>
 
-    <!-- Summary chips -->
     <div class="balance-chips">
       <div class="bchip">
         <span class="bchip-val">{{ successPaymentsCount }}</span>
@@ -39,7 +38,7 @@
       </div>
       <div class="bchip">
         <span class="bchip-val">₹{{ totalTopupAmount.toLocaleString('en-IN') }}</span>
-        <span class="bchip-label">Total Added via Razorpay</span>
+        <span class="bchip-label">Total via Razorpay</span>
       </div>
     </div>
 
@@ -59,7 +58,7 @@
         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
         <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
       </svg>
-      Add Money via Razorpay
+      Add via Razorpay
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'history'" (click)="changeTab('history')">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -76,9 +75,16 @@
       </svg>
       Transaction History
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'request'" (click)="changeTab('request')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+      </svg>
+      Request Recharge
+    </button>
   </div>
 
-  <!-- ======== TAB: ADD MONEY ======== -->
+  <!-- ======== TAB: ADD MONEY (RAZORPAY) ======== -->
   @if (activeTab === 'topup') {
   <div class="form-card">
     <div class="card-header">
@@ -86,11 +92,10 @@
       <p class="card-sub">Securely pay via Razorpay — wallet is credited instantly after payment capture.</p>
     </div>
 
-    <!-- Alerts -->
     @if (successMessage) {
     <div class="alert alert-success">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em">
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
       </svg>
       {{ successMessage }}
@@ -99,7 +104,7 @@
     @if (errorMessage) {
     <div class="alert alert-error">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em">
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0">
         <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
       </svg>
       {{ errorMessage }}
@@ -150,7 +155,6 @@
       </button>
     </div>
 
-    <!-- Razorpay badge -->
     <div class="rzp-badge">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px">
         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#072654"/>
@@ -172,44 +176,30 @@
     </div>
 
     @if (paymentsLoading) {
-    <div class="loading-state">
-      <span class="spinner dark"></span> Loading payments…
-    </div>
+    <div class="loading-state"><span class="spinner dark"></span> Loading payments…</div>
     } @else if (payments.length === 0) {
     <div class="empty-state">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:2.5em;height:2.5em;color:#cbd5e1">
         <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
       </svg>
-      <p>No payments yet. Add money via Razorpay to get started.</p>
+      <p>No payments yet. Use the Add via Razorpay tab to top up.</p>
     </div>
     } @else {
     <div class="table-wrapper">
       <table>
         <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Payment ID</th>
-            <th>Status</th>
-          </tr>
+          <tr><th>Order ID</th><th>Date</th><th>Amount</th><th>Method</th><th>Payment ID</th><th>Status</th></tr>
         </thead>
         <tbody>
           @for (p of payments; track p.id) {
           <tr>
-            <td class="id-cell">{{ p.razorpayOrderId }}</td>
+            <td class="id-cell small">{{ p.razorpayOrderId }}</td>
             <td class="date-cell">{{ p.date }}</td>
-            <td class="amount-cell" [class.credit-amt]="p.status === 'SUCCESS'">
-              ₹{{ p.amount.toLocaleString('en-IN') }}
-            </td>
+            <td class="amount-cell" [class.credit-amt]="p.status === 'SUCCESS'">₹{{ p.amount.toLocaleString('en-IN') }}</td>
             <td>
-              @if (p.method) {
-              <span class="method-badge">{{ p.method | uppercase }}</span>
-              } @else {
-              <span class="text-muted">—</span>
-              }
+              @if (p.method) { <span class="method-badge">{{ p.method | uppercase }}</span> }
+              @else { <span class="text-muted">—</span> }
             </td>
             <td class="id-cell small">{{ p.razorpayPaymentId || '—' }}</td>
             <td>
@@ -227,7 +217,6 @@
       </table>
     </div>
 
-    <!-- Pagination -->
     @if (totalPages > 1) {
     <div class="pagination">
       <button class="page-btn" (click)="prevPage()" [disabled]="paymentsPage === 1">← Prev</button>
@@ -248,25 +237,14 @@
     </div>
 
     @if (txLoading) {
-    <div class="loading-state">
-      <span class="spinner dark"></span> Loading transactions…
-    </div>
+    <div class="loading-state"><span class="spinner dark"></span> Loading transactions…</div>
     } @else if (transactions.length === 0) {
-    <div class="empty-state">
-      <p>No transactions found.</p>
-    </div>
+    <div class="empty-state"><p>No transactions found.</p></div>
     } @else {
     <div class="table-wrapper">
       <table>
         <thead>
-          <tr>
-            <th>Txn ID</th>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Reference</th>
-          </tr>
+          <tr><th>Txn ID</th><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Reference</th></tr>
         </thead>
         <tbody>
           @for (t of transactions; track t.id) {
@@ -290,6 +268,113 @@
     </div>
     }
   </div>
+  }
+
+  <!-- ======== TAB: REQUEST RECHARGE (Manual, SA approves) ======== -->
+  @if (activeTab === 'request') {
+  <div class="form-card">
+    <div class="card-header">
+      <h3>Request Wallet Recharge</h3>
+      <p class="card-sub">Submit a manual recharge request — the Super Admin will credit your wallet after verifying the payment.</p>
+    </div>
+
+    @if (successMessage) {
+    <div class="alert alert-success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      {{ successMessage }}
+    </div>
+    }
+    @if (errorMessage) {
+    <div class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0">
+        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+      </svg>
+      {{ errorMessage }}
+    </div>
+    }
+
+    <label class="form-label">Select Amount</label>
+    <div class="packages-grid">
+      @for (pkg of packages; track pkg) {
+      <button class="pkg-chip" [class.selected]="selectedPackage === pkg" (click)="selectPackage(pkg)">
+        ₹{{ pkg.toLocaleString('en-IN') }}
+      </button>
+      }
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select [(ngModel)]="requestPaymentMethod" name="requestPaymentMethod">
+          <option value="UPI">UPI</option>
+          <option value="NEFT">NEFT</option>
+          <option value="IMPS">IMPS</option>
+          <option value="RTGS">RTGS</option>
+          <option value="Cash">Cash</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Reference ID (optional)</label>
+        <input type="text" [(ngModel)]="requestReferenceId" name="requestRef"
+          placeholder="e.g. UTR / Transaction ID" />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-submit" (click)="submitRechargeRequest()" [disabled]="!selectedPackage || requestLoading">
+        @if (requestLoading) {
+        <span class="spinner"></span> Submitting…
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+          <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+        </svg>
+        Submit Recharge Request
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Recharge Request History -->
+  @if (myRequests.length > 0) {
+  <div class="table-card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>My Recharge Requests</h3>
+      <p class="card-sub">Requests submitted to Super Admin for approval</p>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Request ID</th><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          @for (r of myRequests; track r.id) {
+          <tr>
+            <td class="id-cell small">{{ r.requestId }}</td>
+            <td class="date-cell">{{ r.date }}</td>
+            <td class="amount-cell credit-amt">₹{{ r.amount.toLocaleString('en-IN') }}</td>
+            <td><span class="method-badge">{{ r.method }}</span></td>
+            <td class="date-cell">{{ r.reference }}</td>
+            <td>
+              <span class="status-badge"
+                [class.success]="r.status === 'APPROVED'"
+                [class.pending]="r.status === 'PENDING'"
+                [class.failed]="r.status === 'REJECTED'">
+                {{ r.status }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
   }
 
 </div>
