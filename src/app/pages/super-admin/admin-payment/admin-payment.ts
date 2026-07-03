@@ -65,73 +65,93 @@ export class AdminPayment implements OnInit {
 
   changeTab(tab: string) {
     this.activeTab = tab;
-    if (tab === 'razorpay') this.loadRazorpayPayments();
-    if (tab === 'commission') this.loadCommission();
+    // Lazy-load heavy tabs only when opened
+    if (tab === 'razorpay' && this.razorpayPayments.length === 0) this.loadRazorpayPayments();
+    if (tab === 'commission' && this.commissionData.length === 0)  this.loadCommission();
+    if (tab === 'refunds'   && this.refunds.length === 0)          this.loadRefunds();
+    if (tab === 'requests'  && this.rechargeRequestsData.length === 0) this.loadRechargeRequests();
   }
 
   // ── Loaders ───────────────────────────────────────────────────────────────
 
   loadAll() {
     this.isLoading = true;
-    this.financeService.getAdminStats().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          const d = res.data;
-          this.paymentCards = [
-            { title: 'Total Wallets Value',    value: '₹' + (d.totalWalletValue || 0).toLocaleString('en-IN'), icon: 'fas fa-wallet',      bgColor: '#DBEAFE', iconColor: 'rgb(11,74,111)' },
-            { title: 'Total Admin Commission', value: '₹' + (d.totalCommission  || 0).toLocaleString('en-IN'), icon: 'fas fa-percent',      bgColor: '#DCFCE7', iconColor: '#16A34A' },
-            { title: 'Successful Top-ups',     value: String(d.successTransactions || 0),                       icon: 'fas fa-exchange-alt', bgColor: '#FEF3C7', iconColor: '#D97706' },
-            { title: 'Pending Refunds',        value: String(d.pendingRefunds      || 0),                       icon: 'fas fa-undo-alt',     bgColor: '#FEE2E2', iconColor: '#DC2626' },
-          ];
-        }
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => { this.isLoading = false; this.cdr.detectChanges(); },
+    // Load stats + essential wallet/transaction data in parallel
+    Promise.allSettled([
+      this.loadStats(),
+      this.loadDistributors(),
+      this.loadTransactions(),
+    ]).then(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges();
     });
-
-    this.loadDistributors();
-    this.loadTransactions();
-    this.loadRefunds();
+    // Pre-load recharge requests (needed for badge)
     this.loadRechargeRequests();
   }
 
+  private loadStats(): Promise<void> {
+    return new Promise((resolve) => {
+      this.financeService.getAdminStats().subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const d = res.data;
+            this.paymentCards = [
+              { title: 'Total Wallets Value',    value: '₹' + (d.totalWalletValue || 0).toLocaleString('en-IN'), icon: 'fas fa-wallet',      bgColor: '#DBEAFE', iconColor: 'rgb(11,74,111)' },
+              { title: 'Total Admin Commission', value: '₹' + (d.totalCommission  || 0).toLocaleString('en-IN'), icon: 'fas fa-percent',      bgColor: '#DCFCE7', iconColor: '#16A34A' },
+              { title: 'Successful Top-ups',     value: String(d.successTransactions || 0),                       icon: 'fas fa-exchange-alt', bgColor: '#FEF3C7', iconColor: '#D97706' },
+              { title: 'Pending Refunds',        value: String(d.pendingRefunds      || 0),                       icon: 'fas fa-undo-alt',     bgColor: '#FEE2E2', iconColor: '#DC2626' },
+            ];
+          }
+          this.cdr.detectChanges();
+          resolve();
+        },
+        error: () => resolve(),
+      });
+    });
+  }
+
   loadDistributors() {
-    this.financeService.listWallets({ limit: 100 }).subscribe({
-      next: (res) => {
-        this.distributors = (res?.data?.wallets ?? [])
-          .filter((w: any) => w.userId?.role === 'DISTRIBUTOR')
-          .map((w: any) => ({
-            id: w.userId?._id ?? w._id,
-            name: w.userId?.companyName ?? w.userId?.firstName ?? 'Unknown',
-            balance: w.balance ?? 0,
-            lastRechargeAmount: w.lastRechargeAmount ?? 0,
-            lastRechargeDate: w.lastRechargeDate
-              ? new Date(w.lastRechargeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-              : 'N/A',
-            status: w.isActive === false ? 'Inactive' : 'Active',
-          }));
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error('Wallets load failed', err),
+    return new Promise<void>((resolve) => {
+      this.financeService.listWallets({ limit: 100 }).subscribe({
+        next: (res) => {
+          this.distributors = (res?.data?.wallets ?? [])
+            .filter((w: any) => w.userId?.role === 'DISTRIBUTOR')
+            .map((w: any) => ({
+              id: w.userId?._id ?? w._id,
+              name: w.userId?.companyName ?? w.userId?.firstName ?? 'Unknown',
+              balance: w.balance ?? 0,
+              lastRechargeAmount: w.lastRechargeAmount ?? 0,
+              lastRechargeDate: w.lastRechargeDate
+                ? new Date(w.lastRechargeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                : 'N/A',
+              status: w.isActive === false ? 'Inactive' : 'Active',
+            }));
+          this.cdr.detectChanges();
+          resolve();
+        },
+        error: () => resolve(),
+      });
     });
   }
 
   loadTransactions() {
-    this.financeService.listTransactions({ limit: 50 }).subscribe({
-      next: (res) => {
-        this.payments = (res?.data?.transactions ?? []).map((t: any) => ({
-          transactionId: t._id,
-          displayId: (t._id as string)?.slice(-8)?.toUpperCase() ?? '—',
-          distributor: t.userId?.companyName ?? t.userId?.firstName ?? 'Unknown',
-          rechargeAmount: Math.abs(t.amount ?? 0),
-          paymentMethod: t.type ?? 'Wallet',
-          date: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
-          status: t.amount >= 0 ? 'Credit' : 'Debit',
-        }));
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error('Transactions load failed', err),
+    return new Promise<void>((resolve) => {
+      this.financeService.listTransactions({ limit: 50 }).subscribe({
+        next: (res) => {
+          this.payments = (res?.data?.transactions ?? []).map((t: any) => ({
+            transactionId: t._id,
+            displayId: (t._id as string)?.slice(-8)?.toUpperCase() ?? '—',
+            distributor: t.userId?.companyName ?? t.userId?.firstName ?? 'Unknown',
+            rechargeAmount: Math.abs(t.amount ?? 0),
+            paymentMethod: t.type ?? 'Wallet',
+            date: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+            status: t.amount >= 0 ? 'Credit' : 'Debit',
+          }));
+          this.cdr.detectChanges();
+          resolve();
+        },
+        error: () => resolve(),
+      });
     });
   }
 
@@ -169,11 +189,15 @@ export class AdminPayment implements OnInit {
           refundId: r._id,
           displayId: (r._id as string)?.slice(-8)?.toUpperCase() ?? '—',
           user: r.userId?.companyName ?? r.userId?.firstName ?? 'Unknown',
-          originalTxn: (r.originalTransactionId as string)?.slice(-8)?.toUpperCase() ?? '—',
-          amount: r.amount ?? 0,
-          reason: r.reason ?? '—',
-          date: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
-          status: r.status ?? 'Pending',
+          originalTxn: r.razorpayPaymentId
+            ? (r.razorpayPaymentId as string).slice(-10)
+            : (r.razorpayOrderId as string)?.slice(-10) ?? '—',
+          amount: r.amountRupees ?? r.amount ?? 0,
+          reason: r.metadata?.refund?.reason ?? r.failureReason ?? '—',
+          date: r.capturedAt ?? r.createdAt
+            ? new Date(r.capturedAt ?? r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—',
+          status: r.status ?? 'REFUNDED',
         }));
         this.cdr.detectChanges();
       },

@@ -65,10 +65,11 @@ export class Payments implements OnInit {
     this.activeTab = tab;
     this.topupSuccess = '';
     this.topupError = '';
-    if (tab === 'payments')     this.loadRazorpayPayments();
-    if (tab === 'refunds')      this.loadRefundRequests();
-    if (tab === 'requests')     this.loadRefundRequests();  // recharge requests tab reuses refund history
-    if (tab === 'transactions') this.loadTransactions();
+    // Lazy-load per tab — only fetch when user actually opens it
+    if (tab === 'payments')      this.loadRazorpayPayments();
+    if (tab === 'disputes')      this.loadDisputes();
+    if (tab === 'transactions')  this.loadTransactions();
+    if (tab === 'refunds' || tab === 'requests') this.loadRefundRequests();
   }
 
   // ── Wallet ────────────────────────────────────────────────────────────────
@@ -117,10 +118,11 @@ export class Payments implements OnInit {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
+    // Only load what's needed for the default tab (balance) + critical data
     this.loadWalletDetails();
-    this.loadTransactions();
-    this.loadDisputes();
-    this.loadRefundRequests();
+    this.loadTransactions();   // needed for summary stats
+    this.loadRefundRequests(); // needed for badge counts on tabs
+    // Disputes loaded lazily when tab is opened
   }
 
   // ── Loaders ───────────────────────────────────────────────────────────────
@@ -138,6 +140,7 @@ export class Payments implements OnInit {
   }
 
   loadTransactions(): void {
+    if (this.txLoading || this.transactions.length > 0) return; // already loaded
     this.txLoading = true;
     this.financeService.listTransactions({ limit: 50 }).subscribe({
       next: (res) => {
@@ -158,6 +161,7 @@ export class Payments implements OnInit {
   }
 
   loadRazorpayPayments(): void {
+    if (this.paymentsLoading) return;
     this.paymentsLoading = true;
     const params: any = { page: this.paymentsPage, limit: this.paymentsLimit };
     if (this.paymentsFilter) params.status = this.paymentsFilter;
@@ -182,6 +186,7 @@ export class Payments implements OnInit {
   }
 
   loadRefundRequests(): void {
+    if (this.refundRequestsLoading) return;
     this.refundRequestsLoading = true;
     this.financeService.listRefundRequests({ limit: 50 }).subscribe({
       next: (res) => {
@@ -244,7 +249,11 @@ export class Payments implements OnInit {
       this.balance = result.balance;
       this.topupSuccess = `₹${this.selectedPackage.toLocaleString('en-IN')} added to your wallet successfully!`;
       this.selectedPackage = null;
+      // Force refresh after successful payment
+      this.transactions = [];
       this.loadTransactions();
+      this.razorpayPayments = [];
+      this.paymentsLoading = false; // reset guard so refresh works
     } catch (err: any) {
       this.topupError = err?.error?.message || err?.message || 'Payment could not be completed.';
     } finally {

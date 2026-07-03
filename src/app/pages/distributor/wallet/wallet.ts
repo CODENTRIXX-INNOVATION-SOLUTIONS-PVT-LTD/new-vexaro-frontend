@@ -25,7 +25,7 @@ export class DistributorWallet implements OnInit {
   private financeService = inject(FinanceService);
 
   // ── State ─────────────────────────────────────────────────────────────────
-  activeTab: 'topup' | 'history' | 'transactions' = 'topup';
+  activeTab: 'topup' | 'history' | 'transactions' | 'request' = 'topup';
   balance: number = 0;
 
   // Top-up form
@@ -54,9 +54,8 @@ export class DistributorWallet implements OnInit {
   requestLoading = false;
 
   ngOnInit(): void {
+    // Only load balance and payment history on init — transactions/recharge loaded lazily
     this.loadWallet();
-    this.loadTransactions();
-    this.loadRechargeRequests();
     this.loadPaymentHistory();
   }
 
@@ -72,6 +71,7 @@ export class DistributorWallet implements OnInit {
   }
 
   loadTransactions(): void {
+    if (this.txLoading || this.transactions.length > 0) return; // prevent duplicate calls
     this.txLoading = true;
     this.financeService.listTransactions({ limit: 50 }).subscribe({
       next: (res) => {
@@ -90,6 +90,7 @@ export class DistributorWallet implements OnInit {
   }
 
   loadPaymentHistory(): void {
+    if (this.paymentsLoading) return; // prevent duplicate calls
     this.paymentsLoading = true;
     this.financeService.listPayments({ page: this.paymentsPage, limit: this.paymentsLimit }).subscribe({
       next: (res) => {
@@ -150,6 +151,11 @@ export class DistributorWallet implements OnInit {
       this.balance = result.balance;
       this.successMessage = `₹${this.selectedPackage.toLocaleString('en-IN')} successfully added to your wallet!`;
       this.selectedPackage = null;
+      // Reset guards so refresh works
+      this.payments = [];
+      this.paymentsLoading = false;
+      this.transactions = [];
+      this.txLoading = false;
       this.loadPaymentHistory();
       this.loadTransactions();
     } catch (err: any) {
@@ -161,7 +167,6 @@ export class DistributorWallet implements OnInit {
 
   // ── Manual Recharge Request ───────────────────────────────────────────────
   // Distributor submits a manual recharge request that Super Admin approves.
-  // This path is separate from the Razorpay self-service flow.
 
   submitRechargeRequest(): void {
     if (!this.selectedPackage) {
@@ -169,15 +174,26 @@ export class DistributorWallet implements OnInit {
       return;
     }
     this.requestLoading = true;
-    // Manual recharge requests are not yet backed by a public endpoint.
-    // The distributor can use the Razorpay self-service flow above instead.
-    setTimeout(() => {
-      this.requestLoading = false;
-      alert('Recharge request submitted. The Super Admin will process it shortly.');
-      this.selectedPackage = null;
-      this.requestReferenceId = '';
-      this.loadRechargeRequests();
-    }, 500);
+    this.errorMessage = '';
+    this.financeService.createRechargeRequest({
+      amount: this.selectedPackage,
+      paymentMethod: this.requestPaymentMethod as 'UPI' | 'NEFT' | 'IMPS' | 'RTGS' | 'Cash' | 'Cheque',
+      referenceId: this.requestReferenceId || undefined,
+    }).subscribe({
+      next: () => {
+        this.requestLoading = false;
+        this.successMessage = `Recharge request for ₹${this.selectedPackage!.toLocaleString('en-IN')} submitted. The Super Admin will process it shortly.`;
+        this.selectedPackage = null;
+        this.requestReferenceId = '';
+        // Refresh the requests list
+        this.myRequests = [];
+        this.loadRechargeRequests();
+      },
+      error: (err: any) => {
+        this.requestLoading = false;
+        this.errorMessage = err?.error?.message ?? 'Failed to submit recharge request.';
+      },
+    });
   }
 
   // ── Pagination ────────────────────────────────────────────────────────────
@@ -202,10 +218,13 @@ export class DistributorWallet implements OnInit {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  changeTab(tab: 'topup' | 'history' | 'transactions'): void {
+  changeTab(tab: 'topup' | 'history' | 'transactions' | 'request'): void {
     this.activeTab = tab;
     this.successMessage = '';
     this.errorMessage = '';
+    if (tab === 'history')      this.loadPaymentHistory();
+    if (tab === 'transactions') this.loadTransactions();
+    if (tab === 'request')      this.loadRechargeRequests();
   }
 
   get successPaymentsCount(): number {

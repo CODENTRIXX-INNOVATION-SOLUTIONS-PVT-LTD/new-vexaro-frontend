@@ -272,6 +272,15 @@ export class FinanceService {
     return this.http.post<any>(`${this.baseUrl}/finance/recharge-requests/${requestId}/reject`, { reason });
   }
 
+  // Distributor: submit a manual recharge request to SA
+  createRechargeRequest(payload: {
+    amount: number;
+    paymentMethod: 'UPI' | 'NEFT' | 'IMPS' | 'RTGS' | 'Cash' | 'Cheque';
+    referenceId?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/recharge-requests`, payload);
+  }
+
   // SA: manually add funds to any wallet (topup)
   topupWallet(payload: { userId: string; amount: number; note?: string }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/finance/topup`, payload);
