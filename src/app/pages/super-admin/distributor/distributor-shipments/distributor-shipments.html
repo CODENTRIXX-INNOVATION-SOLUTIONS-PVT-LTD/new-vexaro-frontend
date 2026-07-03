@@ -12,6 +12,7 @@
             <thead>
                 <tr>
                     <th>Shipment ID</th>
+                    <th>Merchant</th>
                     <th>Destination</th>
                     <th>Date</th>
                     <th>Amount</th>
@@ -24,6 +25,11 @@
                 <tr *ngFor="let shipment of shipments">
 
                     <td>{{ shipment.shipmentId }}</td>
+                    <td>
+                        <span class="merchant-link" (click)="navigateToMerchant(shipment.merchantId)">
+                            {{ shipment.merchantName }}
+                        </span>
+                    </td>
                     <td>{{ shipment.destination }}</td>
                     <td>{{ shipment.date }}</td>
                     <td>₹{{ shipment.amount }}</td>
@@ -49,3 +55,16 @@
     </div>
 
 </div>
+
+<style>
+.merchant-link {
+    color: #0ea5e9;
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.merchant-link:hover {
+    color: #0284c7;
+}
+</style>

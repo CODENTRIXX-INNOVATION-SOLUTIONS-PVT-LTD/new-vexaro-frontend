@@ -12,11 +12,9 @@ import { MerchantService, MerchantUser } from '../../../../services/merchant.ser
 interface MerchantViewModel {
   id: string;
   merchantName: string;
-  displayName: string;
   email: string;
   phone: string;
   address: string;
-  region: string;
   city: string;
   state: string;
   pincode: string;
@@ -24,51 +22,30 @@ interface MerchantViewModel {
   contactPhone: string;
   contactEmail: string;
   gstNumber: string;
-  panNumber: string;
-  paymentTerms: string;
-  creditLimit: number | string;
   status: string;
-  distributorName: string;
   distributorId: string;
   warehouseDetails: string;
   registrationDate: string;
 }
 
-// DB → ViewModel mapping. Any field that has no equivalent column is '—'.
+// DB → ViewModel mapping
 function toViewModel(user: MerchantUser): MerchantViewModel {
   const w = user.warehouse;
   return {
     id:               user.id,
-    // companyName is the closest to "merchant name" in the DB
     merchantName:     user.companyName || `${user.firstName} ${user.lastName}`,
-    // No separate displayName column — show company name if available
-    displayName:      user.companyName || '—',
     email:            user.email,
     phone:            user.phone || '—',
-    // Top-level address field (free text, not structured)
     address:          user.address || (w ? `${w.address}, ${w.city}, ${w.state} - ${w.pincode}` : '—'),
-    // No region column in DB
-    region:           '—',
     city:             w?.city  || '—',
     state:            w?.state || '—',
     pincode:          w?.pincode || '—',
-    // contactPerson lives on the warehouse document
     contactPerson:    w?.contactPerson || `${user.firstName} ${user.lastName}`,
     contactPhone:     w?.phone || user.phone || '—',
     contactEmail:     w?.email || user.email,
-    // gstNo is on the warehouse; no dedicated user-level GST field
     gstNumber:        w?.gstNo || '—',
-    // No PAN column in DB
-    panNumber:        '—',
-    // No payment terms column in DB
-    paymentTerms:     '—',
-    // No credit limit column in DB
-    creditLimit:      '—',
     status:           user.isActive ? 'Active' : 'Inactive',
-    // invitedBy is the distributor's ObjectId — name not populated by this endpoint
-    distributorName:  '—',
     distributorId:    typeof user.invitedBy === 'string' ? user.invitedBy : '—',
-    // Warehouse name or ID as the "warehouse details" label
     warehouseDetails: w ? (w.name || w.warehouseId) : '—',
     registrationDate: user.createdAt
       ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -100,11 +77,10 @@ export class MerchantProfile implements OnInit {
   // Initialised with blank strings so template bindings never blow up before
   // data arrives.
   merchant: MerchantViewModel = {
-    id: '', merchantName: '', displayName: '', email: '', phone: '',
-    address: '', region: '', city: '', state: '', pincode: '',
+    id: '', merchantName: '', email: '', phone: '',
+    address: '', city: '', state: '', pincode: '',
     contactPerson: '', contactPhone: '', contactEmail: '',
-    gstNumber: '', panNumber: '', paymentTerms: '', creditLimit: '',
-    status: 'Active', distributorName: '', distributorId: '',
+    gstNumber: '', status: 'Active', distributorId: '',
     warehouseDetails: '', registrationDate: '',
   };
 

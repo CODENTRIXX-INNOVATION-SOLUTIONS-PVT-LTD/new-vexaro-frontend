@@ -36,105 +36,123 @@
     <div class="tab-content-panel animated-fade">
       <div class="card table-card">
         <div class="card-header">
-          <h3>Pricing Sheets per Carrier</h3>
+          <h3>Rate Cards</h3>
           <span class="badge info">Rates in INR (₹)</span>
         </div>
 
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Courier Partner</th>
-                <th>Base (up to 0.5kg)</th>
-                <th>Additional (per 0.5kg)</th>
-                <th>COD Surcharge</th>
-                <th>Fuel Surcharge</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (card of rateCards(); track card.code; let idx = $index) {
+        @if (isLoading()) {
+          <div class="loading-state">Loading rate cards...</div>
+        } @else {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td class="courier-name-cell">
-                    <span class="avatar-sm">{{ card.courier[0] }}</span>
-                    <div>
-                      <strong>{{ card.courier }}</strong>
-                      <span class="subtext">{{ card.code }}</span>
-                    </div>
-                  </td>
-                  
-                  <!-- Base Rate cell -->
-                  <td>
-                    @if (editingRateIndex() === idx) {
-                      <div class="inline-edit">
-                        <span>₹</span>
-                        <input type="number" [(ngModel)]="editBaseRateValue" class="inline-input" />
-                      </div>
-                    } @else {
-                      <strong>₹{{ card.baseRate }}</strong>
-                    }
-                  </td>
-
-                  <!-- Addl Rate cell -->
-                  <td>
-                    @if (editingRateIndex() === idx) {
-                      <div class="inline-edit">
-                        <span>₹</span>
-                        <input type="number" [(ngModel)]="editAddlRateValue" class="inline-input" />
-                      </div>
-                    } @else {
-                      <span>₹{{ card.additionalRate }}</span>
-                    }
-                  </td>
-
-                  <!-- COD Surcharge cell -->
-                  <td>
-                    <span>{{ card.codPercent }}% (min ₹{{ card.codMin }})</span>
-                  </td>
-
-                  <!-- Fuel Surcharge cell -->
-                  <td>
-                    @if (editingRateIndex() === idx) {
-                      <div class="inline-edit">
-                        <input type="number" [(ngModel)]="editFuelSurchargeValue" class="inline-input-small" />
-                        <span>%</span>
-                      </div>
-                    } @else {
-                      <span>{{ card.fuelSurcharge }}%</span>
-                    }
-                  </td>
-
-                  <!-- Status badge -->
-                  <td>
-                    <span class="status-pill" [class.active]="card.active" (click)="toggleCourierActive(idx)">
-                      {{ card.active ? 'Active' : 'Disabled' }}
-                    </span>
-                  </td>
-
-                  <!-- Action triggers -->
-                  <td>
-                    @if (editingRateIndex() === idx) {
-                      <div class="btn-group">
-                        <button class="icon-btn success" (click)="saveRate(idx)" title="Save changes">
-                          <span class="material-icons">check</span>
-                        </button>
-                        <button class="icon-btn danger" (click)="cancelEditRate()" title="Cancel">
-                          <span class="material-icons">close</span>
-                        </button>
-                      </div>
-                    } @else {
-                      <button class="primary-btn-sm" (click)="startEditRate(idx)">
-                        <span class="material-icons">edit</span>
-                        Edit Rates
-                      </button>
-                    }
-                  </td>
+                  <th>Rate Card Name</th>
+                  <th>Service Type</th>
+                  <th>COD Charge</th>
+                  <th>COD %</th>
+                  <th>Fuel Surcharge</th>
+                  <th>Markup %</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                @for (card of rateCards(); track card._id) {
+                  <tr>
+                    <td class="courier-name-cell">
+                      <span class="avatar-sm">{{ card.name[0] }}</span>
+                      <div>
+                        <strong>{{ card.name }}</strong>
+                        @if (card.description) {
+                          <span class="subtext">{{ card.description }}</span>
+                        }
+                      </div>
+                    </td>
+                    
+                    <td>
+                      <span class="service-type-badge">{{ card.serviceType }}</span>
+                    </td>
+
+                    <!-- COD Charge cell -->
+                    <td>
+                      @if (editingRateId() === card._id) {
+                        <div class="inline-edit">
+                          <span>₹</span>
+                          <input type="number" [(ngModel)]="editRateCard().codCharge" class="inline-input" />
+                        </div>
+                      } @else {
+                        <strong>₹{{ card.codCharge }}</strong>
+                      }
+                    </td>
+
+                    <!-- COD Percent cell -->
+                    <td>
+                      @if (editingRateId() === card._id) {
+                        <div class="inline-edit">
+                          <input type="number" [(ngModel)]="editRateCard().codPercent" class="inline-input-small" />
+                          <span>%</span>
+                        </div>
+                      } @else {
+                        <span>{{ card.codPercent }}%</span>
+                      }
+                    </td>
+
+                    <!-- Fuel Surcharge cell -->
+                    <td>
+                      @if (editingRateId() === card._id) {
+                        <div class="inline-edit">
+                          <input type="number" [(ngModel)]="editRateCard().fuelSurcharge" class="inline-input-small" />
+                          <span>%</span>
+                        </div>
+                      } @else {
+                        <span>{{ card.fuelSurcharge }}%</span>
+                      }
+                    </td>
+
+                    <!-- Markup cell -->
+                    <td>
+                      @if (editingRateId() === card._id) {
+                        <div class="inline-edit">
+                          <input type="number" [(ngModel)]="editRateCard().superAdminMarkupPercent" class="inline-input-small" />
+                          <span>%</span>
+                        </div>
+                      } @else {
+                        <span>{{ card.superAdminMarkupPercent }}%</span>
+                      }
+                    </td>
+
+                    <!-- Status badge -->
+                    <td>
+                      <span class="status-pill" [class.active]="card.isActive" (click)="toggleCourierActive(card)">
+                        {{ card.isActive ? 'Active' : 'Disabled' }}
+                      </span>
+                    </td>
+
+                    <!-- Action triggers -->
+                    <td>
+                      @if (editingRateId() === card._id) {
+                        <div class="btn-group">
+                          <button class="icon-btn success" (click)="saveRate()" title="Save changes">
+                            <span class="material-icons">check</span>
+                          </button>
+                          <button class="icon-btn danger" (click)="cancelEditRate()" title="Cancel">
+                            <span class="material-icons">close</span>
+                          </button>
+                        </div>
+                      } @else {
+                        <button class="primary-btn-sm" (click)="startEditRate(card)">
+                          <span class="material-icons">edit</span>
+                          Edit
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       </div>
     </div>
   }
@@ -142,101 +160,109 @@
   <!-- TAB CONTENT: SLABS -->
   @if (activeTab() === 'slabs') {
     <div class="tab-content-panel animated-fade">
-      <div class="slabs-grid">
-        @for (slab of weightSlabs(); track slab.id) {
-          <div class="slab-card card">
-            <div class="slab-header">
-              <span class="slab-id">{{ slab.id }}</span>
-              <span class="slab-range">{{ slab.minWeight }} - {{ slab.maxWeight }} kg</span>
-            </div>
-            
-            <div class="slab-body">
-              @if (editingSlabId() === slab.id) {
-                <div class="form-group">
-                  <label>Slab Name</label>
-                  <input type="text" [(ngModel)]="editSlabName" class="form-control" />
-                </div>
-                <div class="form-group">
-                  <label>Weight Increment (kg)</label>
-                  <input type="number" [(ngModel)]="editSlabIncrement" step="0.1" class="form-control" />
-                </div>
-              } @else {
-                <h4>{{ slab.name }}</h4>
-                <p>{{ slab.description }}</p>
-                <div class="slab-meta">
-                  <span>Increment Step: <strong>{{ slab.increment }} kg</strong></span>
-                </div>
-              }
-            </div>
-
-            <div class="slab-footer">
-              @if (editingSlabId() === slab.id) {
-                <button class="primary-btn-sm" (click)="saveSlab(slab.id)">Save</button>
-                <button class="secondary-btn-sm" (click)="cancelEditSlab()">Cancel</button>
-              } @else {
-                <button class="secondary-btn-sm edit-slab-trigger" (click)="startEditSlab(slab)">
-                  <span class="material-icons">settings</span>
-                  Modify Configuration
-                </button>
-              }
-            </div>
+      @for (card of rateCards(); track card._id) {
+        <div class="card rate-card-slabs">
+          <div class="card-header">
+            <h3>{{ card.name }}</h3>
+            <span class="badge info">{{ card.serviceType }}</span>
           </div>
-        }
-      </div>
+          
+          <div class="slabs-list">
+            @for (slab of card.weightSlabs; track $index; let slabIndex = $index) {
+              <div class="slab-row">
+                @if (editingRateCardId() === card._id && editingSlabIndex() === slabIndex) {
+                  <div class="slab-edit-form">
+                    <div class="form-group-inline">
+                      <label>Up to (kg):</label>
+                      <input type="number" [(ngModel)]="editSlab().upToKg" step="0.1" class="form-control-sm" />
+                    </div>
+                    <div class="form-group-inline">
+                      <label>Rate per kg (₹):</label>
+                      <input type="number" [(ngModel)]="editSlab().ratePerKg" step="0.1" class="form-control-sm" />
+                    </div>
+                    <div class="form-group-inline">
+                      <label>Base Rate (₹):</label>
+                      <input type="number" [(ngModel)]="editSlab().baseRate" step="0.1" class="form-control-sm" />
+                    </div>
+                    <div class="btn-group">
+                      <button class="icon-btn success" (click)="saveSlab()" title="Save">
+                        <span class="material-icons">check</span>
+                      </button>
+                      <button class="icon-btn danger" (click)="cancelEditSlab()" title="Cancel">
+                        <span class="material-icons">close</span>
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="slab-display">
+                    <span class="slab-range">Up to {{ slab.upToKg }} kg</span>
+                    <span class="slab-rate">₹{{ slab.ratePerKg }}/kg</span>
+                    <span class="slab-base">Base: ₹{{ slab.baseRate }}</span>
+                    <button class="icon-btn" (click)="startEditSlab(card._id, slabIndex)" title="Edit slab">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    @if (card.weightSlabs.length > 1) {
+                      <button class="icon-btn danger" (click)="removeSlab(card._id, slabIndex)" title="Remove slab">
+                        <span class="material-icons">delete</span>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+            @if (editingRateCardId() === card._id && editingSlabIndex() === -1) {
+              <div class="slab-edit-form add-slab-form">
+                <div class="form-group-inline">
+                  <label>Up to (kg):</label>
+                  <input type="number" [(ngModel)]="editSlab().upToKg" step="0.1" class="form-control-sm" />
+                </div>
+                <div class="form-group-inline">
+                  <label>Rate per kg (₹):</label>
+                  <input type="number" [(ngModel)]="editSlab().ratePerKg" step="0.1" class="form-control-sm" />
+                </div>
+                <div class="form-group-inline">
+                  <label>Base Rate (₹):</label>
+                  <input type="number" [(ngModel)]="editSlab().baseRate" step="0.1" class="form-control-sm" />
+                </div>
+                <div class="btn-group">
+                  <button class="icon-btn success" (click)="saveNewSlab(card._id)" title="Save">
+                    <span class="material-icons">check</span>
+                  </button>
+                  <button class="icon-btn danger" (click)="cancelAddSlab()" title="Cancel">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <button class="secondary-btn-sm add-slab-btn" (click)="showAddSlabForm(card._id)">
+                <span class="material-icons">add</span>
+                Add Weight Slab
+              </button>
+            }
+          </div>
+        </div>
+      }
     </div>
   }
 
   <!-- TAB CONTENT: COD & FUEL -->
   @if (activeTab() === 'cod') {
     <div class="tab-content-panel animated-fade">
-      <div class="pricing-settings-grid">
-        <!-- Fuel Surcharge Box -->
-        <div class="card settings-card">
-          <div class="card-header">
-            <h3>Global Logistics Adjustments</h3>
-          </div>
-          <div class="card-body">
-            <div class="form-group">
-              <label>Default Fuel Surcharge (%)</label>
-              <div class="input-prefix-wrapper">
-                <input type="number" [(ngModel)]="globalFuelSurcharge" class="form-control" />
-                <span class="suffix">%</span>
-              </div>
-              <p class="input-hint">Applied as a flat administrative surcharge on final calculated shipment base fees.</p>
-            </div>
-
-            <div class="form-group">
-              <label>Minimum COD Fee (₹)</label>
-              <div class="input-prefix-wrapper">
-                <span class="prefix">₹</span>
-                <input type="number" [(ngModel)]="globalMinCod" class="form-control" />
-              </div>
-              <p class="input-hint">The lowest possible collection charge if the invoice collection percentage is low.</p>
-            </div>
-
-            <button class="primary-btn" (click)="saveGlobalSettings()">
-              <span class="material-icons">save</span>
-              Save Adjustments
-            </button>
-          </div>
+      <div class="card info-card">
+        <div class="card-header">
+          <h3>Rate Card Configuration Info</h3>
         </div>
-
-        <!-- Help Info Box -->
-        <div class="card info-card">
-          <div class="card-header">
-            <h3>Logistics Rates Formula</h3>
+        <div class="card-body formula-body">
+          <p>COD and Fuel surcharge settings are now configured per rate card in the "Courier Rate Cards" tab.</p>
+          <div class="formula-box">
+            <code>Total Shipping Cost = Base Rate + (Weight × Rate per kg) + Fuel Surcharge (%) + COD Charges</code>
           </div>
-          <div class="card-body formula-body">
-            <p>Platform system charges are dynamically computed based on active pricing sheets:</p>
-            <div class="formula-box">
-              <code>Total Shipping Cost = Base Rate + (Additional Weight Units × Addl. Rate) + Fuel Surcharge (%)</code>
-            </div>
-            <ul class="formula-list">
-              <li>Base rate values cover the initial manifest slab (0.5kg by default).</li>
-              <li>Fuel percentages stack atop the weight billing sum.</li>
-              <li>COD Cash charges are calculated dynamically upon package booking.</li>
-            </ul>
-          </div>
+          <ul class="formula-list">
+            <li>Weight slabs are configured per rate card with upper weight limits.</li>
+            <li>Fuel surcharge is a percentage added to the base shipping cost.</li>
+            <li>COD charges include a flat fee plus percentage of COD amount.</li>
+            <li>Super Admin markup percentage is applied when pricing to distributors.</li>
+          </ul>
         </div>
       </div>
     </div>

@@ -1,11 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, input, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { ShipmentService, ShipmentListItem } from '../../../../services/shipment.service';
+import { MerchantService } from '../../../../services/merchant.service';
 
 interface DistributorShipment extends ShipmentListItem {
   shipmentId: string;
   date: string;
   amount: string;
+  merchantId: string;
+  merchantName: string;
 }
 
 @Component({
@@ -15,24 +19,37 @@ interface DistributorShipment extends ShipmentListItem {
   templateUrl: './distributor-shipments.html',
   styleUrls: ['../../../../common-css/super-admin-distrubutore-tabs.css']
 })
-export class DistributorShipments implements OnInit {
+export class DistributorShipments {
+  private router = inject(Router);
+  private shipmentService = inject(ShipmentService);
+  private merchantService = inject(MerchantService);
+
+  distributorId = input.required<string>();
   shipments: DistributorShipment[] = [];
-  isLoading = false;
-  error = '';
+  merchantMap: Map<string, string> = new Map();
+  isLoading = signal(false);
+  error = signal('');
 
-  constructor(private shipmentService: ShipmentService) { }
-
-  ngOnInit(): void {
-    this.loadShipments();
+  constructor() {
+    // Use setTimeout to ensure input is bound before loading
+    setTimeout(() => {
+      this.loadShipments();
+    }, 0);
   }
 
   private loadShipments(): void {
-    this.isLoading = true;
-    this.error = '';
+    this.isLoading.set(true);
+    this.error.set('');
 
-    this.shipmentService.listShipments({ page: 1, limit: 50 }).subscribe({
+    this.shipmentService.listShipments({ distributor: this.distributorId(), page: 1, limit: 50 }).subscribe({
       next: (res) => {
-        this.shipments = (res.data.shipments ?? []).map((shipment) => ({
+        const shipments = (res.data.shipments ?? []).filter((s: any) => s.distributorId === this.distributorId());
+        const merchantIds = [...new Set(shipments.map((s: any) => s.merchantId))];
+        
+        // Load merchant names
+        this.loadMerchantNames(merchantIds);
+        
+        this.shipments = shipments.map((shipment: any) => ({
           ...shipment,
           shipmentId: shipment.awb,
           date: new Date(shipment.createdAt).toLocaleDateString('en-IN', {
@@ -41,13 +58,37 @@ export class DistributorShipments implements OnInit {
             year: 'numeric',
           }),
           amount: shipment.merchantCost != null ? `₹${shipment.merchantCost.toLocaleString('en-IN')}` : '—',
+          merchantId: shipment.merchantId,
+          merchantName: this.merchantMap.get(shipment.merchantId) || 'Loading...',
         }));
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.error = err?.error?.message || 'Failed to load shipments.';
-        this.isLoading = false;
+        this.error.set(err?.error?.message || 'Failed to load shipments.');
+        this.isLoading.set(false);
       },
     });
+  }
+
+  private loadMerchantNames(merchantIds: string[]): void {
+    merchantIds.forEach(id => {
+      this.merchantService.getMerchantById(id).subscribe({
+        next: (res) => {
+          const merchant = res.data;
+          this.merchantMap.set(id, merchant.companyName || `${merchant.firstName} ${merchant.lastName}`);
+          // Update shipments with loaded merchant name
+          this.shipments = this.shipments.map(s => 
+            s.merchantId === id ? { ...s, merchantName: this.merchantMap.get(id) || '—' } : s
+          );
+        },
+        error: () => {
+          this.merchantMap.set(id, '—');
+        }
+      });
+    });
+  }
+
+  navigateToMerchant(merchantId: string): void {
+    this.router.navigate(['/super-admin/merchants/profile', merchantId]);
   }
 }

@@ -1,25 +1,28 @@
-import { Component, signal } from "@angular/core";
+import { Component, signal, inject, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-
-interface RateCard {
-  courier: string;
-  code: string;
-  baseRate: number;
-  additionalRate: number;
-  codPercent: number;
-  codMin: number;
-  fuelSurcharge: number;
-  active: boolean;
-}
+import { RateService } from "../../../services/rate.service";
 
 interface WeightSlab {
-  id: string;
+  upToKg: number;
+  ratePerKg: number;
+  baseRate: number;
+}
+
+interface RateCard {
+  _id: string;
   name: string;
-  minWeight: number;
-  maxWeight: number;
-  increment: number;
   description: string;
+  serviceType: string;
+  weightSlabs: WeightSlab[];
+  codCharge: number;
+  codPercent: number;
+  fuelSurcharge: number;
+  superAdminMarkupPercent: number;
+  isActive: boolean;
+  applicableTo: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Component({
@@ -28,41 +31,31 @@ interface WeightSlab {
   templateUrl: "./rate-management.html",
   styleUrl: "./rate-management.css",
 })
-export class RateManagement {
+export class RateManagement implements OnInit {
   activeTab = signal<"rates" | "slabs" | "cod">("rates");
+  private rateService = inject(RateService);
   
-  rateCards = signal<RateCard[]>([
-    { courier: "Delhivery Air", code: "delhivery_air", baseRate: 75, additionalRate: 65, codPercent: 2.0, codMin: 45, fuelSurcharge: 12.5, active: true },
-    { courier: "Delhivery Surface", code: "delhivery_surface", baseRate: 48, additionalRate: 40, codPercent: 1.8, codMin: 40, fuelSurcharge: 10.0, active: true },
-    { courier: "BlueDart Express", code: "bluedart_express", baseRate: 110, additionalRate: 95, codPercent: 2.5, codMin: 60, fuelSurcharge: 15.0, active: true },
-    { courier: "ExpressBees B2C", code: "xpressbees_b2c", baseRate: 42, additionalRate: 36, codPercent: 1.5, codMin: 35, fuelSurcharge: 8.0, active: true },
-    { courier: "Ecom Express", code: "ecom_express", baseRate: 45, additionalRate: 38, codPercent: 1.6, codMin: 35, fuelSurcharge: 9.0, active: false }
-  ]);
-
-  weightSlabs = signal<WeightSlab[]>([
-    { id: "SLAB-0.5", name: "Standard Envelope/Box", minWeight: 0, maxWeight: 0.5, increment: 0.5, description: "Small document packets and light items up to 500 grams." },
-    { id: "SLAB-1.0", name: "Medium Package", minWeight: 0.5, maxWeight: 1.0, increment: 0.5, description: "Parcels between 500g and 1kg weight limit." },
-    { id: "SLAB-2.0", name: "Heavy Cargo Slab", minWeight: 1.0, maxWeight: 2.0, increment: 1.0, description: "Parcels up to 2kg weight limit." },
-    { id: "SLAB-5.0", name: "Bulk Freight Slab", minWeight: 2.0, maxWeight: 5.0, increment: 5.0, description: "Heavy shipments calculated in 5kg incremental steps." }
-  ]);
-
-  // Global settings model
-  globalFuelSurcharge = signal<number>(12);
-  globalMinCod = signal<number>(40);
-
+  rateCards = signal<RateCard[]>([]);
+  isLoading = signal<boolean>(false);
+  
   // Edit rates variables
-  editingRateIndex = signal<number | null>(null);
-  editBaseRateValue = 0;
-  editAddlRateValue = 0;
-  editFuelSurchargeValue = 0;
-
+  editingRateId = signal<string | null>(null);
+  editRateCard = signal<Partial<RateCard>>({});
+  
   // Edit slabs variables
-  editingSlabId = signal<string | null>(null);
-  editSlabName = "";
-  editSlabIncrement = 0.5;
+  editingSlabIndex = signal<number | null>(null);
+  editingRateCardId = signal<string | null>(null);
+  editSlab = signal<WeightSlab>({ upToKg: 1, ratePerKg: 0, baseRate: 0 });
+  
+  // Add slab form state
+  isAddingSlab = signal<boolean>(false);
 
   // Info notification
   notificationMessage = signal<string | null>(null);
+
+  ngOnInit() {
+    this.loadRateCards();
+  }
 
   showNotification(msg: string) {
     this.notificationMessage.set(msg);
@@ -71,65 +64,208 @@ export class RateManagement {
     }, 3000);
   }
 
-  // Rate actions
-  startEditRate(idx: number) {
-    const card = this.rateCards()[idx];
-    this.editingRateIndex.set(idx);
-    this.editBaseRateValue = card.baseRate;
-    this.editAddlRateValue = card.additionalRate;
-    this.editFuelSurchargeValue = card.fuelSurcharge;
+  loadRateCards() {
+    this.isLoading.set(true);
+    this.rateService.getRateCards().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.rateCards.set(res.data);
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading rate cards:', err);
+        this.showNotification('Failed to load rate cards');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  saveRate(idx: number) {
-    this.rateCards.update(cards => {
-      const copy = [...cards];
-      copy[idx] = {
-        ...copy[idx],
-        baseRate: this.editBaseRateValue,
-        additionalRate: this.editAddlRateValue,
-        fuelSurcharge: this.editFuelSurchargeValue
-      };
-      return copy;
+  // Rate actions
+  startEditRate(card: RateCard) {
+    this.editingRateId.set(card._id);
+    this.editRateCard.set({ ...card });
+  }
+
+  saveRate() {
+    const cardId = this.editingRateId();
+    if (!cardId) return;
+    
+    const updates = {
+      name: this.editRateCard().name,
+      description: this.editRateCard().description,
+      serviceType: this.editRateCard().serviceType,
+      weightSlabs: this.editRateCard().weightSlabs,
+      codCharge: this.editRateCard().codCharge,
+      codPercent: this.editRateCard().codPercent,
+      fuelSurcharge: this.editRateCard().fuelSurcharge,
+      superAdminMarkupPercent: this.editRateCard().superAdminMarkupPercent,
+    };
+    
+    console.log('Updating rate card:', cardId, 'with updates:', updates);
+    
+    this.rateService.updateRateCard(cardId, updates).subscribe({
+      next: (res) => {
+        console.log('Update rate card response:', res);
+        if (res.success) {
+          this.loadRateCards();
+          this.editingRateId.set(null);
+          this.showNotification('Rate card updated successfully.');
+        } else {
+          this.showNotification('Failed to update rate card: ' + (res.message || 'Unknown error'));
+        }
+      },
+      error: (err) => {
+        console.error('Error updating rate card:', err);
+        if (err.status === 404) {
+          this.showNotification('Rate card not found or unauthorized');
+        } else if (err.status === 403) {
+          this.showNotification('You do not have permission to modify rate cards');
+        } else {
+          this.showNotification('Failed to update rate card: ' + (err.message || err.status));
+        }
+      }
     });
-    this.editingRateIndex.set(null);
-    this.showNotification("Rate card updated successfully.");
   }
 
   cancelEditRate() {
-    this.editingRateIndex.set(null);
+    this.editingRateId.set(null);
+    this.editRateCard.set({});
   }
 
-  toggleCourierActive(idx: number) {
-    this.rateCards.update(cards => {
-      const copy = [...cards];
-      copy[idx].active = !copy[idx].active;
-      return copy;
+  toggleCourierActive(card: RateCard) {
+    const newStatus = !card.isActive;
+    this.rateService.updateRateCard(card._id, { isActive: newStatus }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.loadRateCards();
+          const status = newStatus ? 'activated' : 'deactivated';
+          this.showNotification(`Rate card ${card.name} has been ${status}.`);
+        }
+      },
+      error: (err) => {
+        console.error('Error toggling rate card:', err);
+        this.showNotification('Failed to update rate card status');
+      }
     });
-    const status = this.rateCards()[idx].active ? "activated" : "deactivated";
-    this.showNotification(`Courier partner ${this.rateCards()[idx].courier} has been ${status}.`);
   }
 
   // Slab actions
-  startEditSlab(slab: WeightSlab) {
-    this.editingSlabId.set(slab.id);
-    this.editSlabName = slab.name;
-    this.editSlabIncrement = slab.increment;
+  startEditSlab(cardId: string, slabIndex: number) {
+    this.editingRateCardId.set(cardId);
+    this.editingSlabIndex.set(slabIndex);
+    const card = this.rateCards().find(c => c._id === cardId);
+    if (card && card.weightSlabs[slabIndex]) {
+      this.editSlab.set({ ...card.weightSlabs[slabIndex] });
+    }
   }
 
-  saveSlab(id: string) {
-    this.weightSlabs.update(slabs => {
-      return slabs.map(s => s.id === id ? { ...s, name: this.editSlabName, increment: this.editSlabIncrement } : s);
+  saveSlab() {
+    const cardId = this.editingRateCardId();
+    const slabIndex = this.editingSlabIndex();
+    if (!cardId || slabIndex === null) return;
+    
+    const card = this.rateCards().find(c => c._id === cardId);
+    if (!card) return;
+    
+    const updatedSlabs = [...card.weightSlabs];
+    updatedSlabs[slabIndex] = this.editSlab();
+    
+    this.rateService.updateRateCard(cardId, { weightSlabs: updatedSlabs }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.loadRateCards();
+          this.editingRateCardId.set(null);
+          this.editingSlabIndex.set(null);
+          this.showNotification('Weight slab updated successfully.');
+        }
+      },
+      error: (err) => {
+        console.error('Error updating slab:', err);
+        this.showNotification('Failed to update weight slab');
+      }
     });
-    this.editingSlabId.set(null);
-    this.showNotification("Weight slab configured successfully.");
   }
 
   cancelEditSlab() {
-    this.editingSlabId.set(null);
+    this.editingRateCardId.set(null);
+    this.editingSlabIndex.set(null);
+    this.editSlab.set({ upToKg: 1, ratePerKg: 0, baseRate: 0 });
   }
 
-  // Global settings save
-  saveGlobalSettings() {
-    this.showNotification("Global surcharge adjustments saved successfully.");
+  // Show add slab form
+  showAddSlabForm(cardId: string) {
+    const card = this.rateCards().find(c => c._id === cardId);
+    if (!card) return;
+    
+    // Set default values based on last slab
+    const lastSlab = card.weightSlabs[card.weightSlabs.length - 1];
+    const newUpToKg = lastSlab ? lastSlab.upToKg + 1 : 1;
+    
+    this.editingRateCardId.set(cardId);
+    this.editingSlabIndex.set(-1); // -1 indicates adding new slab
+    this.editSlab.set({ upToKg: newUpToKg, ratePerKg: 0, baseRate: 0 });
+  }
+
+  // Save new slab
+  saveNewSlab(cardId: string) {
+    const card = this.rateCards().find(c => c._id === cardId);
+    if (!card) return;
+    
+    const newSlab = this.editSlab();
+    const updatedSlabs = [...card.weightSlabs, newSlab];
+    
+    console.log('Saving new slab to card:', cardId, 'with slabs:', updatedSlabs);
+    
+    this.rateService.updateRateCard(cardId, { weightSlabs: updatedSlabs }).subscribe({
+      next: (res) => {
+        console.log('Save new slab response:', res);
+        if (res.success) {
+          this.loadRateCards();
+          this.cancelAddSlab();
+          this.showNotification('New slab added successfully.');
+        } else {
+          this.showNotification('Failed to add slab: ' + (res.message || 'Unknown error'));
+        }
+      },
+      error: (err) => {
+        console.error('Error adding slab:', err);
+        if (err.status === 404) {
+          this.showNotification('Rate card not found or unauthorized');
+        } else if (err.status === 403) {
+          this.showNotification('You do not have permission to modify rate cards');
+        } else {
+          this.showNotification('Failed to add slab: ' + (err.message || err.status));
+        }
+      }
+    });
+  }
+
+  // Cancel add slab form
+  cancelAddSlab() {
+    this.editingRateCardId.set(null);
+    this.editingSlabIndex.set(null);
+    this.editSlab.set({ upToKg: 1, ratePerKg: 0, baseRate: 0 });
+  }
+
+  // Remove slab from rate card
+  removeSlab(cardId: string, slabIndex: number) {
+    const card = this.rateCards().find(c => c._id === cardId);
+    if (!card || card.weightSlabs.length <= 1) return;
+    
+    const updatedSlabs = card.weightSlabs.filter((_, i) => i !== slabIndex);
+    
+    this.rateService.updateRateCard(cardId, { weightSlabs: updatedSlabs }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.loadRateCards();
+          this.showNotification('Slab removed successfully.');
+        }
+      },
+      error: (err) => {
+        console.error('Error removing slab:', err);
+        this.showNotification('Failed to remove slab');
+      }
+    });
   }
 }

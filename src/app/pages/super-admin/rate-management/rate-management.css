@@ -258,6 +258,117 @@
 }
 
 /* ================= SLABS TAB ================= */
+.rate-card-slabs {
+    margin-bottom: 24px;
+}
+
+.slabs-list {
+    padding: 20px;
+}
+
+.slab-row {
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.slab-row:last-child {
+    border-bottom: none;
+}
+
+.slab-edit-form {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.form-group-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group-inline label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.form-control-sm {
+    width: 100px;
+    padding: 8px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+}
+
+.form-control-sm:focus {
+    border-color: rgb(11, 74, 111);
+}
+
+.slab-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.slab-range {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgb(11, 74, 111);
+    min-width: 100px;
+}
+
+.slab-rate {
+    font-size: 13px;
+    color: #475569;
+    min-width: 80px;
+}
+
+.slab-base {
+    font-size: 13px;
+    color: #64748b;
+    min-width: 80px;
+}
+
+.add-slab-btn {
+    margin-top: 16px;
+    width: 100%;
+    justify-content: center;
+}
+
+.add-slab-form {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border: 1.5px solid #bae6fd;
+}
+
+.service-type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e0f2fe;
+    color: #0369a1;
+    text-transform: uppercase;
+}
+
+.loading-state {
+    padding: 40px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* ================= OLD SLABS GRID (deprecated) ================= */
 .slabs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
