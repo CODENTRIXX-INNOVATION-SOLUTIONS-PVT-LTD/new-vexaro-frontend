@@ -6,11 +6,14 @@
 
         <!-- Financial Section Navigation Tabs -->
         <div class="financial-tabs">
+            <button class="tab-btn" [class.active]="activeTab === 'adminwallet'" (click)="changeTab('adminwallet')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg> My Wallet
+            </button>
             <button class="tab-btn" [class.active]="activeTab === 'wallet'" (click)="changeTab('wallet')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg> Distributor Wallets
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Distributor Wallets
             </button>
             <button class="tab-btn" [class.active]="activeTab === 'recharge'" (click)="changeTab('recharge')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Recharge Distributor
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Transfer to Distributor
             </button>
             <button class="tab-btn" [class.active]="activeTab === 'razorpay'" (click)="changeTab('razorpay')">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Razorpay Payments
@@ -32,8 +35,90 @@
         <!-- Tab Contents -->
         <div class="tab-content-container">
 
-            <!-- TAB 1: Distributor Wallet -->
-            <div class="table-card" *ngIf="activeTab === 'wallet'">
+        <!-- TAB 0: Admin Wallet (Razorpay Top-up) -->
+        <div class="form-card" *ngIf="activeTab === 'adminwallet'">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+                <div>
+                    <h3>Admin Wallet</h3>
+                    <p class="card-subtitle">Top up your wallet via Razorpay, then transfer funds to distributors.</p>
+                </div>
+                <div style="background:linear-gradient(135deg,#1e3a8a,rgb(11,74,111));color:white;border-radius:14px;padding:16px 24px;text-align:right;min-width:160px;">
+                    <div style="font-size:12px;opacity:0.8;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;">Your Balance</div>
+                    <div style="font-size:28px;font-weight:800;margin-top:4px;">₹{{ adminBalance.toLocaleString('en-IN') }}</div>
+                </div>
+            </div>
+
+            @if (adminTopupSuccess) {
+            <div style="display:flex;align-items:center;gap:10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:500;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                {{ adminTopupSuccess }}
+            </div>
+            }
+            @if (adminTopupError) {
+            <div style="display:flex;align-items:center;gap:10px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:500;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                {{ adminTopupError }}
+            </div>
+            }
+
+            <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:10px;">Select Top-up Amount</label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;">
+                @for (pkg of adminTopupPackages; track pkg) {
+                <button
+                    style="border:2px solid;border-radius:12px;padding:11px 22px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;"
+                    [style.borderColor]="adminSelectedPackage === pkg ? 'rgb(11,74,111)' : '#e5e7eb'"
+                    [style.background]="adminSelectedPackage === pkg ? 'rgb(11,74,111)' : 'white'"
+                    [style.color]="adminSelectedPackage === pkg ? 'white' : '#374151'"
+                    (click)="adminSelectedPackage = pkg; adminTopupError = ''; adminTopupSuccess = ''">
+                    ₹{{ pkg.toLocaleString('en-IN') }}
+                </button>
+                }
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px;">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <label style="font-size:13px;font-weight:600;color:#374151;">Payment Method</label>
+                    <select [(ngModel)]="adminTopupMode" name="adminTopupMode"
+                        style="border:1.5px solid #e2e8f0;border-radius:10px;padding:11px 14px;font-size:14px;outline:none;background:#f8fafc;">
+                        <option value="checkout">Razorpay Checkout (Card / UPI / Net Banking)</option>
+                        <option value="upi_qr">UPI / QR via Razorpay</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (adminSelectedPackage) {
+            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:13px 18px;font-size:14px;color:rgb(11,74,111);display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Adding <strong>₹{{ adminSelectedPackage.toLocaleString('en-IN') }}</strong> to your admin wallet via <strong>{{ adminTopupMode === 'upi_qr' ? 'UPI / QR' : 'Razorpay Checkout' }}</strong>
+            </div>
+            }
+
+            <div style="display:flex;justify-content:flex-end;gap:12px;align-items:center;">
+                <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:#94a3b8;font-weight:500;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#072654"/><path d="M9.5 7L15.5 12L9.5 17" stroke="#3395FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Secured by Razorpay
+                </div>
+                <button class="btn-submit" (click)="startAdminTopup()" [disabled]="!adminSelectedPackage || adminTopupProcessing">
+                    @if (adminTopupProcessing) {
+                    <span style="display:inline-block;width:14px;height:14px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
+                    Opening Razorpay…
+                    } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Pay with Razorpay
+                    }
+                </button>
+            </div>
+
+            <div style="margin-top:24px;padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+                <p style="margin:0;font-size:13px;color:#64748b;font-weight:500;">
+                    <strong style="color:#374151;">How it works:</strong>
+                    Top up your admin wallet here → then go to <strong>Transfer to Distributor</strong> tab to send funds from your wallet to any distributor. Your balance is always deducted, ensuring full accountability.
+                </p>
+            </div>
+        </div>
+
+        <!-- TAB 1: Distributor Wallet -->
+        <div class="table-card" *ngIf="activeTab === 'wallet'">
                 <div class="card-header">
                     <h3>Distributor Wallet Balances</h3>
                     <p class="card-subtitle">Overview of available funds and statuses for all distributors</p>
@@ -84,9 +169,18 @@
 
             <!-- TAB 2: Recharge Distributor Form -->
             <div class="form-card" *ngIf="activeTab === 'recharge'">
-                <div class="card-header">
-                    <h3>Recharge Distributor Wallet</h3>
-                    <p class="card-subtitle">Add funds to a distributor's virtual credit wallet</p>
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                    <div>
+                        <h3>Transfer Funds to Distributor</h3>
+                        <p class="card-subtitle">Transfer from your admin wallet to a distributor's wallet</p>
+                    </div>
+                    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 16px;text-align:right;">
+                        <div style="font-size:11px;color:#64748b;font-weight:500;">Your Admin Balance</div>
+                        <div style="font-size:20px;font-weight:700;color:rgb(11,74,111);">₹{{ adminBalance.toLocaleString('en-IN') }}</div>
+                        @if (adminBalance === 0) {
+                        <a (click)="changeTab('adminwallet')" style="font-size:11px;color:#dc2626;cursor:pointer;text-decoration:underline;">Top up wallet first</a>
+                        }
+                    </div>
                 </div>
 
                 @if (rechargeSuccess) {
@@ -139,10 +233,19 @@
 
                     <div class="form-actions">
                         <button type="button" class="btn-cancel" (click)="changeTab('wallet')">Cancel</button>
-                        <button type="submit" class="btn-submit" [disabled]="!rechargeForm.form.valid">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Complete Recharge
+                        <button type="submit" class="btn-submit" [disabled]="!rechargeForm.form.valid || isAdminBalanceInsufficient">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            {{ isAdminBalanceInsufficient ? 'Insufficient Balance' : 'Transfer Funds' }}
                         </button>
                     </div>
+
+                    @if (isAdminBalanceInsufficient) {
+                    <div style="display:flex;align-items:center;gap:8px;background:#fee2e2;color:#b91c1c;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:13px;font-weight:500;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Your admin wallet balance (₹{{ adminBalance.toLocaleString('en-IN') }}) is insufficient.
+                        <a (click)="changeTab('adminwallet')" style="color:#b91c1c;cursor:pointer;text-decoration:underline;margin-left:4px;">Top up now →</a>
+                    </div>
+                    }
                 </form>
             </div>
 
