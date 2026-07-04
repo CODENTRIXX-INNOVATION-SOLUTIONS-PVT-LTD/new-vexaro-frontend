@@ -21,7 +21,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Transaction History
         </button>
         <button class="tab-btn" [class.active]="activeTab === 'requests'" (click)="changeTab('requests')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Recharge Requests
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Refund Requests
             @if (pendingRequestsCount > 0) {
                 <span class="tab-badge">{{ pendingRequestsCount }}</span>
             }
@@ -72,7 +72,7 @@
             </div>
 
             <div style="display: flex; align-items: center; ">
-                <button class="hero-topup-btn" (click)="changeTab('requests')" style="background: rgba(255,255,255,0.18); color: white; border: 1.5px solid rgba(255,255,255,0.35); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;">
+                <button class="hero-topup-btn" (click)="scrollToTopupForm()" style="background: rgba(255,255,255,0.18); color: white; border: 1.5px solid rgba(255,255,255,0.35); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Funds
                 </button>
             </div>
@@ -111,7 +111,7 @@
         </div>
 
         <!-- Quick Top-up Form -->
-        <div class="form-card">
+        <div id="topup-form" class="form-card">
             <div class="card-header">
                 <h3>Add Funds to Wallet</h3>
                 <p class="card-sub">Pay securely through Vexaro Razorpay checkout. Wallet credit is applied only after verified captured payment.</p>

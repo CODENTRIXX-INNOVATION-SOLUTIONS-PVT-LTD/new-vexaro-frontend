@@ -75,11 +75,12 @@ export class DistributorWallet implements OnInit {
     this.txLoading = true;
     this.financeService.listTransactions({ limit: 50 }).subscribe({
       next: (res) => {
+        const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
         this.transactions = (res?.data?.transactions ?? []).map((t: any) => ({
           id: t._id,
           date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
           description: t.note || t.type,
-          type: t.amount >= 0 ? 'credit' : 'debit',
+          type: DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
           amount: Math.abs(t.amount),
           reference: t.reference || '—',
         }));

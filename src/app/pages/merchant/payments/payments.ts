@@ -118,10 +118,10 @@ export class Payments implements OnInit {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    // Only load what's needed for the default tab (balance) + critical data
     this.loadWalletDetails();
-    this.loadTransactions();   // needed for summary stats
-    this.loadRefundRequests(); // needed for badge counts on tabs
+    this.loadTransactions();      // needed for summary stats (Total Spent)
+    this.loadRefundRequests();    // needed for badge counts on tabs
+    this.loadRazorpayPayments();  // needed for "Total Top-ups" stat card
     // Disputes loaded lazily when tab is opened
   }
 
@@ -144,12 +144,13 @@ export class Payments implements OnInit {
     this.txLoading = true;
     this.financeService.listTransactions({ limit: 50 }).subscribe({
       next: (res) => {
+        const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
         const raw: any[] = res?.data?.transactions ?? [];
         this.transactions = raw.map((t: any) => ({
           id: t._id,
           date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
           description: t.note || this.formatTxType(t.type),
-          type: t.amount >= 0 ? 'credit' : 'debit',
+          type: DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
           amount: Math.abs(t.amount ?? 0),
           status: 'Success',
           reference: t.reference || '—',
@@ -230,13 +231,19 @@ export class Payments implements OnInit {
 
   // ── Top-up ────────────────────────────────────────────────────────────────
 
+  scrollToTopupForm(): void {
+    this.activeTab = 'balance';
+    setTimeout(() => {
+      const el = document.getElementById('topup-form');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
   selectPackage(amount: number): void {
     this.selectedPackage = amount;
     this.topupSuccess = '';
     this.topupError = '';
-  }
-
-  async submitTopUp(): Promise<void> {
+  }  async submitTopUp(): Promise<void> {
     if (!this.selectedPackage) {
       this.topupError = 'Please select an amount to add.';
       return;
@@ -251,9 +258,11 @@ export class Payments implements OnInit {
       this.selectedPackage = null;
       // Force refresh after successful payment
       this.transactions = [];
+      this.txLoading = false;
       this.loadTransactions();
       this.razorpayPayments = [];
-      this.paymentsLoading = false; // reset guard so refresh works
+      this.paymentsLoading = false;
+      this.loadRazorpayPayments();
     } catch (err: any) {
       this.topupError = err?.error?.message || err?.message || 'Payment could not be completed.';
     } finally {

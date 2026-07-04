@@ -36,9 +36,10 @@ export class Reports implements OnInit {
 
   loadReport() {
     this.isLoading = true;
-    
-    // Mocking an API call
-    setTimeout(() => {
+
+    // Static mock data — replace this block with a real API subscribe when ready.
+    // Using a Promise.resolve to keep async style without a fake delay.
+    Promise.resolve().then(() => {
       this.summary = {
         total: 1250,
         delivered: 1100,
@@ -58,7 +59,7 @@ export class Reports implements OnInit {
       ];
 
       this.isLoading = false;
-    }, 600);
+    });
   }
 
   exportCSV() {
