@@ -1,6 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { CsvExportService } from '../../../../shared/csv-export.service';
 
 @Component({
@@ -8,162 +11,126 @@ import { CsvExportService } from '../../../../shared/csv-export.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './shipment-reports.html',
-  styleUrl: './shipment-reports.css'
+  styleUrl: './shipment-reports.css',
 })
 export class ShipmentReports implements OnInit {
-  dateRange: string = 'This Month';
-  merchantFilter: string = 'All Merchants';
-  isLoading: boolean = false;
-
-  summary = {
-    total: 0,
-    delivered: 0,
-    failed: 0,
-    rto: 0
-  };
-
-  dataList: any[] = [];
-
+  private http       = inject(HttpClient);
   private csvService = inject(CsvExportService);
+  private readonly base = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
 
-  ngOnInit() {
-    this.loadReport();
+  isLoading = false;
+  error     = '';
+
+  summary = { total: 0, delivered: 0, failed: 0, rto: 0, today: 0, pending: 0, inTransit: 0 };
+
+  // Recent shipments used as "daily breakdown" proxy
+  recentShipments: any[] = [];
+
+  get deliveryRate(): string {
+    if (!this.summary.total) return '—';
+    return ((this.summary.delivered / this.summary.total) * 100).toFixed(1) + '%';
   }
 
-  loadReport() {
+  ngOnInit(): void { this.load(); }
+
+  load(): void {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/reports/shipments
-    this.summary = {
-      total: 890,
-      delivered: 812,
-      failed: 43,
-      rto: 35
-    };
-    this.dataList = [
-      { date: '17 Jun 2026', total: 48, delivered: 42, failed: 4, rto: 2, codCollected: 45000 },
-      { date: '16 Jun 2026', total: 55, delivered: 50, failed: 3, rto: 2, codCollected: 38000 },
-      { date: '15 Jun 2026', total: 60, delivered: 55, failed: 3, rto: 2, codCollected: 52000 },
-      { date: '14 Jun 2026', total: 42, delivered: 38, failed: 2, rto: 2, codCollected: 29000 },
-      { date: '13 Jun 2026', total: 38, delivered: 35, failed: 2, rto: 1, codCollected: 18000 },
-    ];
-    this.isLoading = false;
+    this.error     = '';
+
+    const stats$   = this.http.get<any>(`${this.base}/shipments/stats`).pipe(catchError(() => of(null)));
+    const recent$  = this.http.get<any>(`${this.base}/shipments`,
+      { params: new HttpParams().set('limit', '10').set('page', '1') }
+    ).pipe(catchError(() => of(null)));
+
+    forkJoin([stats$, recent$]).subscribe({
+      next: ([statsRes, recentRes]) => {
+        const s = statsRes?.data ?? statsRes;
+        this.summary = {
+          total:     s?.total    ?? 0,
+          delivered: s?.byStatus?.DELIVERED       ?? 0,
+          failed:    s?.byStatus?.DELIVERY_FAILED  ?? 0,
+          rto:       s?.byStatus?.RTO              ?? 0,
+          today:     s?.today ?? 0,
+          pending:   s?.byStatus?.ORDER_CREATED    ?? 0,
+          inTransit: (s?.byStatus?.PICKED_UP ?? 0) +
+                     (s?.byStatus?.ARRIVED_AT_HUB ?? 0) +
+                     (s?.byStatus?.OUT_FOR_DELIVERY ?? 0),
+        };
+
+        this.recentShipments = (recentRes?.data?.shipments ?? []).map((sh: any) => ({
+          awb:     sh.awb,
+          date:    new Date(sh.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          status:  sh.status,
+          dest:    sh.destination?.city ?? '—',
+          carrier: sh.carrier ?? '—',
+          weight:  sh.weight ?? 0,
+          isCOD:   sh.isCOD ?? false,
+          cod:     sh.codAmount ?? 0,
+        }));
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error     = err?.error?.message || 'Failed to load shipment report.';
+        this.isLoading = false;
+      },
+    });
   }
 
-  exportPDF() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow popups to download report.');
-      return;
-    }
-
-    const rowsHtml = this.dataList.map(item => `
-      <tr>
-        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${item.date}</td>
-        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">${item.total}</td>
-        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #16a34a; font-weight: 600;">${item.delivered}</td>
-        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #dc2626;">${item.failed}</td>
-        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #ea580c;">${item.rto}</td>
-        <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;">₹${item.codCollected.toLocaleString('en-IN')}</td>
-      </tr>
-    `).join('');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Shipment Performance Report - Vexaro</title>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; padding: 40px; }
-            .header-table { width: 100%; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: 800; color: rgb(11, 74, 111); }
-            .title { text-align: right; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #64748b; }
-            
-            .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0 35px; }
-            .stat-card { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-            .stat-label { font-size: 12px; color: #64748b; margin-bottom: 4px; font-weight: 500; }
-            .stat-value { font-size: 20px; font-weight: bold; color: #0f172a; }
-
-            .trx-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-            .trx-table th { background: #f8fafc; padding: 10px; font-weight: 600; color: #64748b; border-bottom: 2px solid #cbd5e1; }
-            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-            @media print {
-              body { padding: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <table class="header-table">
-            <tr>
-              <td class="logo">VEXARO</td>
-              <td class="title">Shipment Report</td>
-            </tr>
-          </table>
-
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 20px;" />
-          <div style="font-size: 13px; color: #475569; display: flex; justify-content: space-between;">
-            <div><strong>Date Range:</strong> ${this.dateRange}</div>
-            <div><strong>Filter:</strong> ${this.merchantFilter}</div>
-          </div>
-
-          <div class="stats-grid">
-            <div class="stat-card">
-              <span class="stat-label">Total Volume</span>
-              <span class="stat-value">${this.summary.total}</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">Delivered</span>
-              <span class="stat-value" style="color: #16a34a;">${this.summary.delivered}</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">Failed</span>
-              <span class="stat-value" style="color: #dc2626;">${this.summary.failed}</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">RTO</span>
-              <span class="stat-value" style="color: #ea580c;">${this.summary.rto}</span>
-            </div>
-          </div>
-
-          <table class="trx-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Total Shipments</th>
-                <th>Delivered</th>
-                <th>Failed</th>
-                <th>RTO</th>
-                <th>COD Collected</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <p>This is a computer-generated performance report ledger statement.</p>
-            <p>Vexaro Courier Solutions &copy; ${new Date().getFullYear()}</p>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          </script>
-        </body>
-    `);
-    printWindow.document.close();
-  }
-
-  exportCSV() {
-    const headers = ['Date', 'Total Shipments', 'Delivered', 'Failed', 'RTO', 'COD Collected (INR)'];
-    const rows = this.dataList.map(item => [
-      item.date,
-      item.total,
-      item.delivered,
-      item.failed,
-      item.rto,
-      item.codCollected
+  exportCSV(): void {
+    const headers = ['AWB', 'Date', 'Status', 'Destination', 'Carrier', 'Weight (kg)', 'Payment', 'COD Amount'];
+    const rows = this.recentShipments.map(s => [
+      s.awb, s.date, s.status, s.dest, s.carrier, s.weight,
+      s.isCOD ? 'COD' : 'Prepaid', s.cod,
     ]);
     this.csvService.export('distributor_shipment_report', headers, rows);
+  }
+
+  exportPDF(): void {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { alert('Pop-up blocked. Please allow popups.'); return; }
+
+    const rowsHtml = this.recentShipments.map(s => `
+      <tr>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-size:12px;">${s.awb}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${s.date}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${s.status}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${s.dest}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${s.carrier}</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${s.weight} kg</td>
+        <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${s.isCOD ? 'COD ₹' + s.cod : 'Prepaid'}</td>
+      </tr>`).join('');
+
+    printWindow.document.write(`<html><head><title>Shipment Report - Vexaro</title>
+      <style>
+        body{font-family:'Segoe UI',sans-serif;color:#1e293b;padding:40px;}
+        .logo{font-size:24px;font-weight:800;color:rgb(11,74,111);}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0;}
+        .sc{background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;}
+        .sl{font-size:12px;color:#64748b;margin-bottom:4px;}
+        .sv{font-size:20px;font-weight:bold;color:#0f172a;}
+        table{width:100%;border-collapse:collapse;font-size:13px;}
+        th{background:#f8fafc;padding:10px;font-weight:600;color:#64748b;border-bottom:2px solid #cbd5e1;text-align:left;}
+        .footer{margin-top:40px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:16px;}
+      </style></head><body>
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+        <span class="logo">VEXARO</span>
+        <span style="font-size:18px;font-weight:bold;color:#64748b;">Shipment Report</span>
+      </div>
+      <hr style="border:0;border-top:1px solid #e2e8f0;margin-bottom:16px;" />
+      <div class="stats">
+        <div class="sc"><span class="sl">Total</span><span class="sv">${this.summary.total}</span></div>
+        <div class="sc"><span class="sl">Delivered</span><span class="sv" style="color:#16a34a;">${this.summary.delivered}</span></div>
+        <div class="sc"><span class="sl">RTO</span><span class="sv" style="color:#ea580c;">${this.summary.rto}</span></div>
+        <div class="sc"><span class="sl">Delivery Rate</span><span class="sv">${this.deliveryRate}</span></div>
+      </div>
+      <h3 style="margin-bottom:12px;color:#0f172a;">Recent Shipments (Latest 10)</h3>
+      <table><thead><tr>
+        <th>AWB</th><th>Date</th><th>Status</th><th>Destination</th><th>Carrier</th><th>Weight</th><th>Payment</th>
+      </tr></thead><tbody>${rowsHtml}</tbody></table>
+      <div class="footer">Vexaro Courier Solutions &copy; ${new Date().getFullYear()}</div>
+      <script>window.onload=function(){window.print();};<\/script>
+    </body></html>`);
+    printWindow.document.close();
   }
 }
