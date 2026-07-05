@@ -1,66 +1,160 @@
 <div class="shipment-card">
-    <div class="header mb-0">
-        <div class="d-flex align-center gap-15">
-            <button class="back-btn" (click)="goBack()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <div>
-                <h2 style="margin: 0; font-size: 20px;">Tracking History Log: {{awb}}</h2>
-                <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">Immutable Audit Ledger</p>
-            </div>
-        </div>
-         <div class="actions">
-            <button class="view-btn" (click)="downloadPDFLog()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download PDF Log</button>
-        </div>
+
+  <!-- Header -->
+  <div class="header mb-0">
+    <div class="d-flex align-center gap-15">
+      <button class="back-btn" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <div>
+        <h2 style="margin:0;font-size:20px;">
+          Tracking History
+          @if (awb) { <span style="color:#0b4a6f;font-family:monospace;">{{ awb }}</span> }
+        </h2>
+        <p style="margin:5px 0 0;font-size:14px;color:#6b7280;">Shipment status event log</p>
+      </div>
     </div>
 
+    <div class="actions">
+      <button class="view-btn" (click)="downloadPDFLog()" [disabled]="filteredLogs.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg> Download PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- AWB Search -->
+  <div style="display:flex;gap:10px;align-items:center;margin:20px 0 0;flex-wrap:wrap;">
+    <input type="text" [(ngModel)]="awb" placeholder="Enter AWB number…"
+      (keyup.enter)="search()"
+      style="flex:1;min-width:220px;max-width:360px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;" />
+    <button (click)="search()" [disabled]="isLoading || !awb.trim()"
+      style="padding:10px 20px;background:rgb(11,74,111);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+      @if (isLoading) { Loading… } @else { Track }
+    </button>
+  </div>
+
+  <!-- Shipment summary banner -->
+  @if (shipment && !isLoading) {
+    <div style="display:flex;gap:24px;flex-wrap:wrap;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px 18px;margin-top:16px;font-size:13px;color:#0369a1;">
+      <span><strong>From:</strong> {{ shipment.origin?.city ?? '—' }}, {{ shipment.origin?.state ?? '' }}</span>
+      <span><strong>To:</strong> {{ shipment.destination?.city ?? '—' }}, {{ shipment.destination?.state ?? '' }}</span>
+      <span><strong>Carrier:</strong> {{ shipment.carrier ?? '—' }}</span>
+      <span><strong>Current Status:</strong>
+        <strong style="color:#0b4a6f;">{{ shipment.status }}</strong>
+      </span>
+      <span><strong>Weight:</strong> {{ shipment.weight ?? '—' }} kg</span>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div style="display:flex;align-items:center;gap:10px;padding:40px;color:#64748b;font-size:14px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em;animation:spin 0.7s linear infinite;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      Fetching tracking history…
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading && error) {
+    <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:14px 18px;margin-top:16px;font-size:14px;">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Filters — only show when data is loaded -->
+  @if (!isLoading && logs.length > 0) {
     <div class="filter-bar mt-4">
-        <div class="form-row">
-            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input" style="max-width: 200px;">
-            
-            <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
-                <option value="All">All Statuses</option>
-                <option value="Manifested">Manifested</option>
-                <option value="Picked Up">Picked Up</option>
-                <option value="Received at Hub">Received at Hub</option>
-                <option value="Sorted">Sorted</option>
-                <option value="Out for Delivery">Out for Delivery</option>
-                <option value="Delivered">Delivered</option>
-            </select>
-        </div>
+      <div class="form-row">
+        <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input" style="max-width:200px;" />
+        <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+          <option value="">All Statuses</option>
+          <option value="ORDER_CREATED">Order Created</option>
+          <option value="PICKED_UP">Picked Up</option>
+          <option value="ARRIVED_AT_HUB">Arrived at Hub</option>
+          <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+          <option value="DELIVERED">Delivered</option>
+          <option value="DELIVERY_FAILED">Delivery Failed</option>
+          <option value="RTO">RTO</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;margin:8px 0 0;">
+        {{ filteredLogs.length }} event{{ filteredLogs.length === 1 ? '' : 's' }}
+      </p>
     </div>
 
+    <!-- Timeline table -->
     <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Log ID</th>
-                    <th>Timestamp</th>
-                    <th>Action</th>
-                    <th>Actor</th>
-                    <th>Coordinates</th>
-                    <th>Device / IP</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(log of filteredLogs; track log.id) {
-                <tr>
-                    <td class="fw-bold" style="color: #6b7280; font-size: 12px;">{{log.id}}</td>
-                    <td><strong style="color: #111827;">{{log.timestamp}}</strong></td>
-                    <td>
-                        {{log.action}}<br>
-                        <span style="font-size: 11px; color: rgb(11, 74, 111); font-weight: 600;">{{log.status | uppercase}}</span>
-                    </td>
-                    <td>{{log.actor}}</td>
-                    <td style="white-space:nowrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:inline-block;vertical-align:middle;color:#94a3b8;margin-right:5px;flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>{{log.coordinates}}</td>
-                    <td><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #475569;">{{log.deviceInfo}}</code></td>
-                </tr>
-                }
-                
-                @if(filteredLogs.length === 0) {
-                <tr>
-                    <td colspan="6" class="text-center py-4">No audit logs found for this criteria.</td>
-                </tr>
-                }
-            </tbody>
-        </table>
+      <table>
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Timestamp</th>
+            <th>Status</th>
+            <th>Location</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of filteredLogs; track log.id) {
+            <tr>
+              <td class="fw-bold" style="color:#6b7280;font-size:12px;font-family:monospace;">{{ log.id }}</td>
+              <td><strong style="color:#111827;font-size:13px;">{{ log.timestamp }}</strong></td>
+              <td>
+                <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;"
+                  [style.background]="log.rawStatus === 'DELIVERED' ? '#dcfce7' : log.rawStatus === 'RTO' || log.rawStatus === 'DELIVERY_FAILED' || log.rawStatus === 'CANCELLED' ? '#fee2e2' : '#e0f2fe'"
+                  [style.color]="log.rawStatus === 'DELIVERED' ? '#15803d' : log.rawStatus === 'RTO' || log.rawStatus === 'DELIVERY_FAILED' || log.rawStatus === 'CANCELLED' ? '#b91c1c' : '#0284c7'">
+                  {{ log.status }}
+                </span>
+              </td>
+              <td style="font-size:13px;color:#374151;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round"
+                  style="width:13px;height:13px;display:inline-block;vertical-align:middle;color:#94a3b8;margin-right:4px;">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
+                  <circle cx="12" cy="9" r="2.5"></circle>
+                </svg>
+                {{ log.location }}
+              </td>
+              <td style="font-size:12px;color:#6b7280;max-width:220px;white-space:normal;">{{ log.note }}</td>
+            </tr>
+          }
+          @if (filteredLogs.length === 0) {
+            <tr>
+              <td colspan="5" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">
+                No events match the selected filters.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
+  }
+
+  <!-- Empty state — no AWB entered yet -->
+  @if (!isLoading && !error && !awb) {
+    <div style="display:flex;flex-direction:column;align-items:center;padding:60px 24px;gap:12px;color:#94a3b8;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:3em;height:3em;">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <polyline points="3 3 3 8 8 8"></polyline>
+        <line x1="12" y1="7" x2="12" y2="12"></line>
+        <line x1="12" y1="12" x2="16" y2="14"></line>
+      </svg>
+      <p style="margin:0;font-size:14px;">Enter an AWB number above to view its full status history.</p>
+    </div>
+  }
+
 </div>

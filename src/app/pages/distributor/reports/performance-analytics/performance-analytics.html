@@ -1,89 +1,84 @@
-<div class="header-section">
-    <h2>Franchise Performance Analytics</h2>
-    <div class="actions">
-        <button class="view-btn" (click)="exportCSV()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15H8v1h1v1H8"></path></svg> Export CSV</button>
-        <button class="view-btn" style="background: rgb(239, 68, 68);" (click)="exportPDF()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 15h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8v5zM15 15h1M15 11h2"></path></svg> Export PDF</button>
-    </div>
-</div>
+<div class="page-container">
 
-<div class="filter-bar">
-    <div class="form-row">
-        <select [(ngModel)]="dateRange" class="status-select">
-            <option>Today</option>
-            <option>This Week</option>
-            <option>This Month</option>
-            <option>Last Month</option>
-        </select>
-        
-        <select [(ngModel)]="merchantFilter" class="status-select">
-            <option>All Merchants</option>
-            <option>Fashion Hub</option>
-            <option>Tech Store</option>
-            <option>Grocery Mart</option>
-        </select>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+          <path d="M18 20V10M12 20V4M6 20v-6"></path>
+        </svg> Performance Analytics
+      </h1>
     </div>
-</div>
+    <button class="action-btn" (click)="exportCSV()" [disabled]="metrics.length === 0">Export CSV</button>
+  </div>
 
-<div class="stats-container">
-    <div class="card bg-blue">
-        <h4>Total Revenue</h4>
-        <h2>₹{{summary.revenue | number}}</h2>
+  <!-- Loading -->
+  @if (isLoading) {
+    <div style="display:flex;align-items:center;gap:10px;padding:40px;color:#64748b;font-size:14px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em;animation:spin 0.7s linear infinite;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg> Loading analytics…
     </div>
-    <div class="card bg-green">
-        <h4>Profit Margin</h4>
-        <h2>{{summary.profitMargin}}</h2>
-    </div>
-    <div class="card bg-purple">
-        <h4>Active Merchants</h4>
-        <h2>{{summary.activeMerchants}}</h2>
-    </div>
-    <div class="card bg-orange">
-        <h4>Merchant Growth</h4>
-        <h2>{{summary.merchantGrowth}}</h2>
-    </div>
-</div>
+  }
 
-<div class="shipment-card mt-4">
-    <div class="header">
-        <h2 style="font-size: 18px;">Key Performance Indicators (KPIs) against Targets</h2>
+  @if (!isLoading && error) {
+    <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:14px 18px;font-size:14px;">{{ error }}</div>
+  }
+
+  @if (!isLoading && !error) {
+
+    <!-- KPI summary cards -->
+    <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+      <div class="stat-card">
+        <span class="stat-label">Total Shipments</span>
+        <span class="stat-value">{{ totalShipments | number }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Delivered</span>
+        <span class="stat-value" style="color:#16a34a;">{{ deliveredCount | number }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Delivery Rate</span>
+        <span class="stat-value" style="color:#16a34a;">{{ deliveryRate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">RTO Rate</span>
+        <span class="stat-value" [style.color]="rtoCount > 0 ? '#dc2626' : '#94a3b8'">{{ rtoRate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Open Disputes</span>
+        <span class="stat-value" [style.color]="openDisputes > 0 ? '#b45309' : '#94a3b8'">{{ openDisputes }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Wallet Balance</span>
+        <span class="stat-value" style="color:rgb(11,74,111);">₹{{ walletBalance | number }}</span>
+      </div>
     </div>
 
-    <div class="table-wrapper mt-4">
-        <table>
-            <thead>
-                <tr>
-                    <th>Performance Metric</th>
-                    <th>Actual Achieved</th>
-                    <th>Target Goal</th>
-                    <th>Variance / Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (isLoading) {
-                    <tr>
-                        <td colspan="4" class="text-center py-4" style="color: #94a3b8;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading analytics data...</td>
-                    </tr>
-                } @else if (dataList.length === 0) {
-                    <tr>
-                        <td colspan="4" class="text-center py-4" style="color: #94a3b8;">No data found matching criteria.</td>
-                    </tr>
-                } @else {
-                    @for(row of dataList; track row.metric) {
-                    <tr>
-                        <td><strong>{{row.metric}}</strong></td>
-                        <td class="fw-bold" style="font-size: 16px;">{{row.value}}</td>
-                        <td style="color: #6b7280;">{{row.target}}</td>
-                        <td>
-                            <span class="status"
-                                [class.delivered]="row.status === 'Achieved'"
-                                [class.failed]="row.status === 'Missed'">
-                                {{row.status}}
-                            </span>
-                        </td>
-                    </tr>
-                    }
-                }
-            </tbody>
-        </table>
+    <!-- Full metrics table -->
+    <div class="section-title">Key Metrics</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of metrics; track m.name) {
+            <tr>
+              <td style="font-weight:600;color:#334155;">{{ m.name }}</td>
+              <td style="font-size:16px;font-weight:700;color:#0f172a;">{{ m.value }}</td>
+              <td style="font-size:12px;color:#94a3b8;">{{ m.note }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
+
+  }
+
 </div>

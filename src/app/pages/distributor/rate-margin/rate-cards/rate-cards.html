@@ -1,62 +1,195 @@
 <div class="page-container">
+
+  <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Rate Cards</h1>
-      <p class="page-subtitle">View courier rates, your cost, and the margin applied to merchants</p>
+      <h1 class="page-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+          <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg> Rate Cards
+      </h1>
+      <p class="page-subtitle">Courier base rates set by Super Admin · Set your margin to price for merchants</p>
     </div>
-    <a class="btn-nav" routerLink="/distributor/rate-margin/margins"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="2" y1="14" x2="6" y2="14"></line><line x1="10" y1="8" x2="14" y2="8"></line><line x1="18" y1="16" x2="22" y2="16"></line></svg> Configure Margins</a>
+    <a class="btn-nav" routerLink="/distributor/rate-margin/margins">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+        <line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line>
+        <line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line>
+        <line x1="2" y1="14" x2="6" y2="14"></line><line x1="10" y1="8" x2="14" y2="8"></line>
+        <line x1="18" y1="16" x2="22" y2="16"></line>
+      </svg> Configure Margins
+    </a>
   </div>
 
+  <!-- Info bar -->
   <div class="info-bar">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-    <span>Velocity base rates are not visible to merchants. Merchants only see their final rate configured by you.</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+    </svg>
+    <span>Base rates are set by Super Admin and are read-only. Your margin is added on top to calculate what merchants pay.</span>
   </div>
 
-  <div class="filter-bar">
-    <label>Courier</label>
-    @for (c of ['All', ...couriers]; track c) {
-      <button class="courier-filter" [class.active]="courierFilter === c" (click)="courierFilter = c">{{ c }}</button>
-    }
-  </div>
+  <!-- Save success toast -->
+  @if (saveSuccess) {
+    <div style="display:flex;align-items:center;gap:10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:500;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      {{ saveSuccess }}
+    </div>
+  }
 
+  <!-- Service type filter -->
+  @if (!isLoading && rateCards.length > 0) {
+    <div class="filter-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <label style="font-size:13px;font-weight:600;color:#475569;">Service Type:</label>
+      <button class="courier-filter" [class.active]="serviceFilter === ''" (click)="serviceFilter = ''">All</button>
+      @for (st of serviceTypes; track st) {
+        <button class="courier-filter" [class.active]="serviceFilter === st" (click)="serviceFilter = st">{{ st }}</button>
+      }
+    </div>
+  }
+
+  <!-- Loading -->
   @if (isLoading) {
-    <div class="loading-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg><p>Loading rates...</p></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:40px;color:#64748b;font-size:14px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em;animation:spin 0.7s linear infinite;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      Loading rate cards…
+    </div>
   }
 
-  @if (!isLoading && filteredSlabs.length === 0) {
+  <!-- Error -->
+  @if (!isLoading && error) {
+    <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:14px 18px;font-size:14px;">{{ error }}</div>
+  }
+
+  <!-- Empty -->
+  @if (!isLoading && !error && rateCards.length === 0) {
     <div class="empty-state">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;" class="empty-icon svg-icon">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+      </svg>
       <h3>No Rate Cards Found</h3>
-      <p>Rate cards are assigned by your Super Admin. Contact them to set up courier rates for your franchise.</p>
+      <p>Rate cards are created by your Super Admin. Contact them to configure courier rates for your franchise.</p>
     </div>
   }
 
-  @if (!isLoading && filteredSlabs.length > 0) {
-    <div class="table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Courier</th>
-            <th>Weight Slab</th>
-            <th>Your Cost (Dist. Cost)</th>
-            <th>Your Margin</th>
-            <th>Merchant Rate</th>
-            <th>Your Profit / Shipment</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (s of filteredSlabs; track s.courier + s.weightFrom) {
-            <tr>
-              <td><span class="courier-badge">{{ s.courier }}</span></td>
-              <td>{{ s.weightFrom }}–{{ s.weightTo }} kg</td>
-              <td class="cost">₹{{ s.distributorCost }}</td>
-              <td class="margin">+₹{{ s.distributorMargin }}</td>
-              <td class="rate">₹{{ s.merchantRate }}</td>
-              <td class="profit">₹{{ s.distributorProfit }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+  <!-- Rate card list -->
+  @if (!isLoading && !error && filtered.length > 0) {
+    @for (card of filtered; track card.id) {
+      <div class="table-card" style="margin-bottom:20px;">
+
+        <!-- Card header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+          <div>
+            <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;">{{ card.name }}</h3>
+            <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+              <span style="font-size:12px;background:#e0f2fe;color:#0284c7;padding:2px 8px;border-radius:4px;font-weight:600;">
+                {{ card.serviceType }}
+              </span>
+              @if (card.codCharge > 0) {
+                <span style="font-size:12px;background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:4px;">
+                  COD ₹{{ card.codCharge }} flat
+                </span>
+              }
+              @if (card.codPercent > 0) {
+                <span style="font-size:12px;background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:4px;">
+                  COD {{ card.codPercent }}%
+                </span>
+              }
+              @if (card.fuelSurcharge > 0) {
+                <span style="font-size:12px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px;">
+                  Fuel {{ card.fuelSurcharge }}%
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- My Margin display / edit -->
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            @if (editingId === card.id) {
+              <!-- Edit form -->
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-size:11px;color:#64748b;font-weight:600;">MARGIN %</label>
+                  <input type="number" [(ngModel)]="editMarginPercent" min="0" max="100" step="0.5"
+                    style="width:80px;padding:6px 8px;border:1.5px solid #0b4a6f;border-radius:6px;font-size:13px;font-weight:600;outline:none;" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-size:11px;color:#64748b;font-weight:600;">FLAT ₹</label>
+                  <input type="number" [(ngModel)]="editFlatMargin" min="0" step="1"
+                    style="width:80px;padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;" />
+                </div>
+                <button (click)="saveMargin(card)" [disabled]="isSaving"
+                  style="padding:7px 14px;background:rgb(11,74,111);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
+                  {{ isSaving ? 'Saving…' : 'Save' }}
+                </button>
+                <button (click)="cancelEdit()"
+                  style="padding:7px 10px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;cursor:pointer;">
+                  Cancel
+                </button>
+              </div>
+              @if (saveError) {
+                <span style="font-size:12px;color:#b91c1c;">{{ saveError }}</span>
+              }
+            } @else {
+              <!-- Display margin -->
+              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;text-align:center;">
+                <div style="font-size:11px;color:#15803d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">My Margin</div>
+                <div style="font-size:18px;font-weight:800;color:#15803d;">
+                  {{ card.marginPercent }}%
+                  @if (card.flatMargin > 0) { <span style="font-size:13px;">+ ₹{{ card.flatMargin }}</span> }
+                </div>
+              </div>
+              <button (click)="startEdit(card)"
+                style="padding:8px 14px;background:white;border:1.5px solid #0b4a6f;color:#0b4a6f;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                Edit Margin
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Weight slabs table -->
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Weight Slab (up to)</th>
+                <th>Base Rate</th>
+                <th>Rate / kg</th>
+                <th style="color:#0b4a6f;">Merchant Price (est.)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (slab of card.weightSlabs; track slab.upToKg) {
+                <tr>
+                  <td>≤ {{ slab.upToKg }} kg</td>
+                  <td>₹{{ slab.baseRate }}</td>
+                  <td>₹{{ slab.ratePerKg }} / kg</td>
+                  <td style="font-weight:700;color:rgb(11,74,111);">₹{{ merchantRate(slab, card) }}</td>
+                </tr>
+              }
+              @if (card.weightSlabs.length === 0) {
+                <tr>
+                  <td colspan="4" style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">No weight slabs configured.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    }
   }
+
 </div>
