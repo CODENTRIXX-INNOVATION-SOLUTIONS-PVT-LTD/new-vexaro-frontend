@@ -1,161 +1,107 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { CsvExportService } from '../../../../shared/csv-export.service';
+
+interface MetricRow {
+  name: string;
+  value: string;
+  note: string;
+}
 
 @Component({
   selector: 'app-performance-analytics',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './performance-analytics.html',
-  styleUrl: './performance-analytics.css'
+  styleUrl: './performance-analytics.css',
 })
 export class PerformanceAnalytics implements OnInit {
-  dateRange: string = 'This Month';
-  merchantFilter: string = 'All Merchants';
-  isLoading: boolean = false;
-
-  summary = {
-    revenue: 0,
-    profitMargin: '0%',
-    activeMerchants: 0,
-    merchantGrowth: '+0%'
-  };
-
-  dataList: any[] = [];
-
+  private http       = inject(HttpClient);
   private csvService = inject(CsvExportService);
+  private readonly base = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
 
-  ngOnInit() {
-    this.loadAnalytics();
+  isLoading = false;
+  error     = '';
+
+  // Summary cards
+  totalShipments  = 0;
+  deliveredCount  = 0;
+  rtoCount        = 0;
+  failedCount     = 0;
+  todayCount      = 0;
+  openDisputes    = 0;
+  walletBalance   = 0;
+  activeMerchants = 0;
+
+  get deliveryRate(): string {
+    if (!this.totalShipments) return '—';
+    return ((this.deliveredCount / this.totalShipments) * 100).toFixed(1) + '%';
   }
 
-  loadAnalytics() {
+  get rtoRate(): string {
+    if (!this.totalShipments) return '—';
+    return ((this.rtoCount / this.totalShipments) * 100).toFixed(1) + '%';
+  }
+
+  metrics: MetricRow[] = [];
+
+  ngOnInit(): void { this.load(); }
+
+  load(): void {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/reports/performance
-    this.summary = {
-      revenue: 545000,
-      profitMargin: '9%',
-      activeMerchants: 10,
-      merchantGrowth: '+12%'
-    };
-    this.dataList = [
-      { name: 'Average Pickup Time', value: '2.4 Hours', rating: 'Excellent', ratingClass: 'text-success' },
-      { name: 'Average Delivery Time', value: '2.8 Days', rating: 'Good', ratingClass: 'text-primary' },
-      { name: 'RTO Rate', value: '4.2%', rating: 'Very Low', ratingClass: 'text-success' },
-      { name: 'Customer Satisfaction', value: '4.8 / 5', rating: 'Excellent', ratingClass: 'text-success' },
-      { name: 'Dispute Resolution Rate', value: '96%', rating: 'Excellent', ratingClass: 'text-success' },
-    ];
-    this.isLoading = false;
-  }
+    this.error     = '';
 
-  exportCSV() {
-    const headers = ['Performance Metric', 'Value', 'Rating'];
-    const rows = this.dataList.map(item => [
-      item.name,
-      item.value,
-      item.rating
-    ]);
-    this.csvService.export('distributor_performance_analytics', headers, rows);
-  }
+    const stats$     = this.http.get<any>(`${this.base}/shipments/stats`).pipe(catchError(() => of(null)));
+    const merchants$ = this.http.get<any>(`${this.base}/users`,
+      { params: new HttpParams().set('role', 'MERCHANT').set('limit', '1') }
+    ).pipe(catchError(() => of(null)));
+    const disputes$  = this.http.get<any>(`${this.base}/disputes`,
+      { params: new HttpParams().set('limit', '1').set('status', 'OPEN') }
+    ).pipe(catchError(() => of(null)));
+    const wallet$    = this.http.get<any>(`${this.base}/finance/wallet`).pipe(catchError(() => of(null)));
 
-  exportPDF() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups to generate PDF report.');
-      return;
-    }
-    
-    let rowsHtml = '';
-    this.dataList.forEach(item => {
-      rowsHtml += `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.value}</td>
-          <td style="text-align: right;">${item.rating}</td>
-        </tr>
-      `;
+    forkJoin([stats$, merchants$, disputes$, wallet$]).subscribe({
+      next: ([statsRes, merchantsRes, disputesRes, walletRes]) => {
+        const s = statsRes?.data ?? statsRes;
+
+        this.totalShipments  = s?.total    ?? 0;
+        this.todayCount      = s?.today    ?? 0;
+        this.deliveredCount  = s?.byStatus?.DELIVERED       ?? 0;
+        this.rtoCount        = s?.byStatus?.RTO             ?? 0;
+        this.failedCount     = s?.byStatus?.DELIVERY_FAILED ?? 0;
+        this.activeMerchants = merchantsRes?.meta?.total    ?? 0;
+        this.openDisputes    = disputesRes?.meta?.total     ?? 0;
+        this.walletBalance   = walletRes?.data?.balance     ?? 0;
+
+        this.metrics = [
+          { name: 'Total Shipments',      value: this.totalShipments.toLocaleString('en-IN'), note: 'All time' },
+          { name: "Today's Bookings",     value: this.todayCount.toLocaleString('en-IN'),      note: 'Created today' },
+          { name: 'Delivered',            value: this.deliveredCount.toLocaleString('en-IN'),  note: '' },
+          { name: 'Delivery Rate',        value: this.deliveryRate,                             note: 'Delivered / Total' },
+          { name: 'RTO',                  value: this.rtoCount.toLocaleString('en-IN'),         note: '' },
+          { name: 'RTO Rate',             value: this.rtoRate,                                  note: 'RTO / Total' },
+          { name: 'Delivery Failed',      value: this.failedCount.toLocaleString('en-IN'),      note: '' },
+          { name: 'Active Merchants',     value: this.activeMerchants.toLocaleString('en-IN'),  note: '' },
+          { name: 'Open Disputes',        value: this.openDisputes.toLocaleString('en-IN'),     note: '' },
+          { name: 'Wallet Balance',       value: '₹' + this.walletBalance.toLocaleString('en-IN'), note: '' },
+        ];
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error     = err?.error?.message || 'Failed to load analytics.';
+        this.isLoading = false;
+      },
     });
+  }
 
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Performance Analytics Report</title>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; }
-            h1 { color: #0b4a6f; text-align: center; border-bottom: 2px solid #0b4a6f; padding-bottom: 10px; }
-            .header-info { margin-bottom: 20px; display: flex; justify-content: space-between; }
-            .summary-section { margin-bottom: 30px; display: flex; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
-            .summary-box { text-align: center; }
-            .summary-label { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
-            .summary-val { font-size: 20px; font-weight: bold; color: #0f172a; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; }
-            .footer { margin-top: 30px; font-size: 12px; color: #777; text-align: center; }
-            @media print {
-              body { padding: 0; }
-              button { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Performance Analytics Report</h1>
-          <div class="header-info">
-            <div><strong>Date Range:</strong> ${this.dateRange}</div>
-            <div><strong>Merchant Filter:</strong> ${this.merchantFilter}</div>
-            <div><strong>Generated On:</strong> ${new Date().toLocaleString()}</div>
-          </div>
-          
-          <div class="summary-section">
-            <div class="summary-box">
-              <div class="summary-label">Total Revenue</div>
-              <div class="summary-val">₹${this.summary.revenue.toLocaleString()}</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">Profit Margin</div>
-              <div class="summary-val">${this.summary.profitMargin}</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">Active Merchants</div>
-              <div class="summary-val">${this.summary.activeMerchants}</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">Merchant Growth</div>
-              <div class="summary-val">${this.summary.merchantGrowth}</div>
-            </div>
-          </div>
-
-          <h2>Key Performance Metrics</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Performance Metric</th>
-                <th>Value</th>
-                <th style="text-align: right;">Rating</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-          <div class="footer">
-            Generated by Vexaro System
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(() => {
-                window.print();
-                window.close();
-              }, 500);
-            }
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+  exportCSV(): void {
+    const headers = ['Metric', 'Value', 'Note'];
+    const rows = this.metrics.map(m => [m.name, m.value, m.note]);
+    this.csvService.export('distributor_performance_analytics', headers, rows);
   }
 }

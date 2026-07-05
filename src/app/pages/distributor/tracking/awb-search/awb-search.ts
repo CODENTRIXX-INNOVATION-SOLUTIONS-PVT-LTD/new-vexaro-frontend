@@ -1,75 +1,144 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ShipmentService } from '../../../../services/shipment.service';
 
-export interface ShipmentSummary {
+interface ShipmentSummary {
   awb: string;
   status: string;
+  rawStatus: string;
   customerName: string;
-  pincode: string;
+  customerPhone: string;
+  destCity: string;
+  destPincode: string;
+  originCity: string;
   paymentType: string;
-  amount: number;
+  codAmount: number;
+  carrier: string;
+  weight: number;
+  isCOD: boolean;
 }
 
-export interface TrackingEvent {
+interface TimelineEvent {
   date: string;
   time: string;
   status: string;
+  rawStatus: string;
   location: string;
-  description: string;
+  note: string;
   isCurrent: boolean;
 }
+
+const STATUS_LABELS: Record<string, string> = {
+  ORDER_CREATED:    'Order Created',
+  PICKED_UP:        'Picked Up',
+  ARRIVED_AT_HUB:   'Arrived at Hub',
+  OUT_FOR_DELIVERY: 'Out for Delivery',
+  DELIVERED:        'Delivered',
+  DELIVERY_FAILED:  'Delivery Failed',
+  RTO:              'RTO',
+  CANCELLED:        'Cancelled',
+};
 
 @Component({
   selector: 'app-awb-search',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './awb-search.html',
-  styleUrl: './awb-search.css'
+  styleUrl: './awb-search.css',
 })
-export class AwbSearch {
-  searchQuery: string = '';
-  hasSearched: boolean = false;
-  
+export class AwbSearch implements OnInit {
+  private router          = inject(Router);
+  private route           = inject(ActivatedRoute);
+  private shipmentService = inject(ShipmentService);
+
+  searchQuery = '';
+  isLoading   = false;
+  hasSearched = false;
+  error       = '';
+
   shipment: ShipmentSummary | null = null;
-  timeline: TrackingEvent[] = [];
+  timeline: TimelineEvent[]        = [];
 
-  constructor(private router: Router) {}
+  ngOnInit(): void {
+    // Auto-search if AWB passed as query param (e.g. from shipments list)
+    this.route.queryParams.subscribe(params => {
+      const awb = params['awb'] || '';
+      if (awb) {
+        this.searchQuery = awb;
+        this.search();
+      }
+    });
+  }
 
-  search() {
-    if (!this.searchQuery.trim()) return;
+  search(): void {
+    const q = this.searchQuery.trim();
+    if (!q) return;
+
+    this.isLoading   = true;
     this.hasSearched = true;
+    this.error       = '';
+    this.shipment    = null;
+    this.timeline    = [];
 
-    if (this.searchQuery.toUpperCase() === 'NOTFOUND') {
-      this.shipment = null;
-      this.timeline = [];
-      return;
-    }
+    this.shipmentService.trackAWB(q).subscribe({
+      next: (res) => {
+        const d = res?.data;
+        if (!d) {
+          this.error     = `No shipment found for "${q}".`;
+          this.isLoading = false;
+          return;
+        }
 
-    this.shipment = {
-      awb: this.searchQuery.toUpperCase(),
-      status: 'Out for Delivery',
-      customerName: 'Rahul Sharma',
-      pincode: '400050',
-      paymentType: 'COD',
-      amount: 1500
-    };
+        this.shipment = {
+          awb:          d.awb,
+          status:       STATUS_LABELS[d.status] ?? d.status,
+          rawStatus:    d.status,
+          customerName: d.destination?.name  || '—',
+          customerPhone: d.destination?.phone || '—',
+          destCity:     d.destination?.city  || '—',
+          destPincode:  d.destination?.pincode || '—',
+          originCity:   d.origin?.city || '—',
+          paymentType:  d.isCOD ? 'COD' : 'Prepaid',
+          codAmount:    d.codAmount ?? 0,
+          isCOD:        d.isCOD ?? false,
+          carrier:      d.carrier ?? '—',
+          weight:       d.weight ?? 0,
+        };
 
-    this.timeline = [
-      { date: '16 Jun 2026', time: '08:30 AM', status: 'Out for Delivery', location: 'Bandra West Hub', description: 'Shipment dispatched with driver Ramesh Singh.', isCurrent: true },
-      { date: '16 Jun 2026', time: '06:00 AM', status: 'Sorted', location: 'Bandra West Hub', description: 'Shipment sorted and allocated to Route 4.', isCurrent: false },
-      { date: '15 Jun 2026', time: '09:45 PM', status: 'Received at Hub', location: 'Bandra West Hub', description: 'Inbound scan completed.', isCurrent: false },
-      { date: '15 Jun 2026', time: '04:15 PM', status: 'Picked Up', location: 'Andheri East', description: 'Driver Amit picked up the package.', isCurrent: false },
-      { date: '15 Jun 2026', time: '10:00 AM', status: 'Manifested', location: 'Andheri East', description: 'Merchant generated AWB.', isCurrent: false }
-    ];
+        // Build timeline from statusHistory (newest first)
+        const history: any[] = d.statusHistory ?? [];
+        const sorted = [...history].sort(
+          (a, b) => new Date(b.updatedAt ?? b.timestamp ?? b.createdAt).getTime()
+                  - new Date(a.updatedAt ?? a.timestamp ?? a.createdAt).getTime()
+        );
+
+        this.timeline = sorted.map((h: any, i: number) => {
+          const dt = new Date(h.updatedAt ?? h.timestamp ?? h.createdAt);
+          return {
+            date:      dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            time:      dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            status:    STATUS_LABELS[h.status] ?? h.status,
+            rawStatus: h.status,
+            location:  h.location || d.destination?.city || '—',
+            note:      h.note || h.description || '',
+            isCurrent: i === 0,
+          };
+        });
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error     = err?.error?.message || `Could not find shipment "${q}".`;
+        this.isLoading = false;
+      },
+    });
   }
 
-  viewLive() {
-    this.router.navigate(['/distributor/tracking/live'], { queryParams: { awb: this.shipment?.awb }});
-  }
-
-  viewHistory() {
-    this.router.navigate(['/distributor/tracking/history'], { queryParams: { awb: this.shipment?.awb }});
+  viewHistory(): void {
+    this.router.navigate(['/distributor/tracking/history'], {
+      queryParams: { awb: this.shipment?.awb },
+    });
   }
 }
