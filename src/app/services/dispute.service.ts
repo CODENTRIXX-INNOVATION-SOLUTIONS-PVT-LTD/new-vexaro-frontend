@@ -38,7 +38,7 @@ export class DisputeService {
     return this.http.patch<any>(`${this.baseUrl}/disputes/${id}/proof`, { proofImages });
   }
 
-  addComment(id: string, comment: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/disputes/${id}/reply`, { comment });
+  addComment(id: string, message: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/disputes/${id}/reply`, { message });
   }
 }

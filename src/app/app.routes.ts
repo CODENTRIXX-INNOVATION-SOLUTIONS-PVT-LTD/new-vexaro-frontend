@@ -87,6 +87,7 @@ import { Reports } from "./pages/merchant/reports/reports";
 import { superAdminGuard } from "./guards/super-admin.guard";
 import { distributorGuard } from "./guards/distributor.guard";
 import { merchantGuard } from "./guards/merchant.guard";
+import { authGuard } from "./guards/auth.guard";
 
 export const routes: Routes = [
   {
@@ -139,6 +140,7 @@ export const routes: Routes = [
   {
     path: "change-credentials",
     component: ChangeCredentialsComponent,
+    canActivate: [authGuard],
   },
   {
     path: "super-admin",

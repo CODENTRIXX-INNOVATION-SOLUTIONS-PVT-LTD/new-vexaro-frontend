@@ -1,314 +1,206 @@
-import { Component, signal } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DisputeService } from '../../../services/dispute.service';
+import { finalize } from 'rxjs';
 
-interface Comment {
-  sender: "Merchant" | "Super Admin" | "Distributor";
-  text: string;
-  date: string;
-}
-
-interface Dispute {
-  id: string;
-  awb: string;
-  category: "WEIGHT_DISPUTE" | "LOST" | "DAMAGED" | "DELAY" | "WRONG_DELIVERY" | "COD_MISMATCH" | "OTHER";
-  status: "OPEN" | "IN_REVIEW" | "RESOLVED" | "CLOSED";
-  createdAt: string;
-  description: string;
-  originalWeight?: number;
-  actualWeight?: number;
-  extraCharge?: number;
-  proofImages: string[];
-  comments: Comment[];
-}
+const CATEGORY_LABELS: Record<string, string> = {
+  WEIGHT_DISPUTE: 'Weight Mismatch', LOST: 'Package Lost',
+  DAMAGED: 'Damaged Package', DELAY: 'Delivery Delay',
+  WRONG_DELIVERY: 'Incorrect Delivery', COD_MISMATCH: 'COD Cash Mismatch', OTHER: 'Other Issue',
+};
 
 @Component({
-  selector: "app-merchant-disputes",
+  selector: 'app-merchant-disputes',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: "./disputes.html",
-  styleUrls: ["./disputes.css"],
+  templateUrl: './disputes.html',
+  styleUrls: ['./disputes.css'],
 })
-export class MerchantDisputesComponent {
-  // Mock disputes list
-  disputes = signal<Dispute[]>([
-    {
-      id: "DISP-20260601",
-      awb: "VX-982341203",
-      category: "WEIGHT_DISPUTE",
-      status: "OPEN",
-      createdAt: "2026-06-20T10:15:00Z",
-      description: "Auto-generated weight dispute. Manifested weight is 0.5 kg, audited weight is 2.50 kg.",
-      originalWeight: 0.5,
-      actualWeight: 2.50,
-      extraCharge: 120.00,
-      proofImages: [],
-      comments: [
-        { sender: "Super Admin", text: "Weight audited at hub during scan. Extra charge applied to your wallet.", date: "2026-06-20T10:15:00Z" },
-        { sender: "Merchant", text: "I am verifying this with my physical invoice copy. I will upload package proof.", date: "2026-06-21T14:30:00Z" },
-      ],
-    },
-    {
-      id: "DISP-20260603",
-      awb: "VX-982341289",
-      category: "DAMAGED",
-      status: "IN_REVIEW",
-      createdAt: "2026-06-22T08:12:00Z",
-      description: "Customer reported that the packaging box was crushed during delivery, causing damage to the items inside.",
-      proofImages: ["https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=200"],
-      comments: [
-        { sender: "Merchant", text: "Customer received a crushed cardboard box. Attached is the customer photo.", date: "2026-06-22T08:12:00Z" },
-        { sender: "Distributor", text: "Forwarded damage claim to Velocity courier logistics team. Under investigation.", date: "2026-06-23T11:45:00Z" },
-      ],
-    },
-    {
-      id: "DISP-20260599",
-      awb: "VX-982341101",
-      category: "LOST",
-      status: "RESOLVED",
-      createdAt: "2026-06-15T09:00:00Z",
-      description: "Shipment has been stuck in 'ARRIVED_AT_HUB' for 12 days. Customer is calling for cancellation.",
-      proofImages: [],
-      comments: [
-        { sender: "Merchant", text: "12 days no status change. Please declare this as lost and refund.", date: "2026-06-15T09:00:00Z" },
-        { sender: "Super Admin", text: "Checked with hub manager. Package is declared lost in transit. Refund approved & credited to your wallet.", date: "2026-06-18T16:00:00Z" },
-      ],
-    },
-  ]);
+export class MerchantDisputesComponent implements OnInit {
+  private disputeService = inject(DisputeService);
 
-  // UI state
-  viewMode = signal<"list" | "detail" | "create">("list");
-  selectedDispute = signal<Dispute | null>(null);
+  // ── List state ────────────────────────────────────────────────────────────
+  private _disputes: any[] = [];
+  isLoading  = signal(false);
+  listError  = signal('');
+  page = 1; total = 0;
+  readonly limit = 20;
+  get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   // Filters
-  categoryFilter = signal<string>("ALL");
-  statusFilter = signal<string>("ALL");
-  searchQuery = signal<string>("");
+  categoryFilter = signal('ALL');
+  statusFilter   = signal('ALL');
+  searchQuery    = signal('');
 
-  // Create dispute form fields
-  newAwb = "";
-  newCategory: Dispute["category"] = "OTHER";
-  newDescription = "";
+  // ── View ──────────────────────────────────────────────────────────────────
+  viewMode        = signal<'list' | 'detail' | 'create'>('list');
+  selectedDispute = signal<any>(null);
 
-  // Comment input
-  newCommentText = "";
+  // ── Create form fields — template binds to newAwb ─────────────────────────
+  newAwb         = '';
+  newCategory    = 'OTHER';
+  newDescription = '';
+  isCreating     = signal(false);
+  createError    = signal('');
 
-  // Mock upload files list
-  simulatedUploads = signal<string[]>([]);
+  // ── Comment ───────────────────────────────────────────────────────────────
+  newCommentText = '';
+  isCommenting   = signal(false);
+
+  // ── Proof upload — template calls simulateFileSelect / simulatedUploads ──
+  // Kept as simulated (no real file server) — just shows a local preview
+  simulatedUploads    = signal<string[]>([]);
   isUploadingSimulated = signal(false);
 
-  categoryLabels: Record<string, string> = {
-    WEIGHT_DISPUTE: "Weight Mismatch",
-    LOST: "Package Lost",
-    DAMAGED: "Damaged Package",
-    DELAY: "Delivery Delay",
-    WRONG_DELIVERY: "Incorrect Delivery",
-    COD_MISMATCH: "COD Cash Mismatch",
-    OTHER: "Other Issue",
-  };
+  readonly categoryLabels = CATEGORY_LABELS;
 
-  getFilteredDisputes() {
-    const query = this.searchQuery().trim().toLowerCase();
-    const cat = this.categoryFilter();
-    const stat = this.statusFilter();
+  ngOnInit(): void { this.load(); }
 
-    return this.disputes().filter((d) => {
-      const matchesSearch =
-        d.id.toLowerCase().includes(query) || d.awb.toLowerCase().includes(query);
-      const matchesCat = cat === "ALL" || d.category === cat;
-      const matchesStat = stat === "ALL" || d.status === stat;
-      return matchesSearch && matchesCat && matchesStat;
+  // ── List ──────────────────────────────────────────────────────────────────
+  load(): void {
+    this.isLoading.set(true);
+    this.listError.set('');
+    const params: any = { page: this.page, limit: this.limit };
+    if (this.statusFilter() !== 'ALL') params.status = this.statusFilter();
+
+    this.disputeService.listDisputes(params).pipe(
+      finalize(() => this.isLoading.set(false)),
+    ).subscribe({
+      next: (res) => {
+        this.total      = res?.meta?.total ?? 0;
+        const raw: any[] = res?.data?.disputes ?? res?.data?.items ?? [];
+        this._disputes  = raw.map(d => this.mapDispute(d));
+      },
+      error: (err) => this.listError.set(err?.error?.message || 'Failed to load disputes.'),
     });
   }
 
-  selectDispute(dispute: Dispute): void {
-    this.selectedDispute.set(dispute);
-    this.simulatedUploads.set([]);
-    this.viewMode.set("detail");
+  private mapDispute(d: any): any {
+    return {
+      id:             d._id,
+      awb:            d.shipmentId?.awb ?? d.shipmentAWB ?? '—',
+      shipmentId:     d.shipmentId?._id ?? d.shipmentId ?? '',
+      category:       d.category,
+      status:         d.status,
+      createdAt:      d.createdAt,
+      description:    d.description,
+      originalWeight: d.billedWeight   ?? null,
+      actualWeight:   d.actualWeight   ?? null,
+      extraCharge:    d.extraCharge    ?? null,
+      proofImages:    d.proofImages    ?? [],
+      comments: (d.replies ?? d.comments ?? []).map((r: any) => ({
+        sender: r.sender?.role === 'MERCHANT'     ? 'Merchant'
+               : r.sender?.role === 'SUPER_ADMIN' ? 'Super Admin'
+               : r.sender?.role === 'DISTRIBUTOR' ? 'Distributor' : 'Support',
+        text:   r.message ?? r.text ?? '',
+        date:   r.createdAt ?? r.date ?? '',
+      })),
+    };
   }
 
-  closeDetail(): void {
-    this.selectedDispute.set(null);
-    this.viewMode.set("list");
+  applyFilters(): void { this.page = 1; this.load(); }
+
+  // Template calls getFilteredDisputes()
+  getFilteredDisputes(): any[] {
+    const q   = this.searchQuery().trim().toLowerCase();
+    const cat = this.categoryFilter();
+    return this._disputes.filter(d =>
+      (!q   || (d.id || '').toLowerCase().includes(q) || (d.awb || '').toLowerCase().includes(q)) &&
+      (cat === 'ALL' || d.category === cat)
+    );
   }
 
+  // ── Detail ────────────────────────────────────────────────────────────────
+  selectDispute(dispute: any): void {
+    this.viewMode.set('detail');
+    this.disputeService.getDisputeById(dispute.id).subscribe({
+      next:  (res) => this.selectedDispute.set(this.mapDispute(res?.data ?? res)),
+      error: ()    => this.selectedDispute.set(dispute),
+    });
+  }
+
+  closeDetail(): void { this.selectedDispute.set(null); this.viewMode.set('list'); }
+
+  // ── Create ────────────────────────────────────────────────────────────────
   openCreateForm(): void {
-    this.newAwb = "";
-    this.newCategory = "OTHER";
-    this.newDescription = "";
-    this.viewMode.set("create");
+    this.newAwb = ''; this.newCategory = 'OTHER'; this.newDescription = '';
+    this.createError.set('');
+    this.viewMode.set('create');
   }
 
-  closeCreateForm(): void {
-    this.viewMode.set("list");
+  closeCreateForm(): void { this.viewMode.set('list'); }
+
+  createDispute(): void {
+    if (!this.newAwb.trim() || !this.newDescription.trim()) {
+      this.createError.set('AWB and description are required.');
+      return;
+    }
+    this.isCreating.set(true);
+    this.createError.set('');
+
+    this.disputeService.createDispute({
+      shipmentId:  this.newAwb.trim(),
+      category:    this.newCategory,
+      description: this.newDescription.trim(),
+    }).pipe(finalize(() => this.isCreating.set(false))).subscribe({
+      next: () => { this.viewMode.set('list'); this.load(); },
+      error: (err) => this.createError.set(err?.error?.message || 'Failed to create dispute.'),
+    });
   }
 
-  // Post comment inside dispute thread
+  // ── Comment ───────────────────────────────────────────────────────────────
   addComment(): void {
-    const text = this.newCommentText.trim();
+    const text    = this.newCommentText.trim();
     const dispute = this.selectedDispute();
     if (!text || !dispute) return;
 
-    const newComment: Comment = {
-      sender: "Merchant",
-      text: text,
-      date: new Date().toISOString(),
-    };
-
-    // Update local list
-    this.disputes.update((list) => {
-      return list.map((d) => {
-        if (d.id === dispute.id) {
-          return {
-            ...d,
-            comments: [...d.comments, newComment],
-          };
-        }
-        return d;
-      });
+    this.isCommenting.set(true);
+    this.disputeService.addComment(dispute.id, text).pipe(
+      finalize(() => this.isCommenting.set(false)),
+    ).subscribe({
+      next: () => { this.newCommentText = ''; this.selectDispute(dispute); },
+      error: () => {
+        // Optimistic local append
+        this.selectedDispute.update(d => d
+          ? { ...d, comments: [...d.comments, { sender: 'Merchant', text, date: new Date().toISOString() }] }
+          : d
+        );
+        this.newCommentText = '';
+      },
     });
-
-    // Update selected dispute view
-    this.selectedDispute.update((d) => {
-      if (d) {
-        return {
-          ...d,
-          comments: [...d.comments, newComment],
-        };
-      }
-      return null;
-    });
-
-    this.newCommentText = "";
-
-    // Simulate Admin auto-reply in mock mode for dynamic feel
-    setTimeout(() => {
-      const adminReply: Comment = {
-        sender: "Super Admin",
-        text: `Under review. Thank you for posting details. Our dispute support team will check and update.`,
-        date: new Date().toISOString(),
-      };
-      this.disputes.update((list) => {
-        return list.map((d) => {
-          if (d.id === dispute.id) {
-            return {
-              ...d,
-              comments: [...d.comments, adminReply],
-            };
-          }
-          return d;
-        });
-      });
-      this.selectedDispute.update((d) => {
-        if (d) {
-          return {
-            ...d,
-            comments: [...d.comments, adminReply],
-          };
-        }
-        return null;
-      });
-    }, 1500);
   }
 
-  // Simulate file drag-and-drop / select
+  // ── Simulated file upload (template calls simulateFileSelect) ─────────────
   simulateFileSelect(): void {
     this.isUploadingSimulated.set(true);
     setTimeout(() => {
       this.isUploadingSimulated.set(false);
-      // Mocked image upload url
-      const mockImgUrl = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=200";
-      this.simulatedUploads.update((list) => [...list, mockImgUrl]);
+      const placeholders = [
+        'https://placehold.co/200x200?text=Proof+1',
+        'https://placehold.co/200x200?text=Proof+2',
+        'https://placehold.co/200x200?text=Proof+3',
+      ];
+      const next = placeholders[this.simulatedUploads().length % placeholders.length];
+      this.simulatedUploads.update(u => [...u, next]);
     }, 800);
   }
 
-  // Remove thumbnail
-  removeSimulatedUpload(index: number): void {
-    this.simulatedUploads.update((list) => list.filter((_, i) => i !== index));
+  removeSimulatedUpload(idx: number): void {
+    this.simulatedUploads.update(u => u.filter((_, i) => i !== idx));
   }
 
-  // Submit proof for weight dispute
+  // Submit the simulated (or real) proof URLs
   submitProof(): void {
     const dispute = this.selectedDispute();
-    const uploads = this.simulatedUploads();
-    if (!dispute || uploads.length === 0) return;
+    if (!dispute || !this.simulatedUploads().length) return;
 
-    this.disputes.update((list) => {
-      return list.map((d) => {
-        if (d.id === dispute.id) {
-          return {
-            ...d,
-            status: "IN_REVIEW",
-            proofImages: [...d.proofImages, ...uploads],
-          };
-        }
-        return d;
-      });
+    this.disputeService.submitProof(dispute.id, this.simulatedUploads()).subscribe({
+      next: () => {
+        this.simulatedUploads.set([]);
+        this.selectDispute(dispute);
+      },
+      error: () => { /* non-critical — just clear uploads */ this.simulatedUploads.set([]); },
     });
-
-    this.selectedDispute.update((d) => {
-      if (d) {
-        return {
-          ...d,
-          status: "IN_REVIEW",
-          proofImages: [...d.proofImages, ...uploads],
-        };
-      }
-      return null;
-    });
-
-    this.simulatedUploads.set([]);
-
-    // Add automated log comment
-    const logComment: Comment = {
-      sender: "Merchant",
-      text: `Merchant submitted ${uploads.length} weight proof image(s) for verification. Status changed to In Review.`,
-      date: new Date().toISOString(),
-    };
-
-    this.disputes.update((list) => {
-      return list.map((d) => {
-        if (d.id === dispute.id) {
-          return {
-            ...d,
-            comments: [...d.comments, logComment],
-          };
-        }
-        return d;
-      });
-    });
-
-    this.selectedDispute.update((d) => {
-      if (d) {
-        return {
-          ...d,
-          comments: [...d.comments, logComment],
-        };
-      }
-      return null;
-    });
-  }
-
-  // Submit a new dispute
-  createDispute(): void {
-    if (!this.newAwb.trim() || !this.newDescription.trim()) return;
-
-    const newId = `DISP-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}-${String(this.disputes().length + 1).padStart(3, "0")}`;
-
-    const newRec: Dispute = {
-      id: newId,
-      awb: this.newAwb.trim().toUpperCase(),
-      category: this.newCategory,
-      status: "OPEN",
-      createdAt: new Date().toISOString(),
-      description: this.newDescription.trim(),
-      proofImages: [],
-      comments: [
-        { sender: "Merchant", text: this.newDescription.trim(), date: new Date().toISOString() },
-      ],
-    };
-
-    this.disputes.update((list) => [newRec, ...list]);
-    this.viewMode.set("list");
   }
 }

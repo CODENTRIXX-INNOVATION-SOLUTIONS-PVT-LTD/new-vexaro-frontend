@@ -3,9 +3,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 /**
- * Centralised service for authentication‑related API calls.
- * Example usage:
- *   this.authService.changeInitialCredentials(email, password).subscribe(...);
+ * Centralised service for authentication-related API calls.
+ * The authInterceptor (registered globally in app.config.ts) automatically
+ * attaches the Bearer token to every non-auth request, so individual methods
+ * here do NOT need to read localStorage themselves.
  */
 @Injectable({
   providedIn: 'root'
@@ -21,26 +22,43 @@ export class AuthService {
   constructor(private http: HttpClient) { }
 
   /**
-   * POST /auth/change-initial-credentials
+   * POST /auth/login
    * Payload: { email: string; password: string }
    */
-  changeInitialCredentials(email: string, password: string): Observable<any> {
-    const payload = { email, password };
-    return this.http.post(`${this.baseUrl}/auth/change-initial-credentials`, payload, {
-      headers: this.jsonHeaders,
-    });
-  }
-
-  /**
-   * POST /auth/login – placeholder for future login integration.
-   */
   login(email: string, password: string): Observable<any> {
-    console.log(this.baseUrl);
     return this.http.post(`${this.baseUrl}/auth/login`, { email, password }, { headers: this.jsonHeaders });
   }
 
   /**
-   * POST /auth/set-password – used by the invite flow (change-credentials / register).
+   * POST /auth/logout
+   * Revokes the refresh token server-side.
+   * Payload: { refreshToken: string }
+   */
+  logout(refreshToken: string): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/auth/logout`,
+      { refreshToken },
+      { headers: this.jsonHeaders },
+    );
+  }
+
+  /**
+   * POST /auth/change-initial-credentials
+   * Called after first login when mustChangeCredentials is true.
+   * Requires a valid access token (injected by the interceptor).
+   * Payload: { newEmail: string; newPassword: string }
+   */
+  changeInitialCredentials(newEmail: string, newPassword: string): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/auth/change-initial-credentials`,
+      { newEmail, newPassword },
+      { headers: this.jsonHeaders },
+    );
+  }
+
+  /**
+   * POST /auth/set-password – used by the invite flow (register / set-password pages).
+   * Payload: { token: string; password: string }
    */
   setPassword(token: string, newPassword: string): Observable<any> {
     return this.http.post(
@@ -77,17 +95,12 @@ export class AuthService {
   }
 
   /**
- * GET /auth/me
- * Returns the currently authenticated user's profile.
- */
+   * GET /auth/me
+   * Returns the currently authenticated user's profile.
+   * The Bearer token is attached automatically by the authInterceptor.
+   */
   getMe(): Observable<any> {
-    const token = localStorage.getItem('accessToken');
-
-    return this.http.get(`${this.baseUrl}/auth/me`, {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${token}`,
-      }),
-    });
+    return this.http.get(`${this.baseUrl}/auth/me`);
   }
 
   /**
@@ -95,6 +108,8 @@ export class AuthService {
    * Verifies the invite token and returns the user's details.
    */
   verifyInvite(token: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/auth/verify-invite?token=${token}`);
+    return this.http.get(`${this.baseUrl}/auth/verify-invite`, {
+      params: { token },
+    });
   }
 }

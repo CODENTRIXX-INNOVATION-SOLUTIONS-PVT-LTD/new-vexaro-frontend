@@ -1,44 +1,57 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SettingsService } from '../../../../services/settings.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-settings-security',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './security.html',
-  styleUrl: './security.css'
+  styleUrl: './security.css',
 })
 export class SecuritySettings {
-  passwordData = {
-    current: '',
-    newPass: '',
-    confirm: ''
-  };
+  private settingsService = inject(SettingsService);
 
-  twoFactorEnabled: boolean = true;
-  isSavingPass: boolean = false;
+  // Template uses isSavingPass (plain boolean, not signal)
+  isSavingPass = false;
+  saveSuccess  = false;
+  errorMsg     = '';
 
-  updatePassword() {
-    if(!this.passwordData.current || !this.passwordData.newPass || !this.passwordData.confirm) {
-      alert('Please fill in all password fields.');
+  passwordData = { current: '', newPass: '', confirm: '' };
+
+  updatePassword(): void {
+    this.errorMsg    = '';
+    this.saveSuccess = false;
+
+    if (!this.passwordData.current || !this.passwordData.newPass || !this.passwordData.confirm) {
+      this.errorMsg = 'Please fill in all password fields.';
       return;
     }
-    if(this.passwordData.newPass !== this.passwordData.confirm) {
-      alert('New passwords do not match.');
+    if (this.passwordData.newPass !== this.passwordData.confirm) {
+      this.errorMsg = 'New passwords do not match.';
+      return;
+    }
+    if (this.passwordData.newPass.length < 8) {
+      this.errorMsg = 'New password must be at least 8 characters.';
       return;
     }
 
     this.isSavingPass = true;
-    setTimeout(() => {
-      alert('Password updated successfully!');
-      this.passwordData = { current: '', newPass: '', confirm: '' };
-      this.isSavingPass = false;
-    }, 1000);
-  }
 
-  toggle2FA() {
-    this.twoFactorEnabled = !this.twoFactorEnabled;
-    alert(this.twoFactorEnabled ? '2FA Enabled' : '2FA Disabled');
+    this.settingsService.changePassword({
+      currentPassword: this.passwordData.current,
+      newPassword:     this.passwordData.newPass,
+    }).pipe(finalize(() => { this.isSavingPass = false; })).subscribe({
+      next: () => {
+        this.saveSuccess  = true;
+        this.passwordData = { current: '', newPass: '', confirm: '' };
+        setTimeout(() => { this.saveSuccess = false; }, 3500);
+      },
+      error: (err) => {
+        this.errorMsg = err?.error?.message || 'Failed to update password.';
+      },
+    });
   }
 }
