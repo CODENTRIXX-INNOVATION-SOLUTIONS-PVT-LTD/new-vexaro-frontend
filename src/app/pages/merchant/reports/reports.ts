@@ -1,6 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { CsvExportService } from '../../../shared/csv-export.service';
 
 @Component({
@@ -8,173 +11,132 @@ import { CsvExportService } from '../../../shared/csv-export.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './reports.html',
-  styleUrl: './reports.css'
+  styleUrl: './reports.css',
 })
 export class Reports implements OnInit {
-  dateRange: string = 'This Month';
-  statusFilter: string = 'All Statuses';
-  carrierFilter: string = 'All Carriers';
-  isLoading: boolean = false;
+  private http       = inject(HttpClient);
+  private csvService = inject(CsvExportService);
+  private readonly base = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
 
+  isLoading = false;
+  error     = '';
+
+  // Template binds to these filter fields
+  dateRange     = 'This Month';
+  statusFilter  = 'All Statuses';
+  carrierFilter = 'All Carriers';
+
+  // Template uses summary.weightDisputes, summary.codPerformance, summary.walletSpend
   summary = {
-    total: 0,
-    delivered: 0,
-    failed: 0,
-    rto: 0,
-    weightDisputes: 0,
-    codPerformance: 0,
-    walletSpend: 0
+    total: 0, delivered: 0, failed: 0, rto: 0,
+    inTransit: 0, pending: 0, totalCost: 0,
+    weightDisputes: 0, codPerformance: 0, walletSpend: 0,
   };
 
   dataList: any[] = [];
 
-  private csvService = inject(CsvExportService);
-
-  ngOnInit() {
-    this.loadReport();
+  get deliveryRate(): string {
+    if (!this.summary.total) return '—';
+    return ((this.summary.delivered / this.summary.total) * 100).toFixed(1) + '%';
   }
 
-  loadReport() {
+  ngOnInit(): void { this.loadReport(); }
+
+  // Template calls loadReport() from filter dropdowns
+  loadReport(): void {
     this.isLoading = true;
+    this.error     = '';
 
-    // Static mock data — replace this block with a real API subscribe when ready.
-    // Using a Promise.resolve to keep async style without a fake delay.
-    Promise.resolve().then(() => {
-      this.summary = {
-        total: 1250,
-        delivered: 1100,
-        failed: 100,
-        rto: 50,
-        weightDisputes: 25,
-        codPerformance: 98.5,
-        walletSpend: 15400
-      };
+    const stats$   = this.http.get<any>(`${this.base}/shipments/stats`)
+      .pipe(catchError(() => of(null)));
+    const recent$  = this.http.get<any>(`${this.base}/shipments`,
+      { params: new HttpParams().set('limit', '10').set('page', '1') })
+      .pipe(catchError(() => of(null)));
+    const disputes$ = this.http.get<any>(`${this.base}/disputes`,
+      { params: new HttpParams().set('limit', '1') })
+      .pipe(catchError(() => of(null)));
 
-      this.dataList = [
-        { date: '16 Jun 2026', total: 45, delivered: 40, failed: 3, rto: 2 },
-        { date: '15 Jun 2026', total: 60, delivered: 55, failed: 4, rto: 1 },
-        { date: '14 Jun 2026', total: 50, delivered: 45, failed: 2, rto: 3 },
-        { date: '13 Jun 2026', total: 70, delivered: 65, failed: 5, rto: 0 },
-        { date: '12 Jun 2026', total: 40, delivered: 35, failed: 2, rto: 3 }
-      ];
+    forkJoin([stats$, recent$, disputes$]).subscribe({
+      next: ([statsRes, recentRes, disputesRes]) => {
+        const s  = statsRes?.data ?? statsRes;
+        const by = s?.byStatus ?? {};
 
-      this.isLoading = false;
+        this.summary = {
+          total:          s?.total    ?? 0,
+          delivered:      by.DELIVERED       ?? 0,
+          failed:         by.DELIVERY_FAILED  ?? 0,
+          rto:            by.RTO             ?? 0,
+          inTransit:      (by.PICKED_UP ?? 0) + (by.ARRIVED_AT_HUB ?? 0) + (by.OUT_FOR_DELIVERY ?? 0),
+          pending:        by.ORDER_CREATED   ?? 0,
+          totalCost:      s?.totalCost       ?? 0,
+          weightDisputes: disputesRes?.meta?.total ?? 0,
+          codPerformance: s?.total ? +((by.DELIVERED ?? 0) / s.total * 100).toFixed(1) : 0,
+          walletSpend:    s?.totalCost ?? 0,
+        };
+
+        this.dataList = (recentRes?.data?.shipments ?? []).map((sh: any) => ({
+          date:     new Date(sh.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          awb:      sh.awb,
+          status:   sh.status,
+          dest:     sh.destination?.city ?? '—',
+          carrier:  sh.carrier ?? '—',
+          weight:   sh.weight ?? 0,
+          total:    sh.merchantCost ?? 0,
+          delivered: sh.status === 'DELIVERED' ? 1 : 0,
+          failed:   sh.status === 'DELIVERY_FAILED' ? 1 : 0,
+          rto:      sh.status === 'RTO' ? 1 : 0,
+        }));
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error     = err?.error?.message || 'Failed to load report.';
+        this.isLoading = false;
+      },
     });
   }
 
-  exportCSV() {
-    const headers = ['Date', 'Total Shipments', 'Delivered', 'Failed', 'RTO'];
-    const rows = this.dataList.map(item => [
-      item.date,
-      item.total,
-      item.delivered,
-      item.failed,
-      item.rto
-    ]);
+  exportCSV(): void {
+    const headers = ['Date', 'AWB', 'Status', 'Destination', 'Carrier', 'Weight (kg)', 'Charge (₹)'];
+    const rows = this.dataList.map(s => [s.date, s.awb, s.status, s.dest, s.carrier, s.weight, s.total]);
     this.csvService.export('merchant_shipment_report', headers, rows);
   }
 
-  exportPDF() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups to generate PDF report.');
-      return;
-    }
-    
-    let rowsHtml = '';
-    this.dataList.forEach(item => {
-      rowsHtml += `
-        <tr>
-          <td>${item.date}</td>
-          <td style="text-align: right;">${item.total}</td>
-          <td style="text-align: right;">${item.delivered}</td>
-          <td style="text-align: right;">${item.failed}</td>
-          <td style="text-align: right;">${item.rto}</td>
-        </tr>
-      `;
-    });
+  exportPDF(): void {
+    const win = window.open('', '_blank');
+    if (!win) return;
 
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Merchant Shipment Report</title>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; }
-            h1 { color: #0b4a6f; text-align: center; border-bottom: 2px solid #0b4a6f; padding-bottom: 10px; }
-            .header-info { margin-bottom: 20px; display: flex; justify-content: space-between; }
-            .summary-section { margin-bottom: 30px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-            .summary-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; }
-            .summary-label { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
-            .summary-val { font-size: 20px; font-weight: bold; color: #0f172a; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #f1f5f9; color: #0f172a; font-weight: 600; font-size: 13px; text-transform: uppercase; }
-            .footer { margin-top: 30px; font-size: 12px; color: #777; text-align: center; }
-            @media print {
-              body { padding: 0; }
-              button { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Shipment Performance Report</h1>
-          <div class="header-info">
-            <div><strong>Date Range:</strong> ${this.dateRange}</div>
-            <div><strong>Filters:</strong> ${this.statusFilter}, ${this.carrierFilter}</div>
-            <div><strong>Generated On:</strong> ${new Date().toLocaleString()}</div>
-          </div>
-          
-          <div class="summary-section">
-            <div class="summary-box">
-              <div class="summary-label">Total Shipments</div>
-              <div class="summary-val">${this.summary.total}</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">Delivered</div>
-              <div class="summary-val" style="color: #16a34a;">${this.summary.delivered}</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">Failed / RTO</div>
-              <div class="summary-val" style="color: #ef4444;">${this.summary.failed + this.summary.rto}</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-label">COD Performance</div>
-              <div class="summary-val" style="color: #16a34a;">${this.summary.codPerformance}%</div>
-            </div>
-          </div>
+    const rowsHtml = this.dataList.map(s => `
+      <tr>
+        <td>${s.date}</td><td>${s.awb}</td><td>${s.status}</td>
+        <td>${s.dest}</td><td>${s.carrier}</td>
+        <td style="text-align:right;">${s.weight} kg</td>
+        <td style="text-align:right;">₹${(s.total ?? 0).toFixed(2)}</td>
+      </tr>`).join('');
 
-          <h2>Daily Breakdown</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th style="text-align: right;">Total</th>
-                <th style="text-align: right;">Delivered</th>
-                <th style="text-align: right;">Failed</th>
-                <th style="text-align: right;">RTO</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-          <div class="footer">
-            Generated by Vexaro System
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(() => {
-                window.print();
-                window.close();
-              }, 500);
-            }
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    win.document.write(`<html><head><title>Merchant Report</title>
+    <style>
+      body{font-family:sans-serif;padding:30px;color:#1e293b;}
+      h1{color:rgb(11,74,111);font-size:22px;}
+      .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0;}
+      .sc{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;}
+      .sl{font-size:12px;color:#64748b;}.sv{font-size:20px;font-weight:bold;}
+      table{width:100%;border-collapse:collapse;font-size:13px;}
+      th{background:#f8fafc;padding:10px;font-weight:600;border-bottom:2px solid #cbd5e1;text-align:left;}
+      td{padding:10px;border-bottom:1px solid #e2e8f0;}
+      @media print{body{padding:0;}}
+    </style></head><body>
+    <h1>Merchant Shipment Report</h1>
+    <div class="stats">
+      <div class="sc"><div class="sl">Total</div><div class="sv">${this.summary.total}</div></div>
+      <div class="sc"><div class="sl">Delivered</div><div class="sv">${this.summary.delivered}</div></div>
+      <div class="sc"><div class="sl">RTO</div><div class="sv">${this.summary.rto}</div></div>
+      <div class="sc"><div class="sl">Delivery Rate</div><div class="sv">${this.deliveryRate}</div></div>
+    </div>
+    <table><thead><tr><th>Date</th><th>AWB</th><th>Status</th><th>Destination</th><th>Carrier</th><th>Weight</th><th>Charge</th></tr></thead>
+    <tbody>${rowsHtml}</tbody></table>
+    <script>window.onload=function(){window.print();};<\/script>
+    </body></html>`);
+    win.document.close();
   }
 }

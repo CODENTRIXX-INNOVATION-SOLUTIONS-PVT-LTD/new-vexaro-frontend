@@ -10,15 +10,48 @@ import { BehaviorSubject, catchError, filter, Observable, switchMap, take, throw
 let isRefreshing = false;
 const refreshToken$ = new BehaviorSubject<string | null>(null);
 
-function clearAuthAndRedirect(router: Router): Observable<never> {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('userRole');
-  localStorage.removeItem('user');
-  localStorage.removeItem('redirectTo');
+/** Reads the access token from whichever storage it was placed in. */
+function getStoredToken(key: string): string | null {
+  return localStorage.getItem(key) ?? sessionStorage.getItem(key);
+}
+
+/** Wipes all auth keys from both storage layers. */
+function clearAuthStorage(): void {
+  const keys = ['accessToken', 'refreshToken', 'userRole', 'user', 'redirectTo'];
+  keys.forEach((k) => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
+}
+
+/**
+ * Revokes the refresh token server-side (best-effort), clears local storage,
+ * and redirects to /login.
+ */
+function clearAuthAndRedirect(
+  http: HttpClient,
+  router: Router,
+  baseUrl: string,
+): Observable<never> {
+  const refreshToken = getStoredToken('refreshToken');
+
   isRefreshing = false;
   refreshToken$.next(null);
+  clearAuthStorage();
   router.navigate(['/login']);
+
+  // Fire-and-forget: revoke the token server-side so it can't be reused.
+  // We don't block on this — the user is already being logged out locally.
+  if (refreshToken) {
+    http
+      .post(
+        `${baseUrl}/auth/logout`,
+        { refreshToken },
+        { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) },
+      )
+      .subscribe({ error: () => { /* ignore — local logout already done */ } });
+  }
+
   return throwError(() => new Error('Session expired. Please log in again.'));
 }
 
@@ -33,9 +66,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     req.url.includes('/auth/refresh') ||
     req.url.includes('/auth/logout');
 
-  // Attach token to every non-auth request
-  const token    = localStorage.getItem('accessToken');
-  const authReq  = token && !isAuthEndpoint
+  // Attach token to every non-auth request (check both storage layers)
+  const token   = getStoredToken('accessToken');
+  const authReq = token && !isAuthEndpoint
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 
@@ -46,9 +79,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      const storedRefresh = localStorage.getItem('refreshToken');
+      const storedRefresh = getStoredToken('refreshToken');
       if (!storedRefresh) {
-        return clearAuthAndRedirect(router);
+        return clearAuthAndRedirect(http, router, baseUrl);
       }
 
       // ── If a refresh is already in-flight, queue this request ────────────
@@ -82,11 +115,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             const newRefreshToken = response?.data?.refreshToken;
 
             if (!newAccessToken || !newRefreshToken) {
-              return clearAuthAndRedirect(router);
+              return clearAuthAndRedirect(http, router, baseUrl);
             }
 
-            localStorage.setItem('accessToken',  newAccessToken);
-            localStorage.setItem('refreshToken', newRefreshToken);
+            // Persist to whichever storage the original tokens were in
+            const storage = localStorage.getItem('accessToken') !== null
+              ? localStorage
+              : sessionStorage;
+            storage.setItem('accessToken',  newAccessToken);
+            storage.setItem('refreshToken', newRefreshToken);
 
             // Unblock all queued requests with the new token
             isRefreshing = false;
@@ -98,9 +135,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             });
             return next(retried);
           }),
-          catchError((refreshError) => {
-            return clearAuthAndRedirect(router);
-          }),
+          catchError(() => clearAuthAndRedirect(http, router, baseUrl)),
         );
     }),
   );

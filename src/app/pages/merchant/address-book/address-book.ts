@@ -1,106 +1,121 @@
-import { Component, signal } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-
-interface ContactAddress {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  street: string;
-  city: string;
-  state: string;
-  pincode: string;
-  label: "Home" | "Office" | "Store" | "Warehouse";
-}
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { finalize } from 'rxjs';
 
 @Component({
-  selector: "app-address-book",
+  selector: 'app-address-book',
   imports: [CommonModule, FormsModule],
-  templateUrl: "./address-book.html",
-  styleUrl: "./address-book.css",
+  templateUrl: './address-book.html',
+  styleUrl: './address-book.css',
 })
-export class AddressBook {
-  searchQuery = signal<string>("");
-  showForm = signal<boolean>(false);
+export class AddressBook implements OnInit {
+  private http = inject(HttpClient);
+  private readonly base = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
 
-  addresses = signal<ContactAddress[]>([
-    { id: "ADD-001", name: "Rajesh Kumar", phone: "9876543210", email: "rajesh@gmail.com", street: "12, MG Road, Sector 4", city: "Bengaluru", state: "Karnataka", pincode: "560001", label: "Home" },
-    { id: "ADD-002", name: "Sharma Traders", phone: "9123456789", email: "sharma@traders.com", street: "45, GIDC Industrial Estate", city: "Surat", state: "Gujarat", pincode: "395003", label: "Warehouse" },
-    { id: "ADD-003", name: "Aarav Mehta", phone: "8899001122", email: "aarav@mehta.com", street: "Flat 402, Sunshine Heights", city: "Mumbai", state: "Maharashtra", pincode: "400012", label: "Office" },
-    { id: "ADD-004", name: "Modern Retail Store", phone: "7766554433", email: "orders@modernretail.in", street: "Shop No. 7, Central Mall", city: "Delhi", state: "Delhi", pincode: "110001", label: "Store" }
-  ]);
+  searchQuery          = signal('');
+  showForm             = signal(false);
+  isLoading            = signal(false);
+  isSaving             = signal(false);
+  notificationMessage  = signal<string | null>(null);   // template calls notificationMessage()
+  error                = signal('');
+
+  private _addresses: any[] = [];
+  page  = 1;
+  total = 0;
+  readonly limit = 20;
+  get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   // Form fields
-  name = "";
-  phone = "";
-  email = "";
-  street = "";
-  city = "";
-  state = "";
-  pincode = "";
-  label: "Home" | "Office" | "Store" | "Warehouse" = "Home";
+  name = ''; phone = ''; email = '';
+  street = ''; city = ''; state = '';
+  pincode = ''; label: 'Home' | 'Office' | 'Store' | 'Warehouse' = 'Home';
+  formError = '';
 
-  notificationMessage = signal<string | null>(null);
+  ngOnInit(): void { this.load(); }
 
-  showNotification(msg: string) {
-    this.notificationMessage.set(msg);
-    setTimeout(() => {
-      this.notificationMessage.set(null);
-    }, 3000);
-  }
+  load(): void {
+    this.isLoading.set(true);
+    this.error.set('');
 
-  getFilteredAddresses() {
-    const query = this.searchQuery().toLowerCase().trim();
-    if (!query) return this.addresses();
+    let p = new HttpParams()
+      .set('page', this.page.toString())
+      .set('pageSize', this.limit.toString());
+    const q = this.searchQuery().trim();
+    if (q) p = p.set('search', q);
 
-    return this.addresses().filter(a => {
-      return (
-        a.name.toLowerCase().includes(query) ||
-        a.phone.includes(query) ||
-        a.city.toLowerCase().includes(query) ||
-        a.state.toLowerCase().includes(query) ||
-        a.pincode.includes(query)
-      );
+    this.http.get<any>(`${this.base}/users/address-book`, { params: p }).pipe(
+      finalize(() => this.isLoading.set(false)),
+    ).subscribe({
+      next: (res) => {
+        this.total       = res?.meta?.total ?? 0;
+        this._addresses  = res?.data?.addresses ?? [];
+      },
+      error: (err) => this.error.set(err?.error?.message || 'Failed to load addresses.'),
     });
   }
 
-  saveAddress() {
-    if (!this.name.trim() || !this.phone.trim() || !this.street.trim() || !this.city.trim() || !this.pincode.trim()) {
-      return;
-    }
+  applySearch(): void { this.page = 1; this.load(); }
+  prevPage(): void { if (this.page > 1)             { this.page--; this.load(); } }
+  nextPage(): void { if (this.page < this.totalPages) { this.page++; this.load(); } }
 
-    const newId = `ADD-0${this.addresses().length + 1}`;
-    const newAddress: ContactAddress = {
-      id: newId,
-      name: this.name,
-      phone: this.phone,
-      email: this.email,
-      street: this.street,
-      city: this.city,
-      state: this.state,
-      pincode: this.pincode,
-      label: this.label
-    };
-
-    this.addresses.update(prev => [newAddress, ...prev]);
-
-    // Reset fields
-    this.name = "";
-    this.phone = "";
-    this.email = "";
-    this.street = "";
-    this.city = "";
-    this.state = "";
-    this.pincode = "";
-    this.label = "Home";
-    this.showForm.set(false);
-
-    this.showNotification("Address added successfully to your Address Book.");
+  // Template uses getFilteredAddresses() method
+  getFilteredAddresses(): any[] {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return this._addresses;
+    return this._addresses.filter(a =>
+      (a.name    || '').toLowerCase().includes(q) ||
+      (a.city    || '').toLowerCase().includes(q) ||
+      (a.state   || '').toLowerCase().includes(q) ||
+      (a.pincode || '').toLowerCase().includes(q)
+    );
   }
 
-  deleteAddress(id: string) {
-    this.addresses.update(prev => prev.filter(a => a.id !== id));
-    this.showNotification("Contact address removed from your Address Book.");
+  openForm(): void {
+    this.name = ''; this.phone = ''; this.email = '';
+    this.street = ''; this.city = ''; this.state = '';
+    this.pincode = ''; this.label = 'Home'; this.formError = '';
+    this.showForm.set(true);
+  }
+
+  saveAddress(): void {
+    if (!this.name.trim() || !this.phone.trim() || !this.street.trim() || !this.city.trim() || !this.pincode.trim()) {
+      this.formError = 'Name, phone, address, city and pincode are required.';
+      return;
+    }
+    this.isSaving.set(true);
+    this.formError = '';
+
+    this.http.post<any>(`${this.base}/users/address-book`, {
+      name:        this.name.trim(),
+      phone:       this.phone.trim(),
+      email:       this.email.trim() || undefined,
+      addressLine: this.street.trim(),
+      city:        this.city.trim(),
+      state:       this.state.trim(),
+      pincode:     this.pincode.trim(),
+      label:       this.label,
+    }).pipe(finalize(() => this.isSaving.set(false))).subscribe({
+      next: () => {
+        this.showForm.set(false);
+        this.load();
+        this.toast('Address saved successfully.');
+      },
+      error: (err) => { this.formError = err?.error?.message || 'Failed to save address.'; },
+    });
+  }
+
+  deleteAddress(id: string): void {
+    if (!confirm('Delete this address?')) return;
+    this.http.delete<any>(`${this.base}/users/address-book/${id}`).subscribe({
+      next: () => { this.load(); this.toast('Address deleted.'); },
+      error: (err) => this.error.set(err?.error?.message || 'Failed to delete address.'),
+    });
+  }
+
+  private toast(msg: string): void {
+    this.notificationMessage.set(msg);
+    setTimeout(() => this.notificationMessage.set(null), 3000);
   }
 }

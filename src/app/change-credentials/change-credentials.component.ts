@@ -1,6 +1,7 @@
 import { Component, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
+import { AuthService } from "../services/auth.service";
 
 @Component({
   selector: "app-change-credentials",
@@ -10,7 +11,10 @@ import { FormsModule } from "@angular/forms";
   styleUrls: ["./change-credentials.component.scss"],
 })
 export class ChangeCredentialsComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+  ) {}
 
   newEmail = "";
   newPassword = "";
@@ -94,18 +98,45 @@ export class ChangeCredentialsComponent {
 
     this.isLoading.set(true);
 
-    // Mock API Submission (will be wired to POST /api/auth/change-initial-credentials)
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.successMessage.set("Credentials changed successfully! Redirecting to dashboard...");
-      
-      setTimeout(() => {
-        // Set mock token and role to bypass guard routing for verification
-        localStorage.setItem("token", "mock-vexaro-session-token");
-        localStorage.setItem("userRole", "SUPER_ADMIN");
-        localStorage.setItem("superAdminCredentialsChanged", "true");
-        this.router.navigate(["/super-admin/dashboard"]);
-      }, 1500);
-    }, 1500);
+    this.authService.changeInitialCredentials(this.newEmail.trim(), this.newPassword).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.successMessage.set("Credentials updated successfully! Redirecting to dashboard...");
+
+        // Update the stored email so the user object stays current
+        const userKey = 'user';
+        const roleKey = 'userRole';
+        const storedUser = localStorage.getItem(userKey) ?? sessionStorage.getItem(userKey);
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            user.email = this.newEmail.trim().toLowerCase();
+            // Write back to whichever storage layer was used
+            if (localStorage.getItem(userKey) !== null) {
+              localStorage.setItem(userKey, JSON.stringify(user));
+            } else {
+              sessionStorage.setItem(userKey, JSON.stringify(user));
+            }
+          } catch { /* ignore parse errors */ }
+        }
+
+        setTimeout(() => {
+          // Role was stored at login — route accordingly (check both layers)
+          const role = localStorage.getItem(roleKey) ?? sessionStorage.getItem(roleKey);
+          switch (role) {
+            case 'SUPER_ADMIN': this.router.navigate(['/super-admin/dashboard']); break;
+            case 'DISTRIBUTOR': this.router.navigate(['/distributor/dashboard']); break;
+            case 'MERCHANT':    this.router.navigate(['/merchant/dashboard']);    break;
+            default:            this.router.navigate(['/login']);
+          }
+        }, 1500);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(
+          err?.error?.message || 'Failed to update credentials. Please try again.'
+        );
+      },
+    });
   }
 }

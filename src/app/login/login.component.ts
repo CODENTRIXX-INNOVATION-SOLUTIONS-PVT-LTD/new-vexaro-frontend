@@ -45,20 +45,21 @@ export class LoginComponent {
         const data = response.data;
 
         // Save tokens
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
+        const storage = this.rememberMe ? localStorage : sessionStorage;
+        storage.setItem("accessToken", data.accessToken);
+        storage.setItem("refreshToken", data.refreshToken);
+        storage.setItem("user", JSON.stringify(data.user));
+        storage.setItem("userRole", data.user.role);
 
-        // Save logged in user
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // mustChangeCredentials: redirect to the first-login setup page
+        if (data.mustChangeCredentials) {
+          this.router.navigate(['/change-credentials']);
+          return;
+        }
 
-        // Save role separately (optional)
-        localStorage.setItem("userRole", data.user.role);
-
-        // Save redirect path (optional)
-        localStorage.setItem("redirectTo", `/${data.redirectTo}/dashboard`);
-
-        // Navigate to the page decided by backend
-        this.router.navigate([`/${data.redirectTo}/dashboard`]);
+        // redirectTo may come with a leading slash (e.g. '/super-admin') — normalise it
+        const redirectSegment = (data.redirectTo as string).replace(/^\/+/, '');
+        this.router.navigate([`/${redirectSegment}/dashboard`]);
       },
 
       error: (error) => {

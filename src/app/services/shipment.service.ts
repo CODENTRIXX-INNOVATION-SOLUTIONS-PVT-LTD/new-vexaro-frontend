@@ -86,4 +86,24 @@ export class ShipmentService {
     if (params.status) httpParams = httpParams.set('status', params.status);
     return this.http.get<ShipmentListResponse>(`${this.baseUrl}/shipments`, { params: httpParams });
   }
+
+  /**
+   * POST /shipments/velocity-rates
+   * Gets carrier-specific rates from Velocity for a given shipment spec.
+   * Used in create-shipment Step 4 to show per-carrier pricing.
+   */
+  getVelocityRates(payload: {
+    journeyType:        'forward' | 'return';
+    originPincode:      string;
+    destinationPincode: string;
+    deadWeightGrams:    number;
+    length:             number;
+    width:              number;
+    height:             number;
+    paymentMethod?:     'cod' | 'prepaid';
+    shipmentValue?:     number;
+    qcApplicable?:      boolean;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/velocity-rates`, payload);
+  }
 }

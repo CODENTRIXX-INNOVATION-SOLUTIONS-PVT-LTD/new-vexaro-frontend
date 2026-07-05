@@ -13,7 +13,53 @@
         </div>
     </div>
 
-    <!-- Main Wizard Grid -->
+    <!-- ── BOOKING SUCCESS STATE ── -->
+    @if(bookingSuccess()) {
+        <div class="booking-success-card">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#16a34a" stroke-width="1.5"/>
+                    <path d="M8 12l3 3 5-5" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2>Shipment Booked Successfully!</h2>
+
+            <div class="booking-details">
+                <div class="booking-detail-row">
+                    <span class="label">Vexaro AWB</span>
+                    <strong class="value">{{ bookedAWB() }}</strong>
+                </div>
+                @if(bookedCarrierAWB()) {
+                <div class="booking-detail-row">
+                    <span class="label">Carrier AWB</span>
+                    <strong class="value">{{ bookedCarrierAWB() }}</strong>
+                </div>
+                }
+                @if(bookedCarrier()) {
+                <div class="booking-detail-row">
+                    <span class="label">Carrier</span>
+                    <strong class="value">{{ bookedCarrier() }}</strong>
+                </div>
+                }
+            </div>
+
+            <div class="success-actions">
+                @if(bookedLabelUrl()) {
+                    <a [href]="bookedLabelUrl()!" target="_blank" rel="noopener" class="primary-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:1em;height:1em;vertical-align:middle">
+                            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Download Shipping Label
+                    </a>
+                }
+                <button class="primary-btn" (click)="goToShipments()">View All Shipments</button>
+                <button class="secondary-btn" (click)="bookAnother()">Book Another</button>
+            </div>
+        </div>
+    }
+
+    <!-- ── WIZARD (hidden after successful booking) ── -->
+    @if(!bookingSuccess()) {
     <div class="wizard-grid">
         <!-- Sidebar Steps -->
         <div class="steps-card">
@@ -79,9 +125,11 @@
 
                     <div class="form-group">
                         <label>Select Address *</label>
-                        <select class="form-control" [(ngModel)]="pickupAddress">
-                            @for(addr of addresses; track addr){
-                                <option [value]="addr">{{ addr }}</option>
+                        <select class="form-control"
+                            [(ngModel)]="selectedWarehouseMongoId"
+                            (ngModelChange)="onWarehouseChange($event)">
+                            @for(wh of warehouses; track getWarehouseId(wh)){
+                                <option [value]="getWarehouseId(wh)">{{ formatWarehouseAddress(wh) }}</option>
                             }
                         </select>
                     </div>
@@ -339,6 +387,7 @@
 
         </div>
     </div>
+    } <!-- end @if(!bookingSuccess()) -->
 
     <!-- Trust Badges Section -->
     <div class="trust-badges">
