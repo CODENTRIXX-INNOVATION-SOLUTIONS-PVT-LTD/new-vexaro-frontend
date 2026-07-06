@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
 import { FinanceService } from '../../../services/finance.service';
 import { DisputeService } from '../../../services/dispute.service';
 import { SupportService } from '../../../services/support.service';
@@ -49,6 +50,15 @@ export interface WeightDispute {
   attachments?: string[];
 }
 
+export interface DistributorTopupRequest {
+  id: string;
+  date: string;
+  amount: number;
+  note: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason: string;
+}
+
 @Component({
   selector: 'app-payments',
   standalone: true,
@@ -56,10 +66,11 @@ export interface WeightDispute {
   templateUrl: './payments.html',
   styleUrl: './payments.css',
 })
-export class Payments implements OnInit {
+export class Payments implements OnInit, OnDestroy {
   private financeService = inject(FinanceService);
   private disputeService = inject(DisputeService);
   private supportService = inject(SupportService);
+  private destroy$ = new Subject<void>();
 
   // ── Active Tab ────────────────────────────────────────────────────────────
   activeTab = 'balance';
@@ -68,11 +79,12 @@ export class Payments implements OnInit {
     this.activeTab = tab;
     this.topupSuccess = '';
     this.topupError = '';
-    // Lazy-load per tab — only fetch when user actually opens it
     if (tab === 'payments')      this.loadRazorpayPayments();
     if (tab === 'disputes')      this.loadDisputes();
     if (tab === 'transactions')  this.loadTransactions();
-    if (tab === 'refunds' || tab === 'requests') this.loadRefundRequests();
+    if (tab === 'requests')      this.loadRefundRequests();
+    if (tab === 'refunds')       this.loadRefundRequests();
+    if (tab === 'dist-request')  this.loadDistributorRequests();
   }
 
   // ── Wallet ────────────────────────────────────────────────────────────────
@@ -82,7 +94,6 @@ export class Payments implements OnInit {
   // ── Razorpay Top-up ───────────────────────────────────────────────────────
   packages = [1000, 2500, 5000, 10000, 25000];
   selectedPackage: number | null = null;
-  topUpMethod: 'checkout' | 'upi_qr' = 'checkout';
   isPaymentProcessing = false;
   topupSuccess = '';
   topupError = '';
@@ -99,21 +110,26 @@ export class Payments implements OnInit {
   paymentsLimit = 10;
   paymentsFilter: '' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED' = '';
 
-  // ── Refund Requests (shipment refunds submitted to distributor) ───────────
+  // ── Refund Requests ───────────────────────────────────────────────────────
   refundRequests: RefundRequest[] = [];
   refundRequestsLoading = false;
-
-  // ── Submit Refund Request form ────────────────────────────────────────────
   showRefundForm = false;
   newRefund = { shipmentId: '', amount: null as number | null, reason: '' };
   refundSubmitting = false;
   refundFormError = '';
   refundFormSuccess = '';
 
+  // ── Request from Distributor ──────────────────────────────────────────────
+  distributorRequests: DistributorTopupRequest[] = [];
+  distRequestsLoading = false;
+  distRequestAmount: number | null = null;
+  distRequestNote = '';
+  distRequestSubmitting = false;
+  distRequestSuccess = '';
+  distRequestError = '';
+
   // ── Weight Disputes ───────────────────────────────────────────────────────
   disputes: WeightDispute[] = [];
-
-  // ── Contest Dispute Modal ─────────────────────────────────────────────────
   showContestModal = false;
   contestingDispute: WeightDispute | null = null;
   contestNote = '';
@@ -125,46 +141,52 @@ export class Payments implements OnInit {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadWalletDetails();
-    this.loadTransactions();      // needed for summary stats (Total Spent)
-    this.loadRefundRequests();    // needed for badge counts on tabs
-    this.loadRazorpayPayments();  // needed for "Total Top-ups" stat card
-    // Disputes loaded lazily when tab is opened
+    this.loadTransactions();
+    this.loadRefundRequests();
+    this.loadRazorpayPayments();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // ── Loaders ───────────────────────────────────────────────────────────────
 
   loadWalletDetails(): void {
-    this.financeService.getMyWallet().subscribe({
-      next: (res) => {
-        if (res?.data) {
-          this.balance = res.data.balance ?? 0;
-          this.codEscrowBalance = res.data.codEscrowBalance ?? 0;
-        }
-      },
-      error: (err) => console.error('Wallet load failed', err),
-    });
+    this.financeService.getMyWallet()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res?.data) {
+            this.balance          = res.data.balance         ?? 0;
+            this.codEscrowBalance = res.data.codEscrowBalance ?? 0;
+          }
+        },
+        error: () => {},
+      });
   }
 
   loadTransactions(): void {
-    if (this.txLoading || this.transactions.length > 0) return; // already loaded
+    if (this.txLoading || this.transactions.length > 0) return;
     this.txLoading = true;
-    this.financeService.listTransactions({ limit: 50 }).subscribe({
-      next: (res) => {
-        const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
-        const raw: any[] = res?.data?.transactions ?? [];
-        this.transactions = raw.map((t: any) => ({
-          id: t._id,
-          date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-          description: t.note || this.formatTxType(t.type),
-          type: DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
-          amount: Math.abs(t.amount ?? 0),
-          status: 'Success',
-          reference: t.reference || '—',
-        }));
-        this.txLoading = false;
-      },
-      error: (err) => { console.error('Transactions load failed', err); this.txLoading = false; },
-    });
+    this.financeService.listTransactions({ limit: 50 })
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.txLoading = false; }))
+      .subscribe({
+        next: (res) => {
+          const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
+          this.transactions = (res?.data?.transactions ?? []).map((t: any) => ({
+            id:          t._id,
+            date:        new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            description: t.note || this.formatTxType(t.type),
+            type:        DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
+            amount:      Math.abs(t.amount ?? 0),
+            status:      'Success',
+            reference:   t.reference || '—',
+          }));
+        },
+        error: () => {},
+      });
   }
 
   loadRazorpayPayments(): void {
@@ -172,70 +194,94 @@ export class Payments implements OnInit {
     this.paymentsLoading = true;
     const params: any = { page: this.paymentsPage, limit: this.paymentsLimit };
     if (this.paymentsFilter) params.status = this.paymentsFilter;
-
-    this.financeService.listPayments(params).subscribe({
-      next: (res) => {
-        const raw: any[] = res?.data?.payments ?? [];
-        this.paymentsTotal = res?.meta?.total ?? raw.length;
-        this.razorpayPayments = raw.map((p: any) => ({
-          id: p._id,
-          date: new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-          amount: p.amountRupees ?? p.amount,
-          method: p.paymentMethod ?? null,
-          status: p.status,
-          razorpayOrderId: p.razorpayOrderId,
-          razorpayPaymentId: p.razorpayPaymentId ?? null,
-        }));
-        this.paymentsLoading = false;
-      },
-      error: () => { this.paymentsLoading = false; },
-    });
+    this.financeService.listPayments(params)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.paymentsLoading = false; }))
+      .subscribe({
+        next: (res) => {
+          const raw: any[] = res?.data?.payments ?? [];
+          this.paymentsTotal    = res?.meta?.total ?? raw.length;
+          this.razorpayPayments = raw.map((p: any) => ({
+            id:                p._id,
+            date:              new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            amount:            p.amountRupees ?? p.amount,
+            method:            p.paymentMethod ?? null,
+            status:            p.status,
+            razorpayOrderId:   p.razorpayOrderId,
+            razorpayPaymentId: p.razorpayPaymentId ?? null,
+          }));
+        },
+        error: () => {},
+      });
   }
 
   loadRefundRequests(): void {
     if (this.refundRequestsLoading) return;
     this.refundRequestsLoading = true;
-    this.financeService.listRefundRequests({ limit: 50 }).subscribe({
-      next: (res) => {
-        const raw: any[] = res?.data?.refundRequests ?? res?.data?.requests ?? [];
-        this.refundRequests = raw.map((r: any) => ({
-          id: r._id,
-          date: new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-          awb: r.shipmentId?.awb ?? r.awb ?? '—',
-          amount: r.amount ?? 0,
-          reason: r.reason ?? '—',
-          status: r.status ?? 'PENDING',
-          reviewNote: r.reviewNote ?? '—',
-        }));
-        this.refundRequestsLoading = false;
-      },
-      error: (err) => { console.error('Refund requests load failed', err); this.refundRequestsLoading = false; },
-    });
+    this.financeService.listRefundRequests({ limit: 50 })
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.refundRequestsLoading = false; }))
+      .subscribe({
+        next: (res) => {
+          const raw: any[] = res?.data?.refundRequests ?? res?.data?.requests ?? [];
+          this.refundRequests = raw.map((r: any) => ({
+            id:         r._id,
+            date:       new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            awb:        r.shipmentId?.awb ?? r.awb ?? '—',
+            amount:     r.amount ?? 0,
+            reason:     r.reason ?? '—',
+            status:     r.status ?? 'PENDING',
+            reviewNote: r.reviewNote ?? '—',
+          }));
+        },
+        error: () => {},
+      });
+  }
+
+  loadDistributorRequests(): void {
+    if (this.distRequestsLoading) return;
+    this.distRequestsLoading = true;
+    this.financeService.listMerchantRechargeRequests({ limit: 50 })
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.distRequestsLoading = false; }))
+      .subscribe({
+        next: (res) => {
+          const raw: any[] = res?.data?.requests ?? [];
+          this.distributorRequests = raw.map((r: any) => ({
+            id:              r._id,
+            date:            new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            amount:          r.amount ?? 0,
+            note:            r.note   ?? '—',
+            status:          r.status ?? 'PENDING',
+            rejectionReason: r.rejectionReason ?? '—',
+          }));
+        },
+        error: () => {},
+      });
   }
 
   loadDisputes(): void {
-    this.disputeService.listDisputes({ limit: 50 }).subscribe({
-      next: (res) => {
-        if (res.data?.items) {
-          this.disputes = res.data.items.map((d: any) => ({
-            id: d._id,
-            date: new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-            awb: d.shipmentId?.awb || '—',
-            billedWeight: d.billedWeight || 0,
-            actualWeight: d.actualWeight || 0,
-            difference: Math.max(0, (d.actualWeight || 0) - (d.billedWeight || 0)),
-            deduction: d.extraCharge || 0,
-            status: d.status,
-            contestNote: d.description || '',
-            attachments: (d.proofImages || []).map((img: string) => img.split('/').pop()),
-          }));
-        }
-      },
-      error: (err) => console.error('Disputes load failed', err),
-    });
+    this.disputeService.listDisputes({ limit: 50 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res.data?.items) {
+            this.disputes = res.data.items.map((d: any) => ({
+              id:           d._id,
+              date:         new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+              awb:          d.shipmentId?.awb || '—',
+              billedWeight: d.billedWeight || 0,
+              actualWeight: d.actualWeight || 0,
+              difference:   Math.max(0, (d.actualWeight || 0) - (d.billedWeight || 0)),
+              deduction:    d.extraCharge || 0,
+              status:       d.status,
+              contestNote:  d.description || '',
+              attachments:  (d.proofImages || []).map((img: string) => img.split('/').pop()),
+            }));
+          }
+        },
+        error: () => {},
+      });
   }
 
-  // ── Top-up ────────────────────────────────────────────────────────────────
+  // ── Razorpay Top-up ───────────────────────────────────────────────────────
 
   scrollToTopupForm(): void {
     this.activeTab = 'balance';
@@ -246,28 +292,30 @@ export class Payments implements OnInit {
   }
 
   selectPackage(amount: number): void {
-    this.selectedPackage = amount;
-    this.topupSuccess = '';
-    this.topupError = '';
-  }  async submitTopUp(): Promise<void> {
+    this.selectedPackage  = amount;
+    this.topupSuccess     = '';
+    this.topupError       = '';
+    this.distRequestError = '';
+  }
+
+  async submitTopUp(): Promise<void> {
     if (!this.selectedPackage) {
       this.topupError = 'Please select an amount to add.';
       return;
     }
     this.isPaymentProcessing = true;
     this.topupSuccess = '';
-    this.topupError = '';
+    this.topupError   = '';
     try {
-      const result = await this.financeService.startRazorpayWalletTopup(this.selectedPackage, this.topUpMethod);
-      this.balance = result.balance;
+      const result = await this.financeService.startRazorpayWalletTopup(this.selectedPackage);
+      this.balance      = result.balance;
       this.topupSuccess = `₹${this.selectedPackage.toLocaleString('en-IN')} added to your wallet successfully!`;
-      this.selectedPackage = null;
-      // Force refresh after successful payment
-      this.transactions = [];
-      this.txLoading = false;
+      this.selectedPackage  = null;
+      this.transactions     = [];
+      this.txLoading        = false;
       this.loadTransactions();
       this.razorpayPayments = [];
-      this.paymentsLoading = false;
+      this.paymentsLoading  = false;
       this.loadRazorpayPayments();
     } catch (err: any) {
       this.topupError = err?.error?.message || err?.message || 'Payment could not be completed.';
@@ -276,18 +324,50 @@ export class Payments implements OnInit {
     }
   }
 
+  // ── Request from Distributor ──────────────────────────────────────────────
+
+  submitDistributorRequest(): void {
+    if (!this.distRequestAmount || this.distRequestAmount <= 0) {
+      this.distRequestError = 'Please enter a valid amount.';
+      return;
+    }
+    this.distRequestSubmitting = true;
+    this.distRequestSuccess    = '';
+    this.distRequestError      = '';
+
+    this.financeService.createMerchantRechargeRequest({
+      amount: this.distRequestAmount,
+      note:   this.distRequestNote.trim() || undefined,
+    })
+    .pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.distRequestSubmitting = false; }),
+    )
+    .subscribe({
+      next: () => {
+        this.distRequestSuccess = `Top-up request for ₹${this.distRequestAmount!.toLocaleString('en-IN')} sent to your distributor.`;
+        this.distRequestAmount  = null;
+        this.distRequestNote    = '';
+        // Force reload the list fresh
+        this.distRequestsLoading = false;
+        this.loadDistributorRequests();
+      },
+      error: (err: any) => {
+        this.distRequestError = err?.error?.message ?? 'Failed to send request. Please try again.';
+      },
+    });
+  }
+
   // ── Refund Request Form ───────────────────────────────────────────────────
 
   openRefundForm(): void {
-    this.showRefundForm = true;
-    this.newRefund = { shipmentId: '', amount: null, reason: '' };
+    this.showRefundForm  = true;
+    this.newRefund       = { shipmentId: '', amount: null, reason: '' };
     this.refundFormError = '';
     this.refundFormSuccess = '';
   }
 
-  closeRefundForm(): void {
-    this.showRefundForm = false;
-  }
+  closeRefundForm(): void { this.showRefundForm = false; }
 
   submitRefundRequest(): void {
     if (!this.newRefund.shipmentId.trim() || !this.newRefund.amount || !this.newRefund.reason.trim()) {
@@ -295,22 +375,26 @@ export class Payments implements OnInit {
       return;
     }
     this.refundSubmitting = true;
-    this.refundFormError = '';
+    this.refundFormError  = '';
     this.financeService.submitRefundRequest({
       shipmentId: this.newRefund.shipmentId.trim(),
-      amount: this.newRefund.amount,
-      reason: this.newRefund.reason.trim(),
-    }).subscribe({
+      amount:     this.newRefund.amount,
+      reason:     this.newRefund.reason.trim(),
+    })
+    .pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.refundSubmitting = false; }),
+    )
+    .subscribe({
       next: () => {
         this.refundFormSuccess = 'Refund request submitted successfully.';
-        this.refundSubmitting = false;
-        this.newRefund = { shipmentId: '', amount: null, reason: '' };
+        this.newRefund         = { shipmentId: '', amount: null, reason: '' };
+        this.refundRequestsLoading = false;
         this.loadRefundRequests();
         setTimeout(() => { this.showRefundForm = false; this.refundFormSuccess = ''; }, 2000);
       },
       error: (err: any) => {
         this.refundFormError = err?.error?.message ?? 'Failed to submit refund request.';
-        this.refundSubmitting = false;
       },
     });
   }
@@ -318,20 +402,19 @@ export class Payments implements OnInit {
   // ── Payments pagination / filter ──────────────────────────────────────────
 
   applyPaymentsFilter(): void {
-    this.paymentsPage = 1;
+    this.paymentsPage    = 1;
+    this.paymentsLoading = false;
     this.loadRazorpayPayments();
   }
 
-  get paymentsTotalPages(): number {
-    return Math.ceil(this.paymentsTotal / this.paymentsLimit);
-  }
+  get paymentsTotalPages(): number { return Math.ceil(this.paymentsTotal / this.paymentsLimit); }
 
   prevPaymentsPage(): void {
-    if (this.paymentsPage > 1) { this.paymentsPage--; this.loadRazorpayPayments(); }
+    if (this.paymentsPage > 1) { this.paymentsPage--; this.paymentsLoading = false; this.loadRazorpayPayments(); }
   }
 
   nextPaymentsPage(): void {
-    if (this.paymentsPage < this.paymentsTotalPages) { this.paymentsPage++; this.loadRazorpayPayments(); }
+    if (this.paymentsPage < this.paymentsTotalPages) { this.paymentsPage++; this.paymentsLoading = false; this.loadRazorpayPayments(); }
   }
 
   // ── Computed badges ───────────────────────────────────────────────────────
@@ -341,12 +424,11 @@ export class Payments implements OnInit {
   }
 
   get pendingRequestsCount(): number {
-    // Recharge requests tab repurposed — show pending refund requests count
     return this.refundRequests.filter(r => r.status === 'PENDING').length;
   }
 
-  get pendingRefundsCount(): number {
-    return this.refundRequests.filter(r => r.status === 'PENDING').length;
+  get pendingDistRequestsCount(): number {
+    return this.distributorRequests.filter(r => r.status === 'PENDING').length;
   }
 
   get totalDisputeDeductions(): number {
@@ -362,10 +444,11 @@ export class Payments implements OnInit {
     this.selectedFileNames = [];
     this.contestError = '';
     this.showContestModal = true;
+    this.contestSuccess    = '';
   }
 
   closeContest(): void {
-    this.showContestModal = false;
+    this.showContestModal  = false;
     this.contestingDispute = null;
   }
 
@@ -376,11 +459,12 @@ export class Payments implements OnInit {
       this.selectedFileNames = this.selectedFiles.map(f => f.name);
       this.contestError = '';
     }
+//     if (input.files) this.selectedFileNames = Array.from(input.files).map(f => f.name);
   }
 
   submitContest(): void {
     if (!this.contestNote.trim()) {
-      alert('Please describe why you believe this deduction is incorrect.');
+      this.contestError = 'Please describe why you believe this deduction is incorrect.';
       return;
     }
     if (!this.selectedFiles.length) {
@@ -418,9 +502,14 @@ export class Payments implements OnInit {
 
   private formatTxType(type: string): string {
     const map: Record<string, string> = {
-      TOPUP: 'Wallet Top-up', CHARGE: 'Shipment Charge', REFUND: 'Refund',
-      COD_CREDIT: 'COD Credit', TRANSFER_CREDIT: 'Transfer In',
-      TRANSFER_DEBIT: 'Transfer Out', DISPUTE_CHARGE: 'Dispute Deduction', RTO_CHARGE: 'RTO Charge',
+      TOPUP:           'Wallet Top-up',
+      CHARGE:          'Shipment Charge',
+      REFUND:          'Refund',
+      COD_CREDIT:      'COD Credit',
+      TRANSFER_CREDIT: 'Transfer In',
+      TRANSFER_DEBIT:  'Transfer Out',
+      DISPUTE_CHARGE:  'Dispute Deduction',
+      RTO_CHARGE:      'RTO Charge',
     };
     return map[type] ?? type;
   }

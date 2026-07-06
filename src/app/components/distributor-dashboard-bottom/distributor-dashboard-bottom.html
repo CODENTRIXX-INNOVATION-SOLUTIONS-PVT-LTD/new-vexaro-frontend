@@ -1,77 +1,92 @@
 <div class="bottom-section">
-    <!-- Recent Merchant Activity -->
-    <div class="activity-card glass-panel">
-      <div class="card-header">
-        <h3>Recent Merchant Activity</h3>
-        <button class="btn-text">View All</button>
-      </div>
-      <div class="activity-list">
-        @for (activity of merchantActivity; track activity.merchantId) {
-          <div class="activity-item">
-            <div class="activity-icon-container" [ngClass]="{
+  <!-- Recent Activity -->
+  <div class="activity-card glass-panel">
+    <div class="card-header">
+      <h3>My Recent Activity</h3>
+      <button class="btn-text" (click)="viewAll()">View All</button>
+    </div>
+    <div class="activity-list">
+      @for (activity of merchantActivity; track activity.merchantId) {
+      <div class="activity-item">
+        <div class="activity-icon-container" [ngClass]="{
               'icon-topup': activity.action === 'Wallet Top-up',
               'icon-dispute': activity.action === 'Weight Dispute Raised',
               'icon-new': activity.action === 'New Merchant Onboarded'
             }">
-              @switch (activity.action) {
-                @case ('Wallet Top-up') {
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
-                }
-                @case ('Weight Dispute Raised') {
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><path d="M12 9v4M12 17h.01"></path></svg>
-                }
-                @case ('New Merchant Onboarded') {
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                }
-              }
-            </div>
-            <div class="activity-details">
-              <h4>{{ activity.action }}</h4>
-              <p>
-                <strong>{{ activity.businessName }}</strong> 
-                @if (activity.amount) {
-                  - <span class="text-success fw-bold">₹{{ activity.amount }}</span>
-                }
-                @if (activity.awb) {
-                  - AWB: <span class="fw-bold">{{ activity.awb }}</span>
-                }
-              </p>
-            </div>
-            <div class="activity-meta">
-              <span class="activity-time">{{ activity.date }}</span>
-              <span class="status-pill" [ngClass]="activity.status.toLowerCase()">{{ activity.status }}</span>
-            </div>
-          </div>
-        }
+          @switch (activity.action) {
+          @case ('Wallet Top-up') {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+            style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;" class="svg-icon">
+            <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path>
+          </svg>
+          }
+          @case ('Weight Dispute Raised') {
+          <svg xmlns="http://www.w3.orghttp://localhost:4200/distributor/merchant-finance/transactions/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;"
+            class="svg-icon">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 9v4M12 17h.01"></path>
+          </svg>
+          }
+          @case ('New Merchant Onboarded') {
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+            style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle;" class="svg-icon">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          }
+          }
+        </div>
+        <div class="activity-details">
+          <h4>{{ activity.action }}</h4>
+          <p>
+            <strong>{{ activity.businessName }}</strong>
+            @if (activity.amount) {
+            - <span class="text-success fw-bold">₹{{ activity.amount }}</span>
+            }
+            @if (activity.awb) {
+            - AWB: <span class="fw-bold">{{ activity.awb }}</span>
+            }
+          </p>
+        </div>
+        <div class="activity-meta">
+          <span class="activity-time">{{ activity.date }}</span>
+          <span class="status-pill" [ngClass]="activity.status.toLowerCase()">{{ activity.status }}</span>
+        </div>
       </div>
+      }
     </div>
-  
-    <!-- Summary -->
-    <div class="summary-card glass-panel">
-      <div class="card-header">
-        <h3>Franchise Summary</h3>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-card glass-panel">
+    <div class="card-header">
+      <h3>Franchise Summary</h3>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span class="label">Total Merchants</span>
+        <span class="value">{{ summary.totalMerchants }}</span>
       </div>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <span class="label">Total Merchants</span>
-          <span class="value">{{ summary.totalMerchants }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">Active Merchants</span>
-          <span class="value">{{ summary.activeMerchants }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">Total Revenue</span>
-          <span class="value text-primary">₹{{ summary.totalRevenue | number }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">Total Profit</span>
-          <span class="value text-success">₹{{ summary.totalProfit | number }}</span>
-        </div>
-        <div class="summary-item full-width">
-          <span class="label">Open Weight Disputes</span>
-          <span class="value text-danger">{{ summary.openDisputes }}</span>
-        </div>
+      <div class="summary-item">
+        <span class="label">Active Merchants</span>
+        <span class="value">{{ summary.activeMerchants }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Total Revenue</span>
+        <span class="value text-primary">₹{{ summary.totalRevenue | number }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Total Profit</span>
+        <span class="value text-success">₹{{ summary.totalProfit | number }}</span>
+      </div>
+      <div class="summary-item full-width">
+        <span class="label">Open Weight Disputes</span>
+        <span class="value text-danger">{{ summary.openDisputes }}</span>
       </div>
     </div>
   </div>
+</div>

@@ -1,83 +1,92 @@
 <div class="header-section">
-    <h2>API & Webhooks</h2>
-    <p class="subtitle">Manage integrations and developer access</p>
+  <h2>API & Developer Settings</h2>
+  <p class="subtitle">Manage integrations and API access</p>
 </div>
 
 <div class="shipment-card mt-4">
-    <div class="form-container">
-        
-        <div class="section-header">
-            <div class="section-title">
-                <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> API Keys</h4>
-                <p>Use these keys to authenticate API requests from your backend.</p>
-            </div>
-            <button class="action-btn" (click)="generateNewKey()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Generate Key</button>
-        </div>
-
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Key Name</th>
-                        <th>API Key</th>
-                        <th>Created On</th>
-                        <th>Last Used</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for(k of apiKeys; track k.key) {
-                    <tr>
-                        <td><strong>{{k.name}}</strong></td>
-                        <td style="font-family: monospace; color: #475569;">
-                            {{k.key}} 
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="copy-icon svg-icon" title="Copy" (click)="copyToClipboard(k.key)"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        </td>
-                        <td>{{k.created}}</td>
-                        <td>{{k.lastUsed}}</td>
-                        <td><span class="status active">{{k.status}}</span></td>
-                        <td>
-                            <button class="delete-btn" title="Revoke Key"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></button>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section-header mt-5">
-            <div class="section-title">
-                <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Webhook Endpoints</h4>
-                <p>Receive real-time HTTP push notifications when events occur.</p>
-            </div>
-            <button class="action-btn" (click)="addWebhook()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Webhook</button>
-        </div>
-
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Endpoint URL</th>
-                        <th>Subscribed Events</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for(w of webhooks; track w.url) {
-                    <tr>
-                        <td style="color: rgb(11, 74, 111);">{{w.url}}</td>
-                        <td>{{w.events}}</td>
-                        <td><span class="status active">{{w.status}}</span></td>
-                        <td>
-                            <button class="delete-btn" title="Delete Webhook"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></button>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
+  <div class="form-container">
+    
+    <div class="section-header">
+      <div class="section-title">
+        <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> API Keys</h4>
+        <p>Use these keys to authenticate API requests from your backend.</p>
+      </div>
+      <button class="action-btn" (click)="openCreateForm()" [disabled]="showCreateForm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Generate Key</button>
     </div>
+
+    @if (showCreateForm && !newKeySecret) {
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;">
+        <h4 style="margin:0 0 12px;font-size:15px;">Create New API Key</h4>
+        @if (createError) {
+          <div style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;">{{ createError }}</div>
+        }
+        <div style="margin-bottom:12px;">
+          <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;">Key Name</label>
+          <input type="text" [(ngModel)]="newKeyName" placeholder="e.g. Production API" style="width:100%;padding:8px 12px;border:1px solid #dbe2ea;border-radius:7px;font-size:14px;">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="action-btn" style="background:rgb(11,74,111);color:white;" (click)="generateNewKey()" [disabled]="!newKeyName.trim() || isCreating">{{ isCreating ? 'Creating...' : 'Create Key' }}</button>
+          <button class="action-btn" style="background:#e2e8f0;color:#1e293b;" (click)="cancelCreate()">Cancel</button>
+        </div>
+      </div>
+    }
+
+    @if (newKeySecret) {
+      <div style="background:#dcfce7;border:1px solid #bbf7d0;color:#15803d;padding:16px;border-radius:10px;margin-bottom:20px;">
+        <h4 style="margin:0 0 8px;font-size:15px;">API Key Created</h4>
+        <p style="margin:0 0 12px;font-size:13px;">Copy this key now — you won't be able to see it again.</p>
+        <div style="background:white;border:1px solid #bbf7d0;padding:10px 12px;border-radius:7px;font-family:monospace;font-size:13px;word-break:break-all;color:#047857;">{{ newKeySecret }}</div>
+        <button class="action-btn" style="margin-top:10px;background:#16a34a;color:white;" (click)="copyToClipboard(newKeySecret!); newKeySecret = null; showCreateForm = false;">Copy & Close</button>
+      </div>
+    }
+
+    @if (isLoading) {
+      <div style="padding:40px;text-align:center;color:#64748b;"><svg class="animate-spin svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.5em;height:1.5em;display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="10"/></svg> Loading...</div>
+    }
+
+    @if (!isLoading && apiKeys.length === 0) {
+      <div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No API keys yet. Create one to get started.</div>
+    }
+
+    @if (!isLoading && apiKeys.length > 0) {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Key Name</th>
+              <th>API Key</th>
+              <th>Created On</th>
+              <th>Last Used</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of apiKeys; track k.id) {
+            <tr>
+              <td><strong>{{ k.name }}</strong></td>
+              <td style="font-family:monospace;color:#475569;">
+                {{ k.keyPreview }} 
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;cursor:pointer;margin-left:6px;" class="copy-icon svg-icon" title="Copy" (click)="copyToClipboard(k.keyPreview)"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </td>
+              <td>{{ k.createdAt }}</td>
+              <td>{{ k.lastUsedAt || 'Never' }}</td>
+              <td><span class="status" [class.active]="k.status==='Active'" [style.background]="k.status==='Revoked'?'#fef2f2':''" [style.color]="k.status==='Revoked'?'#b91c1c':''">{{ k.status }}</span></td>
+              <td>
+                @if (k.status === 'Active') {
+                  <button class="delete-btn" title="Revoke Key" (click)="revokeKey(k.id)" [disabled]="isRevoking === k.id"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <div style="background:#fef9c3;border:1px solid #fde047;color:#854d0e;padding:14px 16px;border-radius:10px;font-size:13px;margin-top:24px;">
+      <strong>Note:</strong> Webhook endpoints are not yet available. Contact Super Admin for webhook integration support.
+    </div>
+
+  </div>
 </div>

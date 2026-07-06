@@ -7,7 +7,8 @@ import { CsvExportService } from '../../../../shared/csv-export.service';
 
 export interface Transaction {
   id: string;
-  date: string;
+  date: string;       // display string e.g. "15 Jan 2025"
+  rawDate: string;    // ISO date string e.g. "2025-01-15" — used for filtering
   type: 'Credit' | 'Debit';
   category: string;
   amount: number;
@@ -58,6 +59,9 @@ export class Transactions implements OnInit {
           date: t.createdAt
             ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
             : '—',
+          rawDate: t.createdAt
+            ? new Date(t.createdAt).toISOString().slice(0, 10) // "YYYY-MM-DD" for date input comparison
+            : '',
           type: this.CREDIT_TYPES.includes(t.type) ? 'Credit' : 'Debit',
           category: this.formatCategory(t.type),
           amount: Math.abs(t.amount ?? 0),
@@ -94,7 +98,8 @@ export class Transactions implements OnInit {
 
   applyFilters() {
     this.filteredTransactions = this.transactions.filter((t) => {
-      const matchesDate = !this.dateFilter || t.date.includes(this.dateFilter);
+      // Compare against rawDate (YYYY-MM-DD) which matches the date input value format
+      const matchesDate = !this.dateFilter || t.rawDate === this.dateFilter;
       const matchesType = this.typeFilter === 'All' || t.type === this.typeFilter;
       return matchesDate && matchesType;
     });
