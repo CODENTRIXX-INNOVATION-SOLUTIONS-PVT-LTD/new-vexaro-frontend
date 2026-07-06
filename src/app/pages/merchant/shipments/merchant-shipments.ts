@@ -7,7 +7,6 @@ import { finalize } from 'rxjs';
 import { ShipmentService } from '../../../services/shipment.service';
 import { AuthService } from '../../../services/auth.service';
 import { MerchantService, MerchantWarehouse } from '../../../services/merchant.service';
-import { RateService } from '../../../services/rate.service';
 
 @Component({
   selector: 'app-merchant-shipments',
@@ -20,7 +19,6 @@ export class MerchantShipments implements OnInit {
   private shipmentService = inject(ShipmentService);
   private authService = inject(AuthService);
   private merchantService = inject(MerchantService);
-  private rateService = inject(RateService);
   private router = inject(Router);
 
   isSubmitting = signal(false);
@@ -102,13 +100,13 @@ export class MerchantShipments implements OnInit {
     },
     {
       title: 'Average Delivery Time',
-      value: '3.2 Days',
+      value: '—',
       icon: 'fas fa-clock',
       bgColor: '#e0f2fe',
       iconColor: '#0284c7',
       percentage: 0,
       symbol: '-',
-      compairTo: 'faster than last month'
+      compairTo: 'from delivered shipments'
     }
   ];
 
@@ -163,13 +161,13 @@ export class MerchantShipments implements OnInit {
     return `${wh.name || wh.warehouseId || 'Warehouse'}, ${wh.address || ''}, ${wh.city || ''}, ${wh.state || ''} - ${wh.pincode || ''}`.replace(/\s+,/g, ',').trim();
   }
 
-  receiverName = 'Ankit Verma';
-  receiverPhone = '9876543211';
-  receiverEmail = 'ankit@example.com';
-  receiverAddress = 'Block C-4, Flat 102, Janakpuri, New Delhi';
-  receiverPincode = '110001';
-  receiverCity = 'Delhi';
-  receiverState = 'Delhi';
+  receiverName = '';
+  receiverPhone = '';
+  receiverEmail = '';
+  receiverAddress = '';
+  receiverPincode = '';
+  receiverCity = '';
+  receiverState = '';
 
   weight = 0.5;
   length = 10;
@@ -231,16 +229,19 @@ export class MerchantShipments implements OnInit {
   loadStats(): void {
     this.shipmentService.getStats().subscribe({
       next: (res) => {
-        if (res.data) {
-          this.shipmentCards[0].value = res.data.total?.toString() || '0';
-          this.shipmentCards[1].value = res.data.inTransit?.toString() || '0';
-          this.shipmentCards[2].value = res.data.delivered?.toString() || '0';
-          this.shipmentCards[3].value = res.data.pendingPickup?.toString() || '0';
-          this.shipmentCards[4].value = res.data.rto?.toString() || '0';
-          this.shipmentCards[6].value = `₹${(res.data.totalCost || 0).toLocaleString('en-IN')}`;
-        }
+        const d = res.data ?? res;
+        const by = d?.byStatus ?? {};
+        this.shipmentCards[0].value = (d?.total ?? 0).toLocaleString('en-IN');
+        this.shipmentCards[1].value = (
+          (by.PICKED_UP ?? 0) + (by.ARRIVED_AT_HUB ?? 0) + (by.OUT_FOR_DELIVERY ?? 0)
+        ).toLocaleString('en-IN');
+        this.shipmentCards[2].value = (by.DELIVERED ?? 0).toLocaleString('en-IN');
+        this.shipmentCards[3].value = (by.ORDER_CREATED ?? 0).toLocaleString('en-IN');
+        this.shipmentCards[4].value = (by.RTO ?? 0).toLocaleString('en-IN');
+        this.shipmentCards[5].value = (d?.today ?? 0).toLocaleString('en-IN');
+        this.shipmentCards[6].value = `₹${(d?.totalCost ?? 0).toLocaleString('en-IN')}`;
       },
-      error: (err) => console.error('Failed to load shipment stats:', err)
+      error: (err) => console.error('Failed to load shipment stats:', err),
     });
   }
 
@@ -274,13 +275,13 @@ export class MerchantShipments implements OnInit {
     this.currentStep.set(1);
     this.selectedCourierIndex.set(0);
     this.errorMessage = '';
-    this.receiverName = 'Ankit Verma';
-    this.receiverPhone = '9876543211';
-    this.receiverEmail = 'ankit@example.com';
-    this.receiverAddress = 'Block C-4, Flat 102, Janakpuri, New Delhi';
-    this.receiverPincode = '110001';
-    this.receiverCity = 'Delhi';
-    this.receiverState = 'Delhi';
+    this.receiverName = '';
+    this.receiverPhone = '';
+    this.receiverEmail = '';
+    this.receiverAddress = '';
+    this.receiverPincode = '';
+    this.receiverCity = '';
+    this.receiverState = '';
     this.weight = 0.5;
     this.length = 10;
     this.width = 10;
@@ -324,129 +325,162 @@ export class MerchantShipments implements OnInit {
     this.couriers = [];
     this.selectedCourierIndex.set(0);
     this.isLoadingRates.set(true);
+    this.errorMessage = '';
 
-    const isCODVal = this.isCOD;
-    const codAmtVal = isCODVal ? this.codAmount : 0;
-
+    // Step 1 — serviceability
     this.shipmentService.checkServiceability({
       fromPincode: this.warehousePincode,
-      toPincode: this.receiverPincode,
-      isCOD: isCODVal,
-      isForward: true,
-      weight: this.weight,
-      length: this.length,
-      breadth: this.width,
-      height: this.height,
-      codAmount: codAmtVal,
+      toPincode:   this.receiverPincode,
+      isCOD:       this.isCOD,
+      isForward:   true,
     }).subscribe({
       next: (res) => {
-        const carriers = res.data?.carriers || res.carriers || [];
-        if (carriers.length > 0) {
-          // Fetch the calculated Vexaro rate
-          this.rateService.calculateRate({
-            weight: this.weight,
-            serviceType: 'STANDARD',
-            isCOD: isCODVal,
-            codAmount: codAmtVal,
-          }).subscribe({
-            next: (rateRes) => {
-              this.isLoadingRates.set(false);
-              const totalCharge = Number(rateRes.data?.totalCharge || rateRes.totalCharge || 0);
-
-              this.couriers = carriers.map((c: any) => {
-                return {
-                  id: c.carrier_id || c.carrierId || c.id,
-                  name: c.carrier_name || c.carrierName || c.name || 'Courier',
-                  type: c.mode || c.service_type || 'Forward shipment',
-                  rate: totalCharge,
-                  rateLabel: totalCharge > 0 ? `Rs ${totalCharge.toFixed(2)}` : 'Available',
-                  logo: 'fas fa-truck-fast',
-                  color: '#1e293b'
-                };
-              });
-            },
-            error: (err) => {
-              console.error('Failed to calculate rate:', err);
-              this.isLoadingRates.set(false);
-              this.couriers = carriers.map((c: any) => ({
-                id: c.carrier_id || c.carrierId || c.id,
-                name: c.carrier_name || c.carrierName || c.name || 'Courier',
-                type: c.mode || c.service_type || 'Forward shipment',
-                rate: 0,
-                rateLabel: 'Available',
-                logo: 'fas fa-truck-fast',
-                color: '#1e293b'
-              }));
-              this.errorMessage = 'Could not calculate shipping charge. Using standard rate.';
-            }
-          });
-        } else {
+        const carriers: any[] = res.data?.carriers || res.carriers || [];
+        if (!carriers.length) {
           this.isLoadingRates.set(false);
-          this.couriers = [];
           this.errorMessage = 'No courier is serviceable for this pickup and delivery pincode.';
+          return;
         }
+
+        // Step 2 — live Velocity rates per carrier
+        this.shipmentService.getVelocityRates({
+          journeyType:        'forward',
+          originPincode:      this.warehousePincode,
+          destinationPincode: this.receiverPincode,
+          deadWeight:         this.weight * 1000,
+          length:             this.length,
+          width:              this.width,
+          height:             this.height,
+          paymentMethod:      this.isCOD ? 'cod' : 'prepaid',
+          ...(this.isCOD && this.codAmount ? { shipmentValue: this.codAmount } : {}),
+        }).subscribe({
+          next: (rateRes) => {
+            this.isLoadingRates.set(false);
+
+            const velocityRates: any[] = rateRes.data?.serviceable_couriers
+              || rateRes.data
+              || rateRes
+              || [];
+
+            const rateByCarrierId: Record<string, any> = {};
+            const rateByName: Record<string, any>      = {};
+            if (Array.isArray(velocityRates)) {
+              for (const r of velocityRates) {
+                if (r.carrier_id)   rateByCarrierId[r.carrier_id]              = r;
+                const name = r.carrier_name || r.courier_name;
+                if (name) rateByName[name.toLowerCase()]   = r;
+              }
+            }
+
+            this.couriers = carriers.map((c: any) => {
+              const carrierId   = c.carrier_id  || c.carrierId  || '';
+              const carrierName = c.carrier_name || c.carrierName || c.name || 'Courier';
+              const rateEntry   = rateByCarrierId[carrierId]
+                               || rateByName[carrierName.toLowerCase()]
+                               || null;
+              const charges = rateEntry?.charges || {};
+              const rate = rateEntry
+                ? Number(
+                    charges.total_forward_charges
+                    ?? charges.total_return_charges
+                    ?? rateEntry.total_amount
+                    ?? rateEntry.rate
+                    ?? rateEntry.total
+                    ?? 0
+                  )
+                : 0;
+              return {
+                id:    carrierId,
+                name:  carrierName,
+                type:  c.mode || c.service_type || 'Forward shipment',
+                rate,
+                etd:   rateEntry?.expected_delivery?.delivery || rateEntry?.etd || rateEntry?.estimated_delivery || null,
+                logo:  'fas fa-truck-fast',
+                color: '#1e293b',
+              };
+            });
+
+            // Sort cheapest first
+            this.couriers.sort((a, b) => {
+              if (!a.rate && !b.rate) return 0;
+              if (!a.rate) return 1;
+              if (!b.rate) return -1;
+              return a.rate - b.rate;
+            });
+          },
+          error: () => {
+            this.isLoadingRates.set(false);
+            // Rates failed — still show carriers, price shown as 0
+            this.couriers = carriers.map((c: any) => ({
+              id:    c.carrier_id  || c.carrierId  || '',
+              name:  c.carrier_name || c.carrierName || c.name || 'Courier',
+              type:  c.mode || c.service_type || 'Forward shipment',
+              rate:  0,
+              etd:   null,
+              logo:  'fas fa-truck-fast',
+              color: '#1e293b',
+            }));
+            this.errorMessage = 'Could not fetch live carrier rates. Charges will be calculated at booking.';
+          },
+        });
       },
       error: (err) => {
         this.isLoadingRates.set(false);
-        this.couriers = [];
         this.errorMessage = err.error?.message || 'Failed to check serviceability.';
-      }
+      },
     });
   }
 
   createShipment(): void {
     if (this.isSubmitting()) return;
     this.errorMessage = '';
-    if (!this.isCurrentStepValid()) {
-      alert(this.errorMessage);
-      return;
-    }
+
+    if (!this.isCurrentStepValid()) return;
+
     const selected = this.couriers[this.selectedCourierIndex()];
     if (!selected) {
       this.errorMessage = 'Please select a courier to book shipment.';
-      alert(this.errorMessage);
       return;
     }
 
     const payload = {
-      serviceType: 'STANDARD',
-      weight: this.weight,
-      length: this.length,
-      breadth: this.width,
-      height: this.height,
-      itemType: this.itemType,
-      isFragile: this.isFragile,
-      warehouseId: this.selectedWarehouseMongoId,
+      serviceType:  'STANDARD',
+      weight:       this.weight,
+      length:       this.length,
+      breadth:      this.width,
+      height:       this.height,
+      warehouseId:  this.selectedWarehouseMongoId,
       destination: {
-        name: this.receiverName,
-        phone: this.receiverPhone,
+        name:        this.receiverName,
+        phone:       this.receiverPhone,
         ...(this.receiverEmail ? { email: this.receiverEmail } : {}),
         addressLine: this.receiverAddress,
-        city: this.receiverCity,
-        state: this.receiverState,
-        pincode: this.receiverPincode,
+        city:        this.receiverCity,
+        state:       this.receiverState,
+        pincode:     this.receiverPincode,
       },
-      carrierId: selected.id,
-      isCOD: this.isCOD,
-      codAmount: this.isCOD ? this.codAmount : 0,
-      declaredValue: this.declaredValue,
-      merchantOrderRef: this.merchantOrderRef || undefined,
+      carrierId:        selected.id || undefined,
+      isCOD:            this.isCOD,
+      codAmount:        this.isCOD ? this.codAmount : 0,
+      declaredValue:    this.declaredValue,
+      ...(this.merchantOrderRef ? { merchantOrderRef: this.merchantOrderRef } : {}),
     };
 
     this.isSubmitting.set(true);
     this.shipmentService.createShipment(payload).pipe(
       finalize(() => this.isSubmitting.set(false))
     ).subscribe({
-      next: () => {
-        alert('Shipment created successfully!');
+      next: (res) => {
+        const data = res.data || res;
         this.closeCreateModal();
         this.loadShipments();
         this.loadStats();
+        // Brief success message in the errorMessage slot (green styling handled in template)
+        this.errorMessage = `Shipment ${data.awb || ''} booked successfully via ${data.carrier || selected.name}!`;
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to create shipment.';
-        alert(this.errorMessage);
-      }
+        this.errorMessage = err.error?.message || 'Failed to create shipment. Please try again.';
+      },
     });
   }
 
@@ -493,17 +527,17 @@ export class MerchantShipments implements OnInit {
   }
 
   cancelShipment(id: string): void {
-    if (confirm('Are you sure you want to cancel this shipment? This will refund the shipping cost to your wallet.')) {
-      this.shipmentService.cancelShipment(id).subscribe({
-        next: () => {
-          alert('Shipment cancelled successfully.');
-          this.closeDetailsModal();
-          this.loadShipments();
-          this.loadStats();
-        },
-        error: (err) => alert(err.error?.message || 'Failed to cancel shipment.')
-      });
-    }
+    if (!confirm('Are you sure you want to cancel this shipment? This will refund the shipping cost to your wallet.')) return;
+    this.shipmentService.cancelShipment(id).subscribe({
+      next: () => {
+        this.closeDetailsModal();
+        this.loadShipments();
+        this.loadStats();
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Failed to cancel shipment.';
+      },
+    });
   }
 
   viewShipmentDetails(shipment: any): void {

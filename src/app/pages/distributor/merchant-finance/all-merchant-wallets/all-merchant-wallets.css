@@ -68,6 +68,23 @@
     outline: none;
     font-size: 14px;
     width: 100%;
+    flex: 1;
+}
+
+.search-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.search-btn:hover {
+    background: #4f46e5;
 }
 
 .table-card {
@@ -226,4 +243,295 @@ code {
     text-align: center;
     padding: 64px 24px;
     color: #94a3b8;
+}
+
+/* ── Pending Requests Panel ─────────────────────────────────────────────── */
+
+.requests-panel {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.rp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.rp-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rp-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pending-badge {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.rp-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+/* Alert banners */
+.rp-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.rp-alert.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+.rp-alert.error   { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+
+/* Cards grid */
+.rp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.rp-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.rp-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  border-color: #cbd5e1;
+}
+
+.rp-card.processing {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.rp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rp-merchant-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rp-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgb(11, 74, 111);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.rp-merchant-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.rp-merchant-email {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.rp-amount {
+  font-size: 22px;
+  font-weight: 800;
+  color: rgb(11, 74, 111);
+}
+
+.rp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.rp-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 14px;
+}
+
+/* Action buttons */
+.rp-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rp-btn-approve {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.rp-btn-approve:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.rp-btn-approve:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rp-btn-reject {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: white;
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.rp-btn-reject:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+.rp-btn-reject:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Reject form */
+.rp-reject-form {
+  margin-top: 10px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.rp-reject-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.rp-reject-input:focus {
+  border-color: rgb(11, 74, 111);
+  box-shadow: 0 0 0 3px rgba(11, 74, 111, 0.1);
+}
+
+.rp-btn-danger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rp-btn-danger:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.rp-btn-ghost {
+  padding: 8px 14px;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rp-btn-ghost:hover { background: #e2e8f0; }
+
+/* Spinner inside buttons */
+.rp-spin {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2.5px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #16a34a;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.rp-spin.white {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .rp-cards { grid-template-columns: 1fr; }
+  .requests-panel { padding: 16px; }
 }

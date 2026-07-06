@@ -15,8 +15,18 @@ export class AdminPayment implements OnInit {
   private financeService = inject(FinanceService);
   private cdr = inject(ChangeDetectorRef);
 
-  activeTab = 'wallet';
+  activeTab = 'adminwallet';
   isLoading = false;
+
+  // ── Admin Wallet ──────────────────────────────────────────────────────────
+  adminBalance = 0;
+  adminWalletLoading = false;
+  adminTopupPackages = [10000, 25000, 50000, 100000, 250000];
+  adminSelectedPackage: number | null = null;
+  adminTopupMode: 'checkout' | 'upi_qr' = 'checkout';
+  adminTopupProcessing = false;
+  adminTopupSuccess = '';
+  adminTopupError = '';
 
   // ── Stats Cards ───────────────────────────────────────────────────────────
   paymentCards = [
@@ -57,6 +67,11 @@ export class AdminPayment implements OnInit {
 
   // ── Recharge Requests ─────────────────────────────────────────────────────
   rechargeRequestsData: any[] = [];
+  rechargeRequestActionInProgress = '';
+  rechargeRequestSuccess = '';
+  rechargeRequestError   = '';
+  rejectingRequestId     = '';
+  rejectReasonInput      = '';
 
   // ── Commission ────────────────────────────────────────────────────────────
   commissionData: any[] = [];
@@ -65,7 +80,7 @@ export class AdminPayment implements OnInit {
 
   changeTab(tab: string) {
     this.activeTab = tab;
-    // Lazy-load heavy tabs only when opened
+    if (tab === 'adminwallet' && this.adminBalance === 0) this.loadAdminWallet();
     if (tab === 'razorpay' && this.razorpayPayments.length === 0) this.loadRazorpayPayments();
     if (tab === 'commission' && this.commissionData.length === 0)  this.loadCommission();
     if (tab === 'refunds'   && this.refunds.length === 0)          this.loadRefunds();
@@ -76,17 +91,56 @@ export class AdminPayment implements OnInit {
 
   loadAll() {
     this.isLoading = true;
-    // Load stats + essential wallet/transaction data in parallel
     Promise.allSettled([
       this.loadStats(),
+      this.loadAdminWallet(),
       this.loadDistributors(),
       this.loadTransactions(),
     ]).then(() => {
       this.isLoading = false;
       this.cdr.detectChanges();
     });
-    // Pre-load recharge requests (needed for badge)
     this.loadRechargeRequests();
+  }
+
+  loadAdminWallet(): Promise<void> {
+    this.adminWalletLoading = true;
+    return new Promise((resolve) => {
+      this.financeService.getMyWallet().subscribe({
+        next: (res) => {
+          this.adminBalance = res?.data?.balance ?? 0;
+          this.adminWalletLoading = false;
+          this.cdr.detectChanges();
+          resolve();
+        },
+        error: () => { this.adminWalletLoading = false; resolve(); },
+      });
+    });
+  }
+
+  async startAdminTopup(): Promise<void> {
+    if (!this.adminSelectedPackage) {
+      this.adminTopupError = 'Please select an amount.';
+      return;
+    }
+    this.adminTopupProcessing = true;
+    this.adminTopupSuccess = '';
+    this.adminTopupError = '';
+    try {
+      const result = await this.financeService.startRazorpayWalletTopup(this.adminSelectedPackage, this.adminTopupMode);
+      this.adminBalance = result.balance;
+      this.adminTopupSuccess = `₹${this.adminSelectedPackage.toLocaleString('en-IN')} added to your admin wallet!`;
+      this.adminSelectedPackage = null;
+    } catch (err: any) {
+      this.adminTopupError = err?.error?.message || err?.message || 'Payment could not be completed.';
+    } finally {
+      this.adminTopupProcessing = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  get isAdminBalanceInsufficient(): boolean {
+    return !!this.rechargeModel.amount && this.rechargeModel.amount > this.adminBalance;
   }
 
   private loadStats(): Promise<void> {
@@ -138,6 +192,7 @@ export class AdminPayment implements OnInit {
     return new Promise<void>((resolve) => {
       this.financeService.listTransactions({ limit: 50 }).subscribe({
         next: (res) => {
+          const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
           this.payments = (res?.data?.transactions ?? []).map((t: any) => ({
             transactionId: t._id,
             displayId: (t._id as string)?.slice(-8)?.toUpperCase() ?? '—',
@@ -145,7 +200,7 @@ export class AdminPayment implements OnInit {
             rechargeAmount: Math.abs(t.amount ?? 0),
             paymentMethod: t.type ?? 'Wallet',
             date: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
-            status: t.amount >= 0 ? 'Credit' : 'Debit',
+            status: DEBIT_TYPES.has(t.type) ? 'Debit' : 'Credit',
           }));
           this.cdr.detectChanges();
           resolve();
@@ -254,6 +309,10 @@ export class AdminPayment implements OnInit {
       this.rechargeError = 'Please fill in the distributor and amount fields.';
       return;
     }
+    if (this.isAdminBalanceInsufficient) {
+      this.rechargeError = `Insufficient admin wallet balance. Available: ₹${this.adminBalance.toLocaleString('en-IN')}. Please top up your wallet first.`;
+      return;
+    }
     this.isLoading = true;
     this.rechargeSuccess = '';
     this.rechargeError = '';
@@ -264,15 +323,16 @@ export class AdminPayment implements OnInit {
       referenceId: this.rechargeModel.referenceId,
     }).subscribe({
       next: () => {
-        this.rechargeSuccess = `Wallet recharged with ₹${this.rechargeModel.amount?.toLocaleString('en-IN')} successfully.`;
+        this.rechargeSuccess = `₹${this.rechargeModel.amount?.toLocaleString('en-IN')} transferred to distributor wallet successfully.`;
         this.rechargeModel = { distributorId: '', amount: null, paymentMethod: 'UPI' as const, referenceId: '' };
         this.activeTab = 'wallet';
         this.isLoading = false;
-        this.loadDistributors();
+        this.loadAdminWallet();  // refresh admin balance
+        this.loadDistributors(); // refresh distributor balances
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.rechargeError = err?.error?.message ?? 'Recharge failed. Please try again.';
+        this.rechargeError = err?.error?.message ?? 'Transfer failed. Please try again.';
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -284,30 +344,65 @@ export class AdminPayment implements OnInit {
   get rechargeRequests() { return this.rechargeRequestsData; }
 
   approveRequest(req: any) {
-    if (!confirm(`Approve recharge of ₹${req.amount.toLocaleString('en-IN')} for ${req.distributorName}?`)) return;
-    this.isLoading = true;
+    this.rechargeRequestSuccess = '';
+    this.rechargeRequestError   = '';
+    this.rechargeRequestActionInProgress = req._id;
+
     this.financeService.approveRechargeRequest(req._id).subscribe({
-      next: () => { this.isLoading = false; this.loadAll(); this.cdr.detectChanges(); },
+      next: () => {
+        this.rechargeRequestActionInProgress = '';
+        this.rechargeRequestSuccess = `₹${req.amount.toLocaleString('en-IN')} approved and credited to ${req.distributorName}'s wallet.`;
+        this.loadRechargeRequests();
+        this.loadAdminWallet();
+        this.loadDistributors();
+        this.cdr.detectChanges();
+      },
       error: (err) => {
-        alert(err?.error?.message ?? 'Approval failed.');
-        this.isLoading = false;
+        this.rechargeRequestActionInProgress = '';
+        this.rechargeRequestError = err?.error?.message ?? 'Approval failed. Please check your admin wallet balance.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  openRejectForm(req: any) {
+    this.rejectingRequestId   = req._id;
+    this.rejectReasonInput    = '';
+    this.rechargeRequestError = '';
+    this.rechargeRequestSuccess = '';
+  }
+
+  cancelRejectForm() {
+    this.rejectingRequestId = '';
+    this.rejectReasonInput  = '';
+  }
+
+  confirmRejectRequest(req: any) {
+    if (!this.rejectReasonInput.trim() || this.rejectReasonInput.trim().length < 5) {
+      this.rechargeRequestError = 'Please provide a rejection reason of at least 5 characters.';
+      return;
+    }
+    this.rechargeRequestActionInProgress = req._id;
+    this.rechargeRequestError = '';
+
+    this.financeService.rejectRechargeRequest(req._id, this.rejectReasonInput.trim()).subscribe({
+      next: () => {
+        this.rechargeRequestActionInProgress = '';
+        this.rejectingRequestId = '';
+        this.rechargeRequestSuccess = `Recharge request from ${req.distributorName} rejected.`;
+        this.loadRechargeRequests();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.rechargeRequestActionInProgress = '';
+        this.rechargeRequestError = err?.error?.message ?? 'Rejection failed. Please try again.';
         this.cdr.detectChanges();
       },
     });
   }
 
   rejectRequest(req: any) {
-    const reason = prompt(`Reason for rejecting ${req.distributorName}'s request:`);
-    if (reason === null) return;
-    this.isLoading = true;
-    this.financeService.rejectRechargeRequest(req._id, reason || undefined).subscribe({
-      next: () => { this.isLoading = false; this.loadAll(); this.cdr.detectChanges(); },
-      error: (err) => {
-        alert(err?.error?.message ?? 'Rejection failed.');
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
+    this.openRejectForm(req);
   }
 
   // ── Razorpay Payments ─────────────────────────────────────────────────────

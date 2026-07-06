@@ -1,0 +1,125 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <h1 class="page-title">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      Merchant Revenue
+    </h1>
+    <div class="actions">
+      <button class="action-btn" (click)="exportCSV()" [disabled]="filteredData.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div style="display:flex;align-items:center;gap:10px;padding:40px;color:#64748b;font-size:14px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em;animation:spin 0.7s linear infinite;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      Loading merchant revenue data…
+    </div>
+  }
+
+  @if (!isLoading && error) {
+    <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:14px 18px;font-size:14px;">{{ error }}</div>
+  }
+
+  @if (!isLoading && !error) {
+
+    <!-- Summary -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Merchants</div>
+        <div class="stat-value">{{ data.length }}</div>
+        <div class="stat-sub">In your network</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Shipments</div>
+        <div class="stat-value">{{ totalShipments | number }}</div>
+        <div class="stat-sub">Across all merchants</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Delivered</div>
+        <div class="stat-value text-success">{{ totalDelivered | number }}</div>
+        <div class="stat-sub">Successfully delivered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">COD Collected</div>
+        <div class="stat-value" style="color:#0b4a6f;">₹{{ totalCOD | number }}</div>
+        <div class="stat-sub">Cash on delivery total</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <div class="table-header">
+        <h2 class="section-title">Merchant Breakdown</h2>
+        <input
+          type="text"
+          placeholder="Search merchant or email…"
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          class="search-input"
+        />
+      </div>
+
+      @if (filteredData.length === 0) {
+        <div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No merchants found.</div>
+      } @else {
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Merchant</th>
+                <th>Email</th>
+                <th class="text-right">Shipments</th>
+                <th class="text-right">Delivered</th>
+                <th class="text-right">Failed/RTO</th>
+                <th class="text-right">Delivery Rate</th>
+                <th class="text-right">COD Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of filteredData; track row.id) {
+                <tr>
+                  <td class="fw-bold">{{ row.name }}</td>
+                  <td style="font-size:13px;color:#64748b;">{{ row.email }}</td>
+                  <td class="text-right">{{ row.totalShipments | number }}</td>
+                  <td class="text-right text-success fw-bold">{{ row.delivered | number }}</td>
+                  <td class="text-right" style="color:#b91c1c;">{{ row.failed | number }}</td>
+                  <td class="text-right">
+                    <span style="font-size:13px;font-weight:700;"
+                      [style.color]="row.deliveryRate !== '—' && +row.deliveryRate >= 80 ? '#16a34a' : '#b45309'">
+                      {{ row.deliveryRate }}
+                    </span>
+                  </td>
+                  <td class="text-right" style="color:#0b4a6f;font-weight:600;">
+                    {{ row.codTotal > 0 ? ('₹' + (row.codTotal | number)) : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+  }
+
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>

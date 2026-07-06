@@ -1,13 +1,39 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 import { DashboardHeader } from '../../../components/dashboard-header/dashboard-header';
 import { StatsCards } from '../../../components/stats-cards/stats-cards';
 import { RecentShipments } from '../../../components/recent-shipments/recent-shipments';
 import { ShipmentOverview } from '../../../components/shipment-overview/shipment-overview';
 import { TopDestinations } from '../../../components/top-destinations/top-destinations';
-import { RouterLink } from '@angular/router';
 import { CsvExportService } from '../../../shared/csv-export.service';
+import { ShipmentService } from '../../../services/shipment.service';
+
+type ModalSelectionMode = 'print' | 'manifest' | null;
+
+interface DashboardShipment {
+  id: string;
+  awb: string;
+  carrierAWB: string | null;
+  labelUrl: string | null;
+  customerName: string;
+  destination: string;
+  courier: string;
+  status: string;
+  date: string;
+  amount: string;
+  weight: string;
+  weightKg: number;
+  isCOD: boolean;
+  codAmount: number;
+  senderName: string;
+  senderAddress: string;
+  receiverAddress: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -19,140 +45,140 @@ import { CsvExportService } from '../../../shared/csv-export.service';
     TopDestinations,
     RouterLink,
     CommonModule,
-    FormsModule
+    FormsModule,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class MarchandeDashboardPage {
+export class MarchandeDashboardPage implements OnInit {
   private csvService = inject(CsvExportService);
+  private shipmentService = inject(ShipmentService);
+
+  isLoading = signal(true);
+  isShipmentsLoading = signal(false);
+
+  dashboardStats: any = {};
+  shipmentMeta: any = null;
+  shipmentPage = 1;
+  shipmentLimit = 10;
 
   cards = [
-    {
-      title: 'Total Shipments',
-      value: '12,678',
-      icon: 'fas fa-box',
-      iconColor: 'rgb(11, 74, 111)',
-      bgColor: '#dbeafe'
-    },
-    {
-      title: 'Delivered',
-      value: '10,426',
-      icon: 'fas fa-check-circle',
-      iconColor: '#16a34a',
-      bgColor: '#dcfce7'
-    },
-    {
-      title: 'In Transit',
-      value: '1,890',
-      icon: 'fas fa-truck',
-      iconColor: 'rgb(232, 116, 58)',
-      bgColor: '#fef3c7'
-    },
-    {
-      title: 'Pending',
-      value: '362',
-      icon: 'fas fa-clock',
-      iconColor: '#dc2626',
-      bgColor: '#fee2e2'
-    },
-    {
-      title: 'Total Revenue',
-      value: '₹45,67,890',
-      icon: 'fas fa-indian-rupee-sign',
-      iconColor: '#7c3aed',
-      bgColor: '#ede9fe'
-    }
+    { title: 'Total Shipments', value: '-', icon: 'fas fa-box', iconColor: 'rgb(11, 74, 111)', bgColor: '#dbeafe' },
+    { title: 'Delivered', value: '-', icon: 'fas fa-check-circle', iconColor: '#16a34a', bgColor: '#dcfce7' },
+    { title: 'In Transit', value: '-', icon: 'fas fa-truck', iconColor: 'rgb(232, 116, 58)', bgColor: '#fef3c7' },
+    { title: 'Pending Pickup', value: '-', icon: 'fas fa-clock', iconColor: '#dc2626', bgColor: '#fee2e2' },
+    { title: 'Total Spend', value: '-', icon: 'fas fa-indian-rupee-sign', iconColor: '#7c3aed', bgColor: '#ede9fe' },
   ];
 
-  // Shipments matching the recent shipments but enriched for labels/manifests
-  shipments = [
-    {
-      id: 'VX001245',
-      customerName: 'Rahul Sharma',
-      destination: 'Mumbai, MH',
-      courier: 'Blue Dart',
-      status: 'Delivered',
-      date: '10 Jun 2026',
-      amount: '₹2,450',
-      weight: '1.5 kg',
-      senderName: 'Sahil Gour',
-      senderAddress: 'Vasamo Store, 123, Sector 5, Noida, UP - 201301',
-      receiverAddress: 'Flat 402, Sea Breeze Apts, Juhu Tara Road, Mumbai, MH - 400049'
-    },
-    {
-      id: 'VX001246',
-      customerName: 'Priya Singh',
-      destination: 'Delhi, DL',
-      courier: 'Delhivery',
-      status: 'In Transit',
-      date: '10 Jun 2026',
-      amount: '₹1,200',
-      weight: '0.8 kg',
-      senderName: 'Sahil Gour',
-      senderAddress: 'Vasamo Store, 123, Sector 5, Noida, UP - 201301',
-      receiverAddress: 'Pocket D-12, Flat 45, Sector 8, Rohini, New Delhi, DL - 110085'
-    },
-    {
-      id: 'VX001247',
-      customerName: 'Amit Verma',
-      destination: 'Bangalore, KA',
-      courier: 'Ecom Express',
-      status: 'Pending',
-      date: '09 Jun 2026',
-      amount: '₹890',
-      weight: '2.0 kg',
-      senderName: 'Sahil Gour',
-      senderAddress: 'Vasamo Store, 123, Sector 5, Noida, UP - 201301',
-      receiverAddress: '12th Cross, Indiranagar, Bangalore, KA - 560038'
-    },
-    {
-      id: 'VX001248',
-      customerName: 'Neha Gupta',
-      destination: 'Pune, MH',
-      courier: 'DTDC',
-      status: 'Delivered',
-      date: '09 Jun 2026',
-      amount: '₹1,670',
-      weight: '1.2 kg',
-      senderName: 'Sahil Gour',
-      senderAddress: 'Vasamo Store, 123, Sector 5, Noida, UP - 201301',
-      receiverAddress: 'Flat 12, Tower B, Amanora Park Town, Hadapsar, Pune, MH - 411028'
-    },
-    {
-      id: 'VX001249',
-      customerName: 'Rohan Patel',
-      destination: 'Ahmedabad, GJ',
-      courier: 'XpressBees',
-      status: 'In Transit',
-      date: '08 Jun 2026',
-      amount: '₹650',
-      weight: '0.5 kg',
-      senderName: 'Sahil Gour',
-      senderAddress: 'Vasamo Store, 123, Sector 5, Noida, UP - 201301',
-      receiverAddress: 'Shanti Sadan Apts, CG Road, Ahmedabad, GJ - 380009'
-    }
-  ];
+  shipments: DashboardShipment[] = [];
 
-  // Modal display states
   showPrintModal = signal(false);
   showManifestModal = signal(false);
-
-  // Selected selection records
-  printSelection: { [id: string]: boolean } = {};
-  manifestSelection: { [id: string]: boolean } = {};
-
-  // Selected shipment for live label preview
   selectedShipmentForPreview = signal<any>(null);
+  printSelection: Record<string, boolean> = {};
+  manifestSelection: Record<string, boolean> = {};
+
+  ngOnInit(): void {
+    this.loadDashboard();
+  }
+
+  private loadDashboard(): void {
+    this.isLoading.set(true);
+
+    const stats$ = this.shipmentService.getStats().pipe(catchError(() => of(null)));
+    const shipments$ = this.shipmentService
+      .listShipments({ page: 1, limit: this.shipmentLimit })
+      .pipe(catchError(() => of(null)));
+
+    forkJoin([stats$, shipments$]).subscribe({
+      next: ([statsRes, shipmentsRes]) => {
+        this.applyStats(statsRes?.data ?? statsRes ?? {});
+        this.applyShipmentResponse(shipmentsRes, null);
+        this.isLoading.set(false);
+      },
+      error: () => this.isLoading.set(false),
+    });
+  }
+
+  private applyStats(stats: any): void {
+    this.dashboardStats = stats || {};
+    const by = this.dashboardStats.byStatus || {};
+
+    this.cards[0].value = (this.dashboardStats.total || 0).toLocaleString('en-IN');
+    this.cards[1].value = (by.DELIVERED || 0).toLocaleString('en-IN');
+    this.cards[2].value = (
+      (by.PICKED_UP || 0) +
+      (by.ARRIVED_AT_HUB || 0) +
+      (by.OUT_FOR_DELIVERY || 0)
+    ).toLocaleString('en-IN');
+    this.cards[3].value = (by.ORDER_CREATED || 0).toLocaleString('en-IN');
+    this.cards[4].value = `INR ${(this.dashboardStats.totalCost || 0).toLocaleString('en-IN')}`;
+  }
+
+  private applyShipmentResponse(response: any, selectionMode: ModalSelectionMode): void {
+    const raw = response?.data?.shipments || response?.data?.items || [];
+    this.shipmentMeta = response?.meta || null;
+    this.shipmentPage = this.shipmentMeta?.page || this.shipmentPage;
+    this.shipments = raw.map((shipment: any) => this.mapShipment(shipment));
+
+    this.shipments.forEach((shipment) => {
+      if (!(shipment.id in this.printSelection)) this.printSelection[shipment.id] = selectionMode === 'print';
+      if (!(shipment.id in this.manifestSelection)) this.manifestSelection[shipment.id] = selectionMode === 'manifest';
+    });
+
+    if (!this.selectedShipmentForPreview() || !this.shipments.some(s => s.id === this.selectedShipmentForPreview()?.id)) {
+      this.selectedShipmentForPreview.set(this.shipments[0] || null);
+    }
+  }
+
+  private mapShipment(shipment: any): DashboardShipment {
+    const destinationCity = shipment.destination?.city || '';
+    const destinationState = shipment.destination?.state || '';
+    const originAddress = [
+      shipment.origin?.addressLine,
+      shipment.origin?.city,
+      shipment.origin?.state,
+      shipment.origin?.pincode,
+    ].filter(Boolean).join(', ');
+    const receiverAddress = [
+      shipment.destination?.addressLine,
+      shipment.destination?.city,
+      shipment.destination?.state,
+      shipment.destination?.pincode,
+    ].filter(Boolean).join(', ');
+    const weightKg = Number(shipment.weight || 0);
+
+    return {
+      id: shipment._id || shipment.id || shipment.awb,
+      awb: shipment.awb || '-',
+      carrierAWB: shipment.carrierAWB || null,
+      labelUrl: shipment.labelUrl || null,
+      customerName: shipment.destination?.name || '-',
+      destination: [destinationCity, destinationState].filter(Boolean).join(', ') || '-',
+      courier: shipment.carrier || 'Velocity',
+      status: shipment.status || '-',
+      date: shipment.createdAt
+        ? new Date(shipment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '-',
+      amount: `INR ${Number(shipment.merchantCost || 0).toFixed(2)}`,
+      weight: `${weightKg.toFixed(2)} kg`,
+      weightKg,
+      isCOD: Boolean(shipment.isCOD),
+      codAmount: Number(shipment.codAmount || 0),
+      senderName: shipment.origin?.name || '-',
+      senderAddress: originAddress || '-',
+      receiverAddress: receiverAddress || '-',
+    };
+  }
+
+  get today(): Date {
+    return new Date();
+  }
 
   openPrintModal(): void {
-    this.shipments.forEach(s => {
-      this.printSelection[s.id] = true;
-    });
-    if (this.shipments.length > 0) {
-      this.selectedShipmentForPreview.set(this.shipments[0]);
-    }
+    this.printSelection = {};
     this.showPrintModal.set(true);
+    this.loadShipmentPage(1, 'print');
   }
 
   closePrintModal(): void {
@@ -160,413 +186,219 @@ export class MarchandeDashboardPage {
   }
 
   openManifestModal(): void {
-    this.shipments.forEach(s => {
-      this.manifestSelection[s.id] = true;
-    });
+    this.manifestSelection = {};
     this.showManifestModal.set(true);
+    this.loadShipmentPage(1, 'manifest');
   }
 
   closeManifestModal(): void {
     this.showManifestModal.set(false);
   }
 
-  get today(): Date {
-    return new Date();
+  loadShipmentPage(page: number, selectionMode: ModalSelectionMode = null): void {
+    if (page < 1) return;
+    this.isShipmentsLoading.set(true);
+    this.shipmentService.listShipments({ page, limit: this.shipmentLimit }).subscribe({
+      next: (response) => {
+        this.applyShipmentResponse(response, selectionMode);
+        this.isShipmentsLoading.set(false);
+      },
+      error: () => this.isShipmentsLoading.set(false),
+    });
   }
 
-  selectPreview(shipment: any): void {
+  changeShipmentPage(delta: number, selectionMode: ModalSelectionMode = null): void {
+    const nextPage = (this.shipmentMeta?.page || this.shipmentPage || 1) + delta;
+    if (nextPage < 1 || (this.shipmentMeta?.pages && nextPage > this.shipmentMeta.pages)) return;
+    this.loadShipmentPage(nextPage, selectionMode);
+  }
+
+  selectPreview(shipment: DashboardShipment): void {
     this.selectedShipmentForPreview.set(shipment);
   }
 
   toggleAllPrint(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
-    this.shipments.forEach(s => {
-      this.printSelection[s.id] = checked;
-    });
-  }
-
-  isAllPrintSelected(): boolean {
-    return this.shipments.every(s => this.printSelection[s.id]);
+    this.shipments.forEach(shipment => { this.printSelection[shipment.id] = checked; });
   }
 
   toggleAllManifest(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
-    this.shipments.forEach(s => {
-      this.manifestSelection[s.id] = checked;
-    });
+    this.shipments.forEach(shipment => { this.manifestSelection[shipment.id] = checked; });
+  }
+
+  isAllPrintSelected(): boolean {
+    return this.shipments.length > 0 && this.shipments.every(shipment => this.printSelection[shipment.id]);
   }
 
   isAllManifestSelected(): boolean {
-    return this.shipments.every(s => this.manifestSelection[s.id]);
+    return this.shipments.length > 0 && this.shipments.every(shipment => this.manifestSelection[shipment.id]);
   }
 
   getSelectedPrintCount(): number {
-    return this.shipments.filter(s => this.printSelection[s.id]).length;
+    return this.shipments.filter(shipment => this.printSelection[shipment.id]).length;
   }
 
   getSelectedManifestCount(): number {
-    return this.shipments.filter(s => this.manifestSelection[s.id]).length;
+    return this.shipments.filter(shipment => this.manifestSelection[shipment.id]).length;
   }
 
   getSelectedManifestWeight(): number {
     return this.shipments
-      .filter(s => this.manifestSelection[s.id])
-      .reduce((sum, s) => sum + parseFloat(s.weight), 0);
+      .filter(shipment => this.manifestSelection[shipment.id])
+      .reduce((sum, shipment) => sum + shipment.weightKg, 0);
   }
 
   printLabels(): void {
-    const selected = this.shipments.filter(s => this.printSelection[s.id]);
-    if (selected.length === 0) {
-      alert('Please select at least one shipment to print labels.');
+    const selected = this.shipments.filter(shipment => this.printSelection[shipment.id]);
+    if (!selected.length) return;
+
+    if (selected.length === 1 && selected[0].labelUrl) {
+      window.open(selected[0].labelUrl, '_blank', 'noopener');
       return;
     }
 
     const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups to print labels.');
-      return;
-    }
+    if (!printWindow) return;
 
-    let labelsHtml = '';
-    selected.forEach(s => {
-      labelsHtml += `
-        <div class="label-container">
-          <div class="label-header">
-            <div class="courier-title">${s.courier}</div>
-            <div class="awb-text">AWB: ${s.id}</div>
-          </div>
-          <div class="barcode-area">
-            <div class="barcode-placeholder"></div>
-            <div class="barcode-digits">${s.id}</div>
-          </div>
-          <div class="address-grid">
-            <div class="address-box sender">
-              <strong>SENDER:</strong>
-              <div>${s.senderName}</div>
-              <div>${s.senderAddress}</div>
-            </div>
-            <div class="address-box receiver">
-              <strong>RECEIVER:</strong>
-              <div>${s.customerName}</div>
-              <div>${s.receiverAddress}</div>
-            </div>
-          </div>
-          <div class="label-footer">
-            <div>Date: ${s.date}</div>
-            <div>Weight: ${s.weight}</div>
-            <div class="amount-badge">${s.status === 'Pending' ? 'COD: ' + s.amount : 'PREPAID'}</div>
-          </div>
-        </div>
-      `;
-    });
+    const labelsHtml = selected.map(shipment => this.buildLabelHtml(shipment)).join('');
 
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Print Shipping Labels</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-              margin: 0;
-              padding: 20px;
-              background: #f8fafc;
-            }
-            .label-container {
-              background: white;
-              border: 3px solid #000;
-              padding: 20px;
-              width: 380px;
-              margin: 0 auto 30px auto;
-              box-sizing: border-box;
-              page-break-inside: avoid;
-              border-radius: 4px;
-            }
-            .label-header {
-              display: flex;
-              justify-content: space-between;
-              border-bottom: 3px solid #000;
-              padding-bottom: 10px;
-              margin-bottom: 10px;
-            }
-            .courier-title {
-              font-size: 20px;
-              font-weight: 900;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .awb-text {
-              font-size: 14px;
-              font-weight: 800;
-              align-self: center;
-            }
-            .barcode-area {
-              text-align: center;
-              padding: 15px 0;
-              border-bottom: 3px solid #000;
-              margin-bottom: 10px;
-            }
-            .barcode-placeholder {
-              height: 55px;
-              background: repeating-linear-gradient(
-                90deg,
-                #000,
-                #000 3px,
-                #fff 3px,
-                #fff 7px
-              );
-              margin: 0 auto;
-              width: 90%;
-            }
-            .barcode-digits {
-              font-family: monospace;
-              font-size: 14px;
-              margin-top: 5px;
-              font-weight: bold;
-              letter-spacing: 2px;
-            }
-            .address-grid {
-              display: flex;
-              flex-direction: column;
-              gap: 12px;
-              font-size: 12px;
-              border-bottom: 3px solid #000;
-              padding-bottom: 12px;
-              margin-bottom: 10px;
-            }
-            .address-box {
-              line-height: 1.4;
-            }
-            .address-box strong {
-              display: block;
-              margin-bottom: 2px;
-              font-size: 11px;
-              letter-spacing: 0.5px;
-            }
-            .label-footer {
-              display: flex;
-              justify-content: space-between;
-              font-size: 12px;
-              font-weight: bold;
-              align-items: center;
-            }
-            .amount-badge {
-              font-size: 13px;
-              border: 1px solid #000;
-              padding: 4px 8px;
-              background: #000;
-              color: #fff;
-              border-radius: 2px;
-            }
-            @media print {
-              body {
-                background: white;
-                padding: 0;
-              }
-              .label-container {
-                margin: 0;
-                page-break-after: always;
-                border: 3px solid #000;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          ${labelsHtml}
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
+    printWindow.document.write(`<html><head><title>Shipping Labels</title><style>
+      body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f8fafc;}
+      .label-container{background:#fff;border:3px solid #000;padding:20px;width:380px;margin:0 auto 30px;page-break-inside:avoid;}
+      .label-header{display:flex;justify-content:space-between;border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:10px;}
+      .courier-title{font-size:20px;font-weight:900;text-transform:uppercase;}
+      .awb-text{font-size:14px;font-weight:800;align-self:center;}
+      .barcode-area{text-align:center;padding:15px 0;border-bottom:3px solid #000;margin-bottom:10px;}
+      .barcode-placeholder{height:55px;background:repeating-linear-gradient(90deg,#000,#000 3px,#fff 3px,#fff 7px);margin:0 auto;width:90%;}
+      .barcode-digits{font-family:monospace;font-size:14px;margin-top:5px;font-weight:bold;letter-spacing:2px;}
+      .address-grid{display:flex;flex-direction:column;gap:12px;font-size:12px;border-bottom:3px solid #000;padding-bottom:12px;margin-bottom:10px;}
+      .label-footer{display:flex;justify-content:space-between;font-size:12px;font-weight:bold;}
+      .amount-badge{font-size:13px;border:1px solid #000;padding:4px 8px;background:#000;color:#fff;}
+      .label-link{font-size:12px;line-height:1.4;margin-bottom:12px;word-break:break-all;}
+      @media print{body{background:#fff;padding:0;}.label-container{margin:0;page-break-after:always;}}
+    </style></head><body>${labelsHtml}
+    <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);};<\/script></body></html>`);
     printWindow.document.close();
   }
 
   downloadCSVManifest(): void {
-    const selected = this.shipments.filter(s => this.manifestSelection[s.id]);
-    if (selected.length === 0) {
-      alert('Please select at least one shipment to include in the manifest.');
-      return;
-    }
+    const selected = this.shipments.filter(shipment => this.manifestSelection[shipment.id]);
+    if (!selected.length) return;
 
-    const headers = ['Tracking ID', 'Customer Name', 'Destination Address', 'Courier', 'Weight', 'Amount', 'Date', 'Status'];
-    const rows = selected.map(s => [
-      s.id,
-      s.customerName,
-      s.receiverAddress,
-      s.courier,
-      s.weight,
-      s.amount,
-      s.date,
-      s.status
+    const headers = ['AWB', 'Carrier AWB', 'Customer', 'Destination', 'Courier', 'Weight', 'Amount', 'Date', 'Status'];
+    const rows = selected.map(shipment => [
+      shipment.awb,
+      shipment.carrierAWB || '-',
+      shipment.customerName,
+      shipment.receiverAddress,
+      shipment.courier,
+      shipment.weight,
+      shipment.amount,
+      shipment.date,
+      shipment.status,
     ]);
-
-    this.csvService.export('Vexaro_Shipping_Manifest', headers, rows);
+    this.csvService.export('Vexaro_Manifest', headers, rows);
   }
 
   printPDFManifest(): void {
-    const selected = this.shipments.filter(s => this.manifestSelection[s.id]);
-    if (selected.length === 0) {
-      alert('Please select at least one shipment to include in the manifest.');
-      return;
-    }
+    const selected = this.shipments.filter(shipment => this.manifestSelection[shipment.id]);
+    if (!selected.length) return;
 
     const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups to print manifest.');
-      return;
-    }
+    if (!printWindow) return;
 
-    let rowsHtml = '';
-    selected.forEach((s, idx) => {
-      rowsHtml += `
-        <tr>
-          <td>${idx + 1}</td>
-          <td><strong>${s.id}</strong></td>
-          <td>${s.customerName}</td>
-          <td>${s.receiverAddress}</td>
-          <td>${s.courier}</td>
-          <td>${s.weight}</td>
-          <td>${s.amount}</td>
-          <td>${s.status}</td>
-        </tr>
-      `;
-    });
+    const merchantName = this.getMerchantName();
+    const rowsHtml = selected.map((shipment, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td><strong>${this.escapeHtml(shipment.awb)}</strong>${shipment.carrierAWB ? '<br><small>' + this.escapeHtml(shipment.carrierAWB) + '</small>' : ''}</td>
+        <td>${this.escapeHtml(shipment.customerName)}</td>
+        <td>${this.escapeHtml(shipment.receiverAddress)}</td>
+        <td>${this.escapeHtml(shipment.courier)}</td>
+        <td>${this.escapeHtml(shipment.weight)}</td>
+        <td>${this.escapeHtml(shipment.amount)}</td>
+        <td>${this.escapeHtml(shipment.status)}</td>
+      </tr>`).join('');
 
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Shipping Manifest</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-              margin: 0;
-              padding: 30px;
-              color: #333;
-            }
-            .header-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 30px;
-            }
-            .header-table td {
-              border: none;
-              padding: 0;
-            }
-            .title {
-              font-size: 24px;
-              font-weight: 800;
-              text-transform: uppercase;
-              color: #0f172a;
-              letter-spacing: 0.5px;
-            }
-            .meta-info {
-              text-align: right;
-              font-size: 13px;
-              color: #475569;
-              line-height: 1.5;
-            }
-            .manifest-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 40px;
-            }
-            .manifest-table th, .manifest-table td {
-              border: 1px solid #cbd5e1;
-              padding: 10px 12px;
-              font-size: 12px;
-              text-align: left;
-            }
-            .manifest-table th {
-              background-color: #f1f5f9;
-              font-weight: 700;
-              color: #0f172a;
-            }
-            .manifest-table tr:nth-child(even) {
-              background-color: #f8fafc;
-            }
-            .signatures-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 50px;
-              margin-top: 50px;
-              page-break-inside: avoid;
-            }
-            .signature-box {
-              border-top: 1px dashed #475569;
-              text-align: center;
-              padding-top: 10px;
-              font-size: 13px;
-              color: #475569;
-            }
-            @media print {
-              body {
-                padding: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <table class="header-table">
-            <tr>
-              <td>
-                <div class="title">VEXARO SHIPPING MANIFEST</div>
-                <div style="font-size: 14px; margin-top: 5px; color: #64748b;">Merchant handover document</div>
-              </td>
-              <td class="meta-info">
-                <strong>Manifest ID:</strong> MN-${Date.now().toString().slice(-6)}<br>
-                <strong>Date:</strong> ${new Date().toLocaleDateString('en-GB')}<br>
-                <strong>Merchant Name:</strong> Sahil Gour<br>
-                <strong>Email:</strong> sahil@gmail.com
-              </td>
-            </tr>
-          </table>
-
-          <table class="manifest-table">
-            <thead>
-              <tr>
-                <th style="width: 40px;">S.No</th>
-                <th>Tracking ID</th>
-                <th>Recipient</th>
-                <th>Address</th>
-                <th>Courier</th>
-                <th>Weight</th>
-                <th>Value</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div class="signatures-grid">
-            <div class="signature-box" style="margin-top: 40px;">
-              Merchant Representative Signature
-            </div>
-            <div class="signature-box" style="margin-top: 40px;">
-              Courier Pickup Agent Signature & Name
-            </div>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
+    printWindow.document.write(`<html><head><title>Manifest</title><style>
+      body{font-family:Arial,sans-serif;padding:30px;color:#333;}
+      .title{font-size:24px;font-weight:800;text-transform:uppercase;color:#0f172a;}
+      .meta{text-align:right;font-size:13px;color:#475569;line-height:1.5;}
+      table{width:100%;border-collapse:collapse;margin-bottom:40px;}
+      th,td{border:1px solid #cbd5e1;padding:10px 12px;font-size:12px;text-align:left;}
+      th{background:#f1f5f9;font-weight:700;}
+      tr:nth-child(even){background:#f8fafc;}
+      .sig{border-top:1px dashed #475569;text-align:center;padding-top:10px;font-size:13px;color:#475569;margin-top:50px;}
+      @media print{body{padding:0;}}
+    </style></head><body>
+    <table style="width:100%;margin-bottom:30px;border:none;"><tr>
+      <td style="border:none;"><div class="title">VEXARO SHIPPING MANIFEST</div></td>
+      <td style="border:none;" class="meta">
+        <strong>Manifest ID:</strong> MN-${Date.now().toString().slice(-6)}<br>
+        <strong>Date:</strong> ${new Date().toLocaleDateString('en-GB')}<br>
+        <strong>Merchant:</strong> ${this.escapeHtml(merchantName)}
+      </td></tr></table>
+    <table><thead><tr><th>S.No</th><th>AWB</th><th>Recipient</th><th>Address</th><th>Courier</th><th>Weight</th><th>Value</th><th>Status</th></tr></thead>
+    <tbody>${rowsHtml}</tbody></table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;">
+      <div class="sig">Merchant Signature</div>
+      <div class="sig">Courier Agent Signature</div>
+    </div>
+    <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);};<\/script>
+    </body></html>`);
     printWindow.document.close();
   }
-}
 
+  private buildLabelHtml(shipment: DashboardShipment): string {
+    const awb = shipment.carrierAWB || shipment.awb;
+    const labelLink = shipment.labelUrl
+      ? `<div class="label-link"><strong>Velocity Label:</strong> <a href="${this.escapeAttr(shipment.labelUrl)}" target="_blank">${this.escapeHtml(shipment.labelUrl)}</a></div>`
+      : '';
+
+    return `
+      <div class="label-container">
+        ${labelLink}
+        <div class="label-header">
+          <div class="courier-title">${this.escapeHtml(shipment.courier)}</div>
+          <div class="awb-text">AWB: ${this.escapeHtml(awb)}</div>
+        </div>
+        <div class="barcode-area">
+          <div class="barcode-placeholder"></div>
+          <div class="barcode-digits">${this.escapeHtml(awb)}</div>
+        </div>
+        <div class="address-grid">
+          <div class="address-box sender"><strong>SENDER:</strong><div>${this.escapeHtml(shipment.senderName)}</div><div>${this.escapeHtml(shipment.senderAddress)}</div></div>
+          <div class="address-box receiver"><strong>RECEIVER:</strong><div>${this.escapeHtml(shipment.customerName)}</div><div>${this.escapeHtml(shipment.receiverAddress)}</div></div>
+        </div>
+        <div class="label-footer">
+          <div>Date: ${this.escapeHtml(shipment.date)}</div>
+          <div>Weight: ${this.escapeHtml(shipment.weight)}</div>
+          <div class="amount-badge">${shipment.isCOD ? 'COD: INR ' + shipment.codAmount : 'PREPAID'}</div>
+        </div>
+      </div>`;
+  }
+
+  private getMerchantName(): string {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      if (user) return user.companyName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Merchant';
+    } catch {
+      return 'Merchant';
+    }
+    return 'Merchant';
+  }
+
+  private escapeHtml(value: unknown): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  private escapeAttr(value: unknown): string {
+    return this.escapeHtml(value).replace(/`/g, '&#096;');
+  }
+}

@@ -15,6 +15,7 @@ export class TopupMerchantWallet implements OnInit {
   private financeService = inject(FinanceService);
 
   selectedMerchantId: string = '';
+  isPreselected: boolean = false;
   amount: number | null = null;
   remarks: string = '';
   isSubmitting: boolean = false;
@@ -31,6 +32,7 @@ export class TopupMerchantWallet implements OnInit {
 
   ngOnInit() {
     this.selectedMerchantId = this.route.snapshot.queryParams['merchantId'] || '';
+    this.isPreselected = !!this.selectedMerchantId;
     this.loadData();
   }
 
@@ -83,12 +85,12 @@ export class TopupMerchantWallet implements OnInit {
       note: this.remarks
     }).subscribe({
       next: (res) => {
-        alert(`₹${this.amount} transferred successfully to merchant wallet.`);
+        window.alert(`₹${this.amount} transferred successfully to merchant wallet.`);
         this.isSubmitting = false;
         this.router.navigate(['/distributor/merchant-finance/wallets']);
       },
       error: (err) => {
-        alert(err?.error?.message || 'Failed to transfer funds. Please check your balance and try again.');
+        window.alert(err?.error?.message || 'Failed to transfer funds. Please check your balance and try again.');
         this.isSubmitting = false;
       }
     });

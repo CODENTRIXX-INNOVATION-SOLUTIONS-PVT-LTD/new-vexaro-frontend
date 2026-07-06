@@ -1,49 +1,83 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { RateService } from '../../../../services/rate.service';
+import { FinanceService } from '../../../../services/finance.service';
+
+interface MarginSummaryRow {
+  rateCardName: string;
+  serviceType: string;
+  marginPercent: number;
+  flatMargin: number;
+  slabCount: number;
+}
 
 @Component({
   selector: 'app-profit-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './profit-view.html',
-  styleUrl: './profit-view.css'
+  styleUrl: './profit-view.css',
 })
 export class ProfitView implements OnInit {
-  profitSummary = {
-    totalRevenue: 0,
-    totalCost: 0,
-    totalProfit: 0,
-    marginPercentage: 0
-  };
+  private rateService    = inject(RateService);
+  private financeService = inject(FinanceService);
 
-  courierProfits: any[] = [];
-  merchantProfits: any[] = [];
-  isLoading: boolean = false;
+  isLoading  = false;
+  error      = '';
 
-  ngOnInit() {
-    this.loadData();
+  walletBalance  = 0;
+  marginRows: MarginSummaryRow[] = [];
+
+  get configuredCount(): number {
+    return this.marginRows.filter(r => r.marginPercent > 0).length;
   }
 
-  loadData() {
+  ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/profit-summary
-    this.profitSummary = {
-      totalRevenue: 545000,
-      totalCost: 500000,
-      totalProfit: 45000,
-      marginPercentage: 9.0
-    };
-    this.courierProfits = [
-      { name: 'Delhivery', shipments: 450, revenue: 225000, cost: 200000, profit: 25000 },
-      { name: 'DTDC', shipments: 320, revenue: 160000, cost: 148000, profit: 12000 },
-      { name: 'BlueDart', shipments: 80, revenue: 56000, cost: 50000, profit: 6000 },
-      { name: 'Ekart', shipments: 40, revenue: 20000, cost: 18000, profit: 2000 },
-    ];
-    this.merchantProfits = [
-      { name: 'ABC Electronics', shipments: 380, revenue: 190000, cost: 172000, profit: 18000 },
-      { name: 'Global Traders', shipments: 450, revenue: 320000, cost: 295000, profit: 25000 },
-      { name: 'Prime Retail', shipments: 60, revenue: 35000, cost: 33000, profit: 2000 },
-    ];
-    this.isLoading = false;
+    this.error     = '';
+
+    const cards$   = this.rateService.getRateCards().pipe(catchError(() => of(null)));
+    const margins$ = this.rateService.getMargins().pipe(catchError(() => of(null)));
+    const wallet$  = this.financeService.getMyWallet().pipe(catchError(() => of(null)));
+
+    forkJoin([cards$, margins$, wallet$]).subscribe({
+      next: ([cardsRes, marginsRes, walletRes]) => {
+        const cards: any[]   = cardsRes?.data  ?? cardsRes  ?? [];
+        const margins: any[] = marginsRes?.data?.margins ?? marginsRes?.data ?? marginsRes?.items ?? [];
+
+        this.walletBalance = walletRes?.data?.balance ?? 0;
+
+        const marginMap = new Map<string, any>();
+        margins.forEach((m: any) => {
+          marginMap.set(String(m.rateCardId?._id ?? m.rateCardId), m);
+        });
+
+        this.marginRows = cards
+          .filter((c: any) => c.isActive !== false)
+          .map((c: any): MarginSummaryRow => {
+            const m = marginMap.get(String(c._id));
+            return {
+              rateCardName:  c.name || c.serviceType,
+              serviceType:   c.serviceType,
+              marginPercent: m?.marginPercent ?? 0,
+              flatMargin:    m?.flatMargin    ?? 0,
+              slabCount:     (c.weightSlabs ?? []).length,
+            };
+          });
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error     = err?.error?.message || 'Failed to load profit data.';
+        this.isLoading = false;
+      },
+    });
   }
 }

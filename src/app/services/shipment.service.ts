@@ -79,11 +79,56 @@ export class ShipmentService {
     return this.http.post<any>(`${this.baseUrl}/shipments/bulk-upload`, formData);
   }
 
+  getBulkUploadStatus(jobId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/shipments/bulk-status/${jobId}`);
+  }
+
   getShipmentsByMerchant(merchantId: string, params: any = {}): Observable<ShipmentListResponse> {
     let httpParams = new HttpParams().set('merchant', merchantId);
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.status) httpParams = httpParams.set('status', params.status);
     return this.http.get<ShipmentListResponse>(`${this.baseUrl}/shipments`, { params: httpParams });
+  }
+
+  /**
+   * POST /shipments/velocity-rates
+   * Gets carrier-specific rates from Velocity for a given shipment spec.
+   * Used in create-shipment Step 4 to show per-carrier pricing.
+   */
+  getVelocityRates(payload: {
+    journeyType:        'forward' | 'return';
+    originPincode:      string;
+    destinationPincode: string;
+    deadWeight:         number;
+    length:             number;
+    width:              number;
+    height:             number;
+    paymentMethod?:     'cod' | 'prepaid';
+    shipmentValue?:     number;
+    qcApplicable?:      boolean;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/velocity-rates`, payload);
+  }
+
+  requestNdrReattempt(payload: {
+    awb: string;
+    updated_address?: { address_line?: string; landmark?: string };
+    updated_phone_number?: string;
+    comments?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/velocity/ndr/reattempt`, payload);
+  }
+
+  initiateRto(awb: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/velocity/ndr/rto`, { awb });
+  }
+
+  listVelocityForwardOrders(filters: any = {}): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/velocity/orders/forward`, filters);
+  }
+
+  listVelocityReturnOrders(filters: any = {}): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/velocity/orders/returns`, filters);
   }
 }

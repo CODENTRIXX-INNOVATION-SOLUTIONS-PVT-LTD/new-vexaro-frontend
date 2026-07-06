@@ -1,189 +1,166 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SupportService } from '../../../services/support.service';
 import { StatsCards } from '../../../components/stats-cards/stats-cards';
-
-interface Stat {
-  title: string;
-  count: number;
-}
-
-interface Issue {
-  title: string;
-  description: string;
-}
-
-interface Ticket {
-  ticketId: string;
-  category: string;
-  subject: string;
-  priority: string;
-  status: string;
-}
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-merchant-support',
   standalone: true,
   imports: [CommonModule, FormsModule, StatsCards],
   templateUrl: './merchant-support.html',
-  styleUrls: ['./merchant-support.css']
+  styleUrls: ['./merchant-support.css'],
 })
-export class MerchantSupport {
+export class MerchantSupport implements OnInit {
+  private supportService = inject(SupportService);
 
+  // ── Stats cards (template binds [cards]="stats") ──────────────────────────
+  stats = [
+    { title: 'Open Tickets',  value: 0, icon: 'fas fa-ticket-alt',  bgColor: '#E3F2FD', iconColor: '#1976D2' },
+    { title: 'Resolved',      value: 0, icon: 'fas fa-check-circle', bgColor: '#E8F5E9', iconColor: '#2E7D32' },
+    { title: 'In Progress',   value: 0, icon: 'fas fa-clock',        bgColor: '#FFF3E0', iconColor: '#F57C00' },
+    { title: 'Total',         value: 0, icon: 'fas fa-list',          bgColor: '#F3E5F5', iconColor: '#7B1FA2' },
+  ];
+
+  // ── Ticket list ───────────────────────────────────────────────────────────
+  tickets: any[] = [];
+  isLoading      = false;
+  listError      = '';
+
+  // ── Accordion ─────────────────────────────────────────────────────────────
   openSections: Set<string> = new Set();
 
-stats = [
-  {
-    title: 'Open Tickets',
-    value: 4,
-    icon: 'fas fa-ticket-alt',
-    bgColor: '#E3F2FD',
-    iconColor: '#1976D2'
-  },
-  {
-    title: 'Resolved',
-    value: 12,
-    icon: 'fas fa-check-circle',
-    bgColor: '#E8F5E9',
-    iconColor: '#2E7D32'
-  },
-  {
-    title: 'Pending',
-    value: 2,
-    icon: 'fas fa-clock',
-    bgColor: '#FFF3E0',
-    iconColor: '#F57C00'
-  },
-  {
-    title: 'Total',
-    value: 18,
-    icon: 'fas fa-list',
-    bgColor: '#F3E5F5',
-    iconColor: '#7B1FA2'
-  }
-];
+  // ── Create ticket ─────────────────────────────────────────────────────────
+  ticketCategories = ['Order Issue', 'Shipment Issue', 'Payment Issue', 'Return Issue', 'Other'];
+  priorities       = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+  selectedCategory = 'Order Issue';
+  ticketSubject    = '';
+  ticketDescription = '';
+  selectedPriority  = 'MEDIUM';
+  isSubmitting      = false;
+  ticketSubmitted   = false;
+  createError       = '';
 
-  ticketCategories: string[] = [
-    'Order Issue',
-    'Shipment Issue',
-    'Payment Issue',
-    'Return Issue',
-    'Product Issue',
-    'Other'
+  // ── FAQ ───────────────────────────────────────────────────────────────────
+  faqs = [
+    'How do I track my shipment?', 'What is the return policy window?',
+    'How long does a refund take?', 'What should I do if a payment fails?',
+    'Can I cancel an order after dispatch?',
   ];
 
-  priorities: string[] = ['Low', 'Medium', 'High', 'Critical'];
-
-  selectedCategory: string = 'Order Issue';
-  ticketSubject: string = '';
-  ticketDescription: string = '';
-  selectedPriority: string = 'Low';
-  ticketSubmitted: boolean = false;
-
-  tickets: Ticket[] = [
-    { ticketId: '#TK-001', category: 'Order Issue', subject: 'Missing item in order', priority: 'High', status: 'Resolved' },
-    { ticketId: '#TK-002', category: 'Shipment Issue', subject: 'Delivery delay', priority: 'Medium', status: 'Pending' },
-    { ticketId: '#TK-003', category: 'Payment Issue', subject: 'Refund not received', priority: 'High', status: 'Resolved' },
-    { ticketId: '#TK-004', category: 'Return Issue', subject: 'Return pickup not scheduled', priority: 'Low', status: 'Open' }
+  // ── Issue card groups (template iterates these) ──────────────────────────
+  orderIssues = [
+    { title: 'Order Not Received',    description: 'Customer reported order has not arrived.' },
+    { title: 'Wrong Item Delivered',  description: 'Incorrect product was delivered.' },
+    { title: 'Order Damaged',         description: 'Item received in damaged condition.' },
+    { title: 'Order Cancelled',       description: 'Help with order cancellation refund.' },
   ];
 
-  orderIssues: Issue[] = [
-    { title: 'Missing item', description: 'Item was not included in the delivered package.' },
-    { title: 'Wrong item delivered', description: 'Received a different item than what was ordered.' },
-    { title: 'Order cancellation', description: 'Need to cancel an order that has already been placed.' },
-    { title: 'Duplicate order', description: 'Accidentally placed the same order more than once.' }
+  shipmentIssues = [
+    { title: 'Shipment Delayed',      description: 'Delivery is taking longer than expected.' },
+    { title: 'Lost in Transit',       description: 'No tracking update for over 3 days.' },
+    { title: 'Delivered to Wrong Address', description: 'Package delivered to incorrect location.' },
+    { title: 'RTO Initiated Wrongly', description: 'Return triggered without delivery attempt.' },
   ];
 
-  shipmentIssues: Issue[] = [
-    { title: 'Shipment not tracking', description: 'Tracking number is not updating or showing any movement.' },
-    { title: 'Carrier delay', description: 'Package delayed beyond the estimated delivery window.' },
-    { title: 'Lost in transit', description: 'Package has not arrived and tracking shows no updates.' },
-    { title: 'Wrong address', description: 'Shipment dispatched to an incorrect delivery address.' }
+  paymentIssues = [
+    { title: 'COD Amount Not Remitted', description: 'Cash collected but not credited to wallet.' },
+    { title: 'Wallet Deduction Error',  description: 'Incorrect amount deducted from wallet.' },
+    { title: 'Refund Not Received',     description: 'Refund for cancelled shipment pending.' },
+    { title: 'Weight Dispute Charge',   description: 'Incorrect weight-based extra charge.' },
   ];
 
-  paymentIssues: Issue[] = [
-    { title: 'Refund not received', description: 'Refund was initiated but not credited to your account.' },
-    { title: 'Double charged', description: 'Amount was deducted more than once for the same order.' },
-    { title: 'Payment failure', description: 'Transaction failed even though the amount was debited.' },
-    { title: 'Invoice mismatch', description: 'Invoice amount does not match the actual order value.' }
+  returnReasons = [
+    { title: 'Return Not Picked Up',   description: 'Reverse pickup not attempted.' },
+    { title: 'Refund for Return',      description: 'Refund not processed for returned item.' },
+    { title: 'Wrong Return Address',   description: 'Return shipment going to wrong warehouse.' },
   ];
 
-  returnReasons: Issue[] = [
-    { title: 'Initiate return', description: 'Request a return for a delivered order within policy window.' },
-    { title: 'Damaged item', description: 'Received item is damaged or defective on delivery.' },
-    { title: 'Return pickup pending', description: 'Return was scheduled but pickup has not happened yet.' },
-    { title: 'Refund after return', description: 'Item was returned but refund has not been processed.' }
+  productIssues = [
+    { title: 'Listing Issue',          description: 'Product catalogue or listing problem.' },
+    { title: 'Inventory Mismatch',     description: 'Stock count does not match records.' },
+    { title: 'Product Damaged',        description: 'Product damaged in warehouse or transit.' },
   ];
 
-  productIssues: Issue[] = [
-    { title: 'Listing not visible', description: 'Product listing is not showing up in search results.' },
-    { title: 'Stock mismatch', description: 'Inventory count on platform does not match actual stock.' },
-    { title: 'Price not updating', description: 'Updated price is not reflecting on the product page.' },
-    { title: 'Image upload error', description: 'Product images are failing to upload or not displaying.' }
-  ];
+  ngOnInit(): void { this.loadTickets(); }
 
-  faqs: string[] = [
-    'How do I track my shipment?',
-    'What is the return policy window?',
-    'How long does a refund take to process?',
-    'How do I update my product listing?',
-    'What should I do if a payment fails?',
-    'Can I cancel an order after dispatch?'
-  ];
-
-  toggleSection(section: string): void {
-    if (this.openSections.has(section)) {
-      this.openSections.delete(section);
-    } else {
-      this.openSections.add(section);
-    }
+  loadTickets(): void {
+    this.isLoading = true;
+    this.listError = '';
+    this.supportService.listTickets({ page: 1, limit: 50 }).pipe(
+      finalize(() => { this.isLoading = false; }),
+    ).subscribe({
+      next: (res) => {
+        const raw: any[] = res?.data?.tickets ?? res?.data?.items ?? [];
+        this.tickets = raw.map(t => ({
+          ticketId: t.ticketId ?? `#${(t._id as string)?.slice(-6).toUpperCase()}`,
+          id:       t._id,
+          category: t.category,
+          subject:  t.subject ?? t.title ?? '—',
+          priority: t.priority ?? 'MEDIUM',
+          status:   t.status   ?? 'OPEN',
+        }));
+        this.updateStats(res?.meta?.total ?? this.tickets.length);
+      },
+      error: (err) => { this.listError = err?.error?.message || 'Failed to load tickets.'; },
+    });
   }
 
-  isOpen(section: string): boolean {
-    return this.openSections.has(section);
+  private updateStats(total: number): void {
+    this.stats[0].value = this.tickets.filter(t => t.status === 'OPEN').length;
+    this.stats[1].value = this.tickets.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED').length;
+    this.stats[2].value = this.tickets.filter(t => t.status === 'IN_PROGRESS').length;
+    this.stats[3].value = total;
   }
+
+  toggleSection(s: string): void {
+    this.openSections.has(s) ? this.openSections.delete(s) : this.openSections.add(s);
+  }
+  isOpen(s: string): boolean { return this.openSections.has(s); }
 
   raiseTicket(category: string, subject: string): void {
-    this.selectedCategory = category;
-    this.ticketSubject = subject;
+    this.selectedCategory  = category;
+    this.ticketSubject     = subject;
     this.ticketDescription = '';
-    this.selectedPriority = 'Low';
     this.openSections.add('create-ticket');
-
     setTimeout(() => {
-      const el = document.getElementById('create-ticket-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('create-ticket-section')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   }
 
   submitTicket(): void {
-    if (!this.ticketSubject.trim()) return;
+    if (!this.ticketSubject.trim() || !this.ticketDescription.trim()) {
+      this.createError = 'Subject and description are required.';
+      return;
+    }
+    this.isSubmitting = true;
+    this.createError  = '';
 
-    const newTicket: Ticket = {
-      ticketId: `#TK-00${this.tickets.length + 1}`,
-      category: this.selectedCategory,
-      subject: this.ticketSubject,
-      priority: this.selectedPriority,
-      status: 'Open'
-    };
-
-    this.tickets.push(newTicket);
-    this.ticketSubmitted = true;
-    this.ticketSubject = '';
-    this.ticketDescription = '';
-    this.selectedPriority = 'Low';
-
-    setTimeout(() => {
-      this.ticketSubmitted = false;
-    }, 3000);
+    this.supportService.createTicket({
+      subject:     this.ticketSubject.trim(),
+      category:    this.selectedCategory,
+      priority:    this.selectedPriority,
+      description: this.ticketDescription.trim(),
+    }).pipe(finalize(() => { this.isSubmitting = false; })).subscribe({
+      next: () => {
+        this.ticketSubmitted   = true;
+        this.ticketSubject     = '';
+        this.ticketDescription = '';
+        this.loadTickets();
+        setTimeout(() => { this.ticketSubmitted = false; }, 3000);
+      },
+      error: (err) => { this.createError = err?.error?.message || 'Failed to create ticket.'; },
+    });
   }
 
   getStatusClass(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'resolved': return 'badge badge-resolved';
-      case 'pending': return 'badge badge-pending';
-      case 'open': return 'badge badge-open';
-      default: return 'badge';
+    switch ((status || '').toUpperCase()) {
+      case 'RESOLVED': case 'CLOSED':  return 'badge badge-resolved';
+      case 'IN_PROGRESS':              return 'badge badge-pending';
+      case 'OPEN':                     return 'badge badge-open';
+      default:                         return 'badge';
     }
   }
 }

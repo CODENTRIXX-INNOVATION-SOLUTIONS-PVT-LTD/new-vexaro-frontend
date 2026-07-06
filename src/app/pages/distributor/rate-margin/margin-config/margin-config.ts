@@ -1,71 +1,119 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { RateService } from '../../../../services/rate.service';
 
-export interface MarginSlab {
-  id: string;
-  courier: string;
-  weightFrom: number;
-  weightTo: number;
-  distributorCost: number;
-  currentMargin: number;
-  editMargin: number;
-  merchantRate: number;
+interface MarginRow {
+  rateCardId: string;
+  rateCardName: string;
+  serviceType: string;
+  marginPercent: number;
+  flatMargin: number;
+  configId: string | null;
   editing: boolean;
+  editMarginPercent: number;
+  editFlatMargin: number;
 }
 
 @Component({
   selector: 'app-margin-config',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './margin-config.html',
-  styleUrl: './margin-config.css'
+  styleUrl: './margin-config.css',
 })
 export class MarginConfig implements OnInit {
-  slabs: MarginSlab[] = [];
-  isLoading: boolean = false;
-  isSaving: boolean = false;
+  private rateService = inject(RateService);
 
-  ngOnInit() {
-    this.loadSlabs();
-  }
+  rows: MarginRow[] = [];
+  isLoading = false;
+  isSaving  = false;
+  error     = '';
+  successMsg = '';
 
-  loadSlabs() {
+  ngOnInit(): void { this.load(); }
+
+  load(): void {
     this.isLoading = true;
-    // TODO: GET /distributor/:id/margins
-    this.slabs = [
-      { id: '1', courier: 'Delhivery', weightFrom: 0, weightTo: 0.5, distributorCost: 40, currentMargin: 10, editMargin: 10, merchantRate: 50, editing: false },
-      { id: '2', courier: 'Delhivery', weightFrom: 0.5, weightTo: 1.0, distributorCost: 72, currentMargin: 18, editMargin: 18, merchantRate: 90, editing: false },
-      { id: '3', courier: 'DTDC', weightFrom: 0, weightTo: 0.5, distributorCost: 45, currentMargin: 10, editMargin: 10, merchantRate: 55, editing: false },
-      { id: '4', courier: 'DTDC', weightFrom: 0.5, weightTo: 1.0, distributorCost: 78, currentMargin: 17, editMargin: 17, merchantRate: 95, editing: false },
-      { id: '5', courier: 'BlueDart', weightFrom: 0, weightTo: 0.5, distributorCost: 55, currentMargin: 15, editMargin: 15, merchantRate: 70, editing: false },
-      { id: '6', courier: 'BlueDart', weightFrom: 0.5, weightTo: 1.0, distributorCost: 93, currentMargin: 22, editMargin: 22, merchantRate: 115, editing: false },
-    ];
-    this.isLoading = false;
+    this.error     = '';
+
+    const cards$   = this.rateService.getRateCards().pipe(catchError(() => of(null)));
+    const margins$ = this.rateService.getMargins().pipe(catchError(() => of(null)));
+
+    forkJoin([cards$, margins$]).subscribe({
+      next: ([cardsRes, marginsRes]) => {
+        const cards: any[]   = cardsRes?.data  ?? cardsRes  ?? [];
+        const margins: any[] = marginsRes?.data?.margins ?? marginsRes?.data ?? marginsRes?.items ?? [];
+
+        const marginMap = new Map<string, any>();
+        margins.forEach((m: any) => {
+          const rid = String(m.rateCardId?._id ?? m.rateCardId);
+          marginMap.set(rid, m);
+        });
+
+        this.rows = cards
+          .filter((c: any) => c.isActive !== false)
+          .map((c: any): MarginRow => {
+            const m = marginMap.get(String(c._id));
+            return {
+              rateCardId:        c._id,
+              rateCardName:      c.name || c.serviceType,
+              serviceType:       c.serviceType,
+              marginPercent:     m?.marginPercent ?? 0,
+              flatMargin:        m?.flatMargin    ?? 0,
+              configId:          m?._id ?? null,
+              editing:           false,
+              editMarginPercent: m?.marginPercent ?? 0,
+              editFlatMargin:    m?.flatMargin    ?? 0,
+            };
+          });
+
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error     = err?.error?.message || 'Failed to load margin config.';
+        this.isLoading = false;
+      },
+    });
   }
 
-  startEdit(slab: MarginSlab) {
-    slab.editing = true;
-    slab.editMargin = slab.currentMargin;
+  startEdit(row: MarginRow): void {
+    this.rows.forEach(r => r.editing = false);
+    row.editMarginPercent = row.marginPercent;
+    row.editFlatMargin    = row.flatMargin;
+    row.editing           = true;
+    this.error            = '';
   }
 
-  cancelEdit(slab: MarginSlab) {
-    slab.editing = false;
-    slab.editMargin = slab.currentMargin;
+  cancelEdit(row: MarginRow): void {
+    row.editing = false;
   }
 
-  saveMargin(slab: MarginSlab) {
-    if (slab.editMargin < 0) return;
+  saveMargin(row: MarginRow): void {
+    if (row.editMarginPercent < 0) { this.error = 'Margin % cannot be negative.'; return; }
     this.isSaving = true;
-    // TODO: PUT /distributor/:id/margins/:slabId { margin: slab.editMargin }
-    // Response updates: merchantRate = distributorCost + editMargin
-    slab.currentMargin = slab.editMargin;
-    slab.merchantRate = slab.distributorCost + slab.editMargin;
-    slab.editing = false;
-    this.isSaving = false;
-  }
+    this.error    = '';
 
-  getProfit(slab: MarginSlab): number {
-    return slab.currentMargin;
+    this.rateService.saveMarginConfig(row.rateCardId, {
+      rateCardId:    row.rateCardId,
+      marginPercent: row.editMarginPercent,
+      flatMargin:    row.editFlatMargin,
+    }).subscribe({
+      next: () => {
+        row.marginPercent = row.editMarginPercent;
+        row.flatMargin    = row.editFlatMargin;
+        row.editing       = false;
+        this.isSaving     = false;
+        this.successMsg   = `Margin saved for ${row.rateCardName}.`;
+        setTimeout(() => { this.successMsg = ''; }, 3000);
+      },
+      error: (err) => {
+        this.error    = err?.error?.message || 'Failed to save margin.';
+        this.isSaving = false;
+      },
+    });
   }
 }

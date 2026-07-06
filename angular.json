@@ -30,12 +30,18 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "public"
               }
             ],
             "index": "src/index.html",
             "browser": "src/main.ts",
             "outputPath": "dist/demo",
-            "polyfills": [],
+            "polyfills": [
+              "zone.js"
+            ],
             "scripts": [],
             "styles": [
               "src/global_styles.css"

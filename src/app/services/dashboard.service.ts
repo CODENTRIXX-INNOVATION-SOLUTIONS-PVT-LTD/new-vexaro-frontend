@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, forkJoin, map, catchError, of } from 'rxjs';
 
 export interface DashboardStats {
   totalShipments: number;
@@ -53,7 +53,13 @@ export class DashboardService {
       { params: new HttpParams().set('limit', '1') }
     );
 
-    return forkJoin([shipments$, distributors$, disputes$]).pipe(
+    // Each inner observable catches its own error and falls back to null.
+    // This ensures forkJoin always completes even if one endpoint is down.
+    return forkJoin([
+      shipments$.pipe(catchError(() => of(null))),
+      distributors$.pipe(catchError(() => of(null))),
+      disputes$.pipe(catchError(() => of(null))),
+    ]).pipe(
       map(([shipmentsRes, distributorsRes, disputesRes]) => ({
         totalShipments:     shipmentsRes?.data?.total    ?? 0,
         activeDistributors: distributorsRes?.meta?.total ?? 0,

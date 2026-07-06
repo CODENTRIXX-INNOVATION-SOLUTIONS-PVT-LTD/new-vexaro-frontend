@@ -1,91 +1,133 @@
 <div class="header-section">
-    <h2>Merchant Shipment Reports</h2>
-    <div class="actions">
-        <button class="view-btn" (click)="exportCSV()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15H8v1h1v1H8"></path></svg> Export CSV</button>
-        <button class="view-btn" style="background: rgb(239, 68, 68);" (click)="exportPDF()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 15h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8v5zM15 15h1M15 11h2"></path></svg> Export PDF</button>
-    </div>
+  <h2>Shipment Reports</h2>
+  <div class="actions">
+    <button class="view-btn" (click)="exportCSV()" [disabled]="recentShipments.length === 0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg> Export CSV
+    </button>
+    <button class="view-btn" style="background:rgb(239,68,68);" (click)="exportPDF()" [disabled]="isLoading">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg> Export PDF
+    </button>
+  </div>
 </div>
 
-<div class="filter-bar">
-    <div class="form-row">
-        <select [(ngModel)]="dateRange" class="status-select">
-            <option>Today</option>
-            <option>This Week</option>
-            <option>This Month</option>
-            <option>Last Month</option>
-        </select>
-        
-        <select [(ngModel)]="merchantFilter" class="status-select">
-            <option>All Merchants</option>
-            <option>Fashion Hub</option>
-            <option>Tech Store</option>
-            <option>Grocery Mart</option>
-        </select>
-    </div>
-</div>
+<!-- Loading -->
+@if (isLoading) {
+  <div style="display:flex;align-items:center;gap:10px;padding:40px;color:#64748b;font-size:14px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em;animation:spin 0.7s linear infinite;">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+    </svg> Loading report…
+  </div>
+}
 
-<div class="stats-container">
+<!-- Error -->
+@if (!isLoading && error) {
+  <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:14px 18px;font-size:14px;margin-top:16px;">
+    {{ error }}
+  </div>
+}
+
+@if (!isLoading && !error) {
+
+  <!-- Summary cards -->
+  <div class="stats-container">
     <div class="card bg-blue">
-        <h4>Total Shipments</h4>
-        <h2>{{summary.total | number}}</h2>
+      <h4>Total Shipments</h4>
+      <h2>{{ summary.total | number }}</h2>
     </div>
     <div class="card bg-green">
-        <h4>Delivered</h4>
-        <h2>{{summary.delivered | number}}</h2>
+      <h4>Delivered</h4>
+      <h2>{{ summary.delivered | number }}</h2>
+      <small style="font-size:13px;opacity:0.85;">{{ deliveryRate }}</small>
     </div>
     <div class="card bg-orange">
-        <h4>Failed Attempts</h4>
-        <h2>{{summary.failed | number}}</h2>
+      <h4>In Transit</h4>
+      <h2>{{ summary.inTransit | number }}</h2>
     </div>
     <div class="card bg-red">
-        <h4>RTO Generated</h4>
-        <h2>{{summary.rto | number}}</h2>
+      <h4>RTO</h4>
+      <h2>{{ summary.rto | number }}</h2>
     </div>
-</div>
+  </div>
 
-<div class="shipment-card mt-4">
+  <!-- Additional stats row -->
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin:16px 0;">
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 20px;min-width:140px;">
+      <div style="font-size:12px;color:#64748b;">Today's Bookings</div>
+      <div style="font-size:22px;font-weight:800;color:#0b4a6f;">{{ summary.today | number }}</div>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 20px;min-width:140px;">
+      <div style="font-size:12px;color:#64748b;">Pending Pickup</div>
+      <div style="font-size:22px;font-weight:800;color:#b45309;">{{ summary.pending | number }}</div>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 20px;min-width:140px;">
+      <div style="font-size:12px;color:#64748b;">Failed Deliveries</div>
+      <div style="font-size:22px;font-weight:800;color:#dc2626;">{{ summary.failed | number }}</div>
+    </div>
+  </div>
+
+  <!-- Recent shipments table -->
+  <div class="shipment-card mt-4">
     <div class="header">
-        <h2 style="font-size: 18px;">Merchant Breakdown</h2>
+      <h2 style="font-size:18px;">Recent Shipments (Latest 10)</h2>
     </div>
-
     <div class="table-wrapper mt-4">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Merchant</th>
-                    <th>Total Shipments</th>
-                    <th>Delivered</th>
-                    <th>Failed</th>
-                    <th>RTO</th>
-                    <th>Success Rate</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (isLoading) {
-                    <tr>
-                        <td colspan="7" class="text-center py-4" style="color: #94a3b8;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading report data...</td>
-                    </tr>
-                } @else if (dataList.length === 0) {
-                    <tr>
-                        <td colspan="7" class="text-center py-4" style="color: #94a3b8;">No data found matching criteria.</td>
-                    </tr>
-                } @else {
-                    @for(row of dataList; track row.date + row.merchantName) {
-                    <tr>
-                        <td>{{row.date}}</td>
-                        <td><strong>{{row.merchantName}}</strong></td>
-                        <td class="fw-bold">{{row.total}}</td>
-                        <td style="color: #16a34a;">{{row.delivered}}</td>
-                        <td style="color: rgb(232, 116, 58);">{{row.failed}}</td>
-                        <td style="color: #dc2626;">{{row.rto}}</td>
-                        <td>
-                            <span class="status delivered">{{ (row.delivered / row.total * 100) | number:'1.1-1' }}%</span>
-                        </td>
-                    </tr>
-                    }
-                }
-            </tbody>
-        </table>
+      <table>
+        <thead>
+          <tr>
+            <th>AWB</th>
+            <th>Date</th>
+            <th>Destination</th>
+            <th>Carrier</th>
+            <th>Weight</th>
+            <th>Payment</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (recentShipments.length === 0) {
+            <tr>
+              <td colspan="7" style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">
+                No shipments found.
+              </td>
+            </tr>
+          }
+          @for (s of recentShipments; track s.awb) {
+            <tr>
+              <td style="font-family:monospace;font-size:12px;font-weight:600;color:#0b4a6f;">{{ s.awb }}</td>
+              <td>{{ s.date }}</td>
+              <td>{{ s.dest }}</td>
+              <td style="font-size:13px;">{{ s.carrier }}</td>
+              <td>{{ s.weight }} kg</td>
+              <td>
+                <span style="font-size:11px;padding:2px 7px;border-radius:4px;"
+                  [style.background]="s.isCOD ? '#fef3c7' : '#dcfce7'"
+                  [style.color]="s.isCOD ? '#b45309' : '#15803d'">
+                  {{ s.isCOD ? 'COD' : 'Prepaid' }}
+                </span>
+              </td>
+              <td>
+                <span class="status"
+                  [class.delivered]="s.status === 'DELIVERED'"
+                  [class.pending]="s.status === 'ORDER_CREATED'"
+                  [class.failed]="s.status === 'RTO' || s.status === 'DELIVERY_FAILED' || s.status === 'CANCELLED'">
+                  {{ s.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-</div>
+  </div>
+
+}

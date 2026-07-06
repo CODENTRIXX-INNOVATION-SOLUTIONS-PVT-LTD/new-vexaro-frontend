@@ -284,6 +284,44 @@
     border-radius: 12px;
 }
 
+.pagination-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pager-btn {
+    border: 1px solid #cbd5e1;
+    background: white;
+    color: #0b4a6f;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pager-btn:disabled {
+    color: #94a3b8;
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+.empty-state {
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    color: #64748b;
+    font-size: 13px;
+    padding: 18px;
+    text-align: center;
+    background: #f8fafc;
+}
+
 .shipment-items-scroll {
     overflow-y: auto;
     max-height: 360px;
@@ -414,6 +452,21 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     font-family: monospace;
     color: #000;
+}
+
+.label-url-link {
+    display: block;
+    margin-bottom: 10px;
+    color: #0b4a6f;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+}
+
+.label-url-link:hover {
+    text-decoration: underline;
 }
 
 .live-label-header {

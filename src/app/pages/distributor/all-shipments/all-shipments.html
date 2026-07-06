@@ -1,81 +1,152 @@
 <div class="shipment-card">
-    <div class="header">
-        <h2>All Shipments</h2>
-        <div class="actions">
-            <button class="view-btn" (click)="exportCSV()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg> Export CSV</button>
-        </div>
-    </div>
 
-    <div class="filter-bar">
-        <div class="form-row">
-            <input type="text" placeholder="Search AWB or Merchant..." [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input">
-            <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
-                <option value="All">All Statuses</option>
-                <option value="Manifested">Manifested</option>
-                <option value="Received at Hub">Received at Hub</option>
-                <option value="Out for Delivery">Out for Delivery</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Failed Attempt">Failed Attempt</option>
-                <option value="RTO">RTO</option>
-            </select>
-        </div>
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h2>All Shipments</h2>
+      @if (merchantFilterId) {
+        <p style="font-size:13px;color:#64748b;margin:4px 0 0;">Filtered by merchant</p>
+      }
     </div>
-
-    @if (isLoading) {
-        <div class="text-center py-4" style="color: #94a3b8; padding: 40px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading shipments...</div>
-    } @else {
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>AWB</th>
-                    <th>Merchant</th>
-                    <th>Dest. Pincode</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th>COD Amount</th>
-                    <th>Last Updated</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(shipment of filteredShipments; track shipment.awb) {
-                <tr>
-                    <td class="fw-bold">{{shipment.awb}}</td>
-                    <td>{{shipment.merchantName}}</td>
-                    <td>{{shipment.destPincode}}</td>
-                    <td>
-                        <span class="status"
-                            [class.delivered]="shipment.status === 'Delivered'"
-                            [class.transit]="shipment.status === 'Out for Delivery'"
-                            [class.pending]="shipment.status === 'Received at Hub' || shipment.status === 'Manifested'"
-                            [class.failed]="shipment.status === 'Failed Attempt' || shipment.status === 'RTO'">
-                            {{shipment.status}}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="payment-badge" [class.cod]="shipment.paymentType === 'COD'" [class.prepaid]="shipment.paymentType === 'Prepaid'">
-                            {{shipment.paymentType}}
-                        </span>
-                    </td>
-                    <td>{{ shipment.paymentType === 'COD' ? ('₹' + shipment.codAmount) : '-' }}</td>
-                    <td>{{shipment.lastUpdated}}</td>
-                    <td>
-                        <button class="action-btn" (click)="viewTimeline(shipment.awb)" title="View Timeline">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline><line x1="12" y1="7" x2="12" y2="12"></line><line x1="12" y1="12" x2="16" y2="14"></line></svg>
-                        </button>
-                    </td>
-                </tr>
-                }
-                
-                @if(filteredShipments.length === 0) {
-                <tr>
-                    <td colspan="8" class="text-center py-4">No shipments found matching your criteria.</td>
-                </tr>
-                }
-            </tbody>
-        </table>
+    <div class="actions">
+      <button class="view-btn" (click)="exportCSV()" [disabled]="filteredShipments.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg> Export CSV
+      </button>
     </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <div class="form-row">
+      <input type="text" placeholder="Search AWB or merchant…" [(ngModel)]="searchTerm"
+        (input)="applyFilters()" class="search-input" />
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+        <option value="">All Statuses</option>
+        <option value="ORDER_CREATED">Pending</option>
+        <option value="PICKED_UP">Picked Up</option>
+        <option value="ARRIVED_AT_HUB">At Hub</option>
+        <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+        <option value="DELIVERED">Delivered</option>
+        <option value="DELIVERY_FAILED">Failed</option>
+        <option value="RTO">RTO</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </div>
+    @if (total > 0) {
+      <p style="font-size:12px;color:#94a3b8;margin:8px 0 0;">{{ total }} total shipments · Page {{ page }} of {{ totalPages }}</p>
     }
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div style="display:flex;align-items:center;gap:10px;padding:40px;color:#64748b;font-size:14px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em;animation:spin 0.7s linear infinite;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      Loading shipments…
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading && error) {
+    <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:14px 18px;margin:16px 0;font-size:14px;">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!isLoading && !error) {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>AWB</th>
+            <th>Merchant</th>
+            <th>Destination</th>
+            <th>Carrier</th>
+            <th>Weight</th>
+            <th>Charge</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredShipments; track s.id) {
+            <tr>
+              <td class="fw-bold" style="font-family:monospace;font-size:12px;color:#0b4a6f;">{{ s.awb }}</td>
+              <td>{{ s.merchantName }}</td>
+              <td>
+                <div>{{ s.dest }}</div>
+                <div style="font-size:11px;color:#94a3b8;">{{ s.destPincode }}</div>
+              </td>
+              <td style="font-size:13px;">{{ s.carrier }}</td>
+              <td>{{ s.weight }} kg</td>
+              <td style="font-weight:600;">₹{{ s.amount | number:'1.2-2' }}</td>
+              <td>
+                <span class="payment-badge"
+                  [class.cod]="s.paymentType === 'COD'"
+                  [class.prepaid]="s.paymentType === 'Prepaid'">
+                  {{ s.paymentType }}
+                  @if (s.paymentType === 'COD') {
+                    &nbsp;₹{{ s.codAmount | number }}
+                  }
+                </span>
+              </td>
+              <td>
+                <span class="status"
+                  [class.delivered]="s.rawStatus === 'DELIVERED'"
+                  [class.transit]="s.rawStatus === 'OUT_FOR_DELIVERY' || s.rawStatus === 'PICKED_UP' || s.rawStatus === 'ARRIVED_AT_HUB'"
+                  [class.pending]="s.rawStatus === 'ORDER_CREATED'"
+                  [class.failed]="s.rawStatus === 'DELIVERY_FAILED' || s.rawStatus === 'RTO' || s.rawStatus === 'CANCELLED'">
+                  {{ s.status }}
+                </span>
+              </td>
+              <td style="font-size:12px;color:#64748b;">{{ s.date }}</td>
+              <td>
+                <button class="action-btn" (click)="viewTimeline(s.awb)" title="Track AWB">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <polyline points="3 3 3 8 8 8"></polyline>
+                    <line x1="12" y1="7" x2="12" y2="12"></line>
+                    <line x1="12" y1="12" x2="16" y2="14"></line>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+
+          @if (filteredShipments.length === 0 && !isLoading) {
+            <tr>
+              <td colspan="10" style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">
+                No shipments found.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding-top:20px;">
+        <button (click)="prevPage()" [disabled]="page === 1"
+          style="border:1.5px solid #e2e8f0;background:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:rgb(11,74,111);cursor:pointer;"
+          [style.opacity]="page === 1 ? '0.4' : '1'">← Prev</button>
+        <span style="font-size:13px;color:#64748b;font-weight:500;">Page {{ page }} of {{ totalPages }}</span>
+        <button (click)="nextPage()" [disabled]="page === totalPages"
+          style="border:1.5px solid #e2e8f0;background:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:rgb(11,74,111);cursor:pointer;"
+          [style.opacity]="page === totalPages ? '0.4' : '1'">Next →</button>
+      </div>
+    }
+  }
+
 </div>

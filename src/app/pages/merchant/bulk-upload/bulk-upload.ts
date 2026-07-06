@@ -1,7 +1,8 @@
-import { Component, signal } from "@angular/core";
+import { Component, OnDestroy, inject, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import Papa from "papaparse";
+import { ShipmentService } from "../../../services/shipment.service";
 
 interface ParsingError {
   row: number;
@@ -16,9 +17,11 @@ interface ParsingError {
   templateUrl: "./bulk-upload.html",
   styleUrl: "./bulk-upload.css",
 })
-export class BulkUpload {
+export class BulkUpload implements OnDestroy {
+  private shipmentService = inject(ShipmentService);
+  private pollTimer: ReturnType<typeof setTimeout> | null = null;
 
-  uploadState = signal<"idle" | "uploading" | "parsing" | "complete">("idle");
+  uploadState = signal<"idle" | "uploading" | "queued" | "processing" | "complete" | "failed">("idle");
 
   selectedFile = signal<File | null>(null);
 
@@ -33,9 +36,15 @@ export class BulkUpload {
   parsingErrors = signal<ParsingError[]>([]);
 
   notificationMessage = signal<string | null>(null);
+  errorMessage = signal<string | null>(null);
+  jobId = signal<string | null>(null);
 
   csvHeaders = signal<string[]>([]);
   csvPreview = signal<any[]>([]);
+
+  ngOnDestroy(): void {
+    this.clearPollTimer();
+  }
 
   showNotification(msg: string) {
     this.notificationMessage.set(msg);
@@ -57,6 +66,11 @@ export class BulkUpload {
 
     this.selectedFile.set(file);
     this.fileName.set(file.name);
+    this.errorMessage.set(null);
+    this.jobId.set(null);
+    this.uploadState.set("idle");
+    this.uploadProgress.set(0);
+    this.parsingErrors.set([]);
 
     Papa.parse(file, {
       header: true,
@@ -74,6 +88,7 @@ export class BulkUpload {
   }
 
   clearUpload() {
+    this.clearPollTimer();
 
     this.selectedFile.set(null);
     this.fileName.set("");
@@ -90,6 +105,8 @@ export class BulkUpload {
     this.errorCount.set(0);
 
     this.parsingErrors.set([]);
+    this.errorMessage.set(null);
+    this.jobId.set(null);
   }
 
   downloadSampleTemplate() {
@@ -100,7 +117,97 @@ export class BulkUpload {
     link.click();
     document.body.removeChild(link);
 
-    this.showNotification("Sample CSV template downloaded successfully.");
+    this.showNotification("CSV template downloaded successfully.");
+  }
+
+  submitUpload(): void {
+    const file = this.selectedFile();
+    if (!file) {
+      this.errorMessage.set("Please select a CSV or Excel file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    this.clearPollTimer();
+    this.errorMessage.set(null);
+    this.uploadState.set("uploading");
+    this.uploadProgress.set(5);
+    this.totalRows.set(0);
+    this.validRows.set(0);
+    this.errorCount.set(0);
+    this.parsingErrors.set([]);
+
+    this.shipmentService.bulkUpload(formData).subscribe({
+      next: (res) => {
+        const data = res?.data || {};
+        this.jobId.set(data.jobId || null);
+        this.uploadState.set("queued");
+        this.uploadProgress.set(10);
+        this.showNotification(res?.message || "Bulk upload queued.");
+        if (data.jobId) this.pollStatus(data.jobId);
+      },
+      error: (err) => {
+        this.uploadState.set("failed");
+        this.uploadProgress.set(0);
+        this.errorMessage.set(err?.error?.message || "Bulk upload failed. Please check the file and try again.");
+      },
+    });
+  }
+
+  private pollStatus(jobId: string): void {
+    this.shipmentService.getBulkUploadStatus(jobId).subscribe({
+      next: (res) => {
+        const data = res?.data || {};
+        const total = Number(data.totalRows || 0);
+        const created = Number(data.createdRows || 0);
+        const failed = Number(data.failedRows || 0);
+        const processed = created + failed;
+        const status = String(data.status || "").toUpperCase();
+
+        this.totalRows.set(total);
+        this.validRows.set(created);
+        this.errorCount.set(failed);
+        this.parsingErrors.set((data.errors || []).map((reason: string, index: number) => ({
+          row: index + 1,
+          field: "row",
+          value: "-",
+          reason,
+        })));
+        this.uploadProgress.set(total ? Math.min(100, Math.round((processed / total) * 100)) : 10);
+
+        if (status === "COMPLETED") {
+          this.uploadState.set("complete");
+          this.uploadProgress.set(100);
+          this.showNotification("Bulk shipment upload completed.");
+          this.clearPollTimer();
+          return;
+        }
+
+        if (status === "FAILED") {
+          this.uploadState.set("failed");
+          this.errorMessage.set(data.fatalError || "Bulk upload failed during processing.");
+          this.clearPollTimer();
+          return;
+        }
+
+        this.uploadState.set(status === "PROCESSING" ? "processing" : "queued");
+        this.pollTimer = setTimeout(() => this.pollStatus(jobId), 2000);
+      },
+      error: (err) => {
+        this.uploadState.set("failed");
+        this.errorMessage.set(err?.error?.message || "Unable to fetch bulk upload status.");
+        this.clearPollTimer();
+      },
+    });
+  }
+
+  private clearPollTimer(): void {
+    if (this.pollTimer) {
+      clearTimeout(this.pollTimer);
+      this.pollTimer = null;
+    }
   }
 
   getFileSize(): string {

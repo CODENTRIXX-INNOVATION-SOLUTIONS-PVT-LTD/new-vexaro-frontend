@@ -27,6 +27,12 @@
 
             <tbody>
 
+                @if (!shipments.length) {
+                <tr>
+                    <td colspan="6">No inbound shipments found.</td>
+                </tr>
+                }
+
                 @for(shipment of shipments; track shipment.trackingId){
 
                 <tr>

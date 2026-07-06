@@ -18,19 +18,31 @@
         </div>
       </div>
 
-      <!-- Merchant Selector -->
+      <!-- Merchant Selector or Preselected Info -->
       <div class="form-group">
-        <label>Select Merchant <span class="required">*</span></label>
-        <select [(ngModel)]="selectedMerchantId" (ngModelChange)="onMerchantChange()">
-          <option value="">— Choose a Merchant —</option>
-          @for (m of merchants; track m.id) {
-            <option [value]="m.id">{{ m.businessName }} ({{ m.merchantCode }})</option>
-          }
-        </select>
-        @if (selectedMerchant) {
-          <div class="merchant-current-balance">
-            Current Wallet: <strong>₹{{ selectedMerchant.walletBalance | number }}</strong>
+        <label>Merchant <span class="required">*</span></label>
+        @if (isPreselected && selectedMerchant) {
+          <div class="preselected-merchant-box">
+            <div class="pm-info">
+              <span class="pm-name">{{ selectedMerchant.businessName }}</span>
+              <code class="pm-code">{{ selectedMerchant.merchantCode }}</code>
+            </div>
+            <div class="merchant-current-balance" style="margin-top: 8px;">
+              Current Wallet Balance: <strong>₹{{ selectedMerchant.walletBalance | number }}</strong>
+            </div>
           </div>
+        } @else {
+          <select [(ngModel)]="selectedMerchantId" (ngModelChange)="onMerchantChange()">
+            <option value="">— Choose a Merchant —</option>
+            @for (m of merchants; track m.id) {
+              <option [value]="m.id">{{ m.businessName }} ({{ m.merchantCode }})</option>
+            }
+          </select>
+          @if (selectedMerchant) {
+            <div class="merchant-current-balance">
+              Current Wallet Balance: <strong>₹{{ selectedMerchant.walletBalance | number }}</strong>
+            </div>
+          }
         }
       </div>
 

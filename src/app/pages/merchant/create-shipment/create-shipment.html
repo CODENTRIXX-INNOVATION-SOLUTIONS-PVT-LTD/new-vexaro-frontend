@@ -13,7 +13,53 @@
         </div>
     </div>
 
-    <!-- Main Wizard Grid -->
+    <!-- ── BOOKING SUCCESS STATE ── -->
+    @if(bookingSuccess()) {
+        <div class="booking-success-card">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#16a34a" stroke-width="1.5"/>
+                    <path d="M8 12l3 3 5-5" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2>Shipment Booked Successfully!</h2>
+
+            <div class="booking-details">
+                <div class="booking-detail-row">
+                    <span class="label">Vexaro AWB</span>
+                    <strong class="value">{{ bookedAWB() }}</strong>
+                </div>
+                @if(bookedCarrierAWB()) {
+                <div class="booking-detail-row">
+                    <span class="label">Carrier AWB</span>
+                    <strong class="value">{{ bookedCarrierAWB() }}</strong>
+                </div>
+                }
+                @if(bookedCarrier()) {
+                <div class="booking-detail-row">
+                    <span class="label">Carrier</span>
+                    <strong class="value">{{ bookedCarrier() }}</strong>
+                </div>
+                }
+            </div>
+
+            <div class="success-actions">
+                @if(bookedLabelUrl()) {
+                    <a [href]="bookedLabelUrl()!" target="_blank" rel="noopener" class="primary-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:1em;height:1em;vertical-align:middle">
+                            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Download Shipping Label
+                    </a>
+                }
+                <button class="primary-btn" (click)="goToShipments()">View All Shipments</button>
+                <button class="secondary-btn" (click)="bookAnother()">Book Another</button>
+            </div>
+        </div>
+    }
+
+    <!-- ── WIZARD (hidden after successful booking) ── -->
+    @if(!bookingSuccess()) {
     <div class="wizard-grid">
         <!-- Sidebar Steps -->
         <div class="steps-card">
@@ -78,12 +124,19 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Select Address *</label>
-                        <select class="form-control" [(ngModel)]="pickupAddress">
-                            @for(addr of addresses; track addr){
-                                <option [value]="addr">{{ addr }}</option>
+                        <label>Warehouse *</label>
+                        <select class="form-control"
+                            [(ngModel)]="selectedWarehouseMongoId"
+                            (ngModelChange)="onWarehouseChange($event)">
+                            @for(wh of warehouses; track getWarehouseId(wh)){
+                                <option [value]="getWarehouseId(wh)">{{ wh.name || wh.warehouseId || 'Warehouse' }}</option>
                             }
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pickup Address</label>
+                        <textarea class="form-control" rows="2" readonly [value]="pickupAddress"></textarea>
                     </div>
 
                     <div class="form-group">
@@ -97,9 +150,14 @@
                             <input type="text" class="form-control" placeholder="Enter mobile number" [(ngModel)]="pickupPhone">
                         </div>
                         <div class="form-group flex-1">
-                            <label>Email (Optional)</label>
+                            <label>Email Address</label>
                             <input type="email" class="form-control" placeholder="Enter email address" [(ngModel)]="pickupEmail">
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>GST (Optional)</label>
+                        <input type="text" class="form-control" placeholder="Enter GST number" [(ngModel)]="pickupGST">
                     </div>
 
                     <button class="dashed-btn" (click)="addNewAddress()">
@@ -134,7 +192,7 @@
 
                     <div class="form-row">
                         <div class="form-group flex-1">
-                            <label>Mobile Number *</label>
+                            <label>Receiver Mobile *</label>
                             <input type="text" class="form-control" placeholder="Enter receiver mobile number" [(ngModel)]="receiverPhone">
                         </div>
                         <div class="form-group flex-1">
@@ -144,8 +202,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Delivery Address *</label>
-                        <textarea class="form-control" rows="3" placeholder="Enter complete delivery address" [(ngModel)]="receiverAddress"></textarea>
+                        <label>Address Line 1 *</label>
+                        <input type="text" class="form-control" placeholder="House number, building name, street" [(ngModel)]="receiverAddressLine1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Address Line 2 (Optional)</label>
+                        <input type="text" class="form-control" placeholder="Area, colony, landmark" [(ngModel)]="receiverAddressLine2">
                     </div>
 
                     <div class="form-row">
@@ -160,6 +223,10 @@
                         <div class="form-group flex-1">
                             <label>State *</label>
                             <input type="text" class="form-control" placeholder="Delhi" [(ngModel)]="receiverState">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Country *</label>
+                            <input type="text" class="form-control" placeholder="India" [(ngModel)]="receiverCountry">
                         </div>
                     </div>
 
@@ -184,55 +251,131 @@
                 <div class="form-section animate-fade-in">
                     <div class="section-header">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="header-icon purple-icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                        <h3>Package Details</h3>
+                        <h3>Package & Order Details</h3>
                     </div>
 
-                    <div class="form-group">
-                        <label>Weight (Actual) *</label>
-                        <div class="input-group">
-                            <input type="number" step="0.1" class="form-control" placeholder="2.5" [(ngModel)]="weight">
-                            <span class="input-suffix">kg</span>
+                    <!-- Order Details Sub-section -->
+                    <div class="form-subsection-card" style="border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; background-color: #f8fafc;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: rgb(11, 74, 111);">Order Details</h4>
+                        
+                        <div class="form-group">
+                            <label>Product Name *</label>
+                            <input type="text" class="form-control" placeholder="Enter product name" [(ngModel)]="productName">
                         </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="form-group flex-1">
-                            <label>Length *</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" placeholder="20" [(ngModel)]="length">
-                                <span class="input-suffix">cm</span>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>SKU *</label>
+                                <input type="text" class="form-control" placeholder="Enter SKU" [(ngModel)]="sku">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Quantity *</label>
+                                <input type="number" class="form-control" placeholder="1" [(ngModel)]="quantity" (ngModelChange)="updateOrderValue()">
                             </div>
                         </div>
-                        <div class="form-group flex-1">
-                            <label>Width *</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" placeholder="15" [(ngModel)]="width">
-                                <span class="input-suffix">cm</span>
-                            </div>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label>Height *</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" placeholder="10" [(ngModel)]="height">
-                                <span class="input-suffix">cm</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Item Type *</label>
-                        <select class="form-control" [(ngModel)]="itemType">
-                            @for(type of itemTypes; track type){
-                                <option [value]="type">{{ type }}</option>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>Selling Price *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="0.00" [(ngModel)]="sellingPrice" (ngModelChange)="updateOrderValue()">
+                                    <span class="input-suffix">₹</span>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Discount</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="0.00" [(ngModel)]="discount" (ngModelChange)="updateOrderValue()">
+                                    <span class="input-suffix">₹</span>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Tax</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="0.00" [(ngModel)]="tax" (ngModelChange)="updateOrderValue()">
+                                    <span class="input-suffix">₹</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>Order Value (Declared Value) *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="0.00" [(ngModel)]="declaredValue">
+                                    <span class="input-suffix">₹</span>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Payment Method *</label>
+                                <select class="form-control" [ngModel]="paymentMethod" (ngModelChange)="onPaymentMethodChange($event)">
+                                    <option value="Prepaid">Prepaid</option>
+                                    <option value="COD">COD</option>
+                                </select>
+                            </div>
+                            @if(isCOD) {
+                                <div class="form-group flex-1 animate-fade-in">
+                                    <label>COD Amount *</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" placeholder="0.00" [(ngModel)]="codAmount">
+                                        <span class="input-suffix">₹</span>
+                                    </div>
+                                </div>
                             }
-                        </select>
+                        </div>
                     </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" [(ngModel)]="isFragile">
-                            <span>Is this a fragile item?</span>
-                        </label>
+                    <!-- Package Details Sub-section -->
+                    <div class="form-subsection-card" style="border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; background-color: #f8fafc; margin-top: 8px;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: rgb(11, 74, 111);">Package Specifications</h4>
+                        
+                        <div class="form-group">
+                            <label>Weight (Actual) *</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control" placeholder="2.5" [(ngModel)]="weight">
+                                <span class="input-suffix">kg</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>Length *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="20" [(ngModel)]="length">
+                                    <span class="input-suffix">cm</span>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Width *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="15" [(ngModel)]="width">
+                                    <span class="input-suffix">cm</span>
+                                </div>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Height *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="10" [(ngModel)]="height">
+                                    <span class="input-suffix">cm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Item Type *</label>
+                            <select class="form-control" [(ngModel)]="itemType">
+                                @for(type of itemTypes; track type){
+                                    <option [value]="type">{{ type }}</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" [(ngModel)]="isFragile">
+                                <span>Is this a fragile item?</span>
+                            </label>
+                        </div>
                     </div>
 
                     @if(errorMessage && currentStep() === 3){
@@ -261,33 +404,122 @@
 
                     <!-- Shipment Summary Card -->
                     <div class="summary-details-card">
-                        <h4>Shipment Summary</h4>
-                        <div class="summary-grid">
-                            <div class="summary-item full-width">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="from-icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                                <div>
-                                    <span class="label">From</span>
+                        <h4 style="margin-bottom: 12px; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px;">Shipment Summary</h4>
+                        
+                        <!-- Pickup Summary -->
+                        <div class="summary-section">
+                            <h5>Pickup Details</h5>
+                            <div class="summary-grid">
+                                <div class="summary-item full-width">
+                                    <span class="label">Warehouse Address</span>
                                     <p class="value">{{ pickupAddress }}</p>
                                 </div>
+                                <div class="summary-item">
+                                    <span class="label">Contact Person</span>
+                                    <p class="value">{{ pickupContact }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Mobile</span>
+                                    <p class="value">{{ pickupPhone }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Email</span>
+                                    <p class="value">{{ pickupEmail || '—' }}</p>
+                                </div>
+                                @if(pickupGST) {
+                                    <div class="summary-item">
+                                        <span class="label">GST</span>
+                                        <p class="value">{{ pickupGST }}</p>
+                                    </div>
+                                }
                             </div>
-                            <div class="summary-item full-width">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="to-icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                                <div>
-                                    <span class="label">To</span>
-                                    <p class="value">{{ receiverName }}, {{ receiverAddress }}, {{ receiverCity }} - {{ receiverPincode }}</p>
+                        </div>
+
+                        <!-- Receiver Summary -->
+                        <div class="summary-section" style="margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                            <h5>Receiver Details</h5>
+                            <div class="summary-grid">
+                                <div class="summary-item full-width">
+                                    <span class="label">Delivery Address</span>
+                                    <p class="value">{{ receiverAddress }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Receiver Name</span>
+                                    <p class="value">{{ receiverName }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Mobile</span>
+                                    <p class="value">{{ receiverPhone }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Email</span>
+                                    <p class="value">{{ receiverEmail || '—' }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">City / State / Pincode</span>
+                                    <p class="value">{{ receiverCity }}, {{ receiverState }} - {{ receiverPincode }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Country</span>
+                                    <p class="value">{{ receiverCountry }}</p>
                                 </div>
                             </div>
-                            <div class="summary-item">
-                                <span class="label">Weight</span>
-                                <p class="value">{{ weight }} kg</p>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">Dimensions</span>
-                                <p class="value">{{ length }} x {{ width }} x {{ height }} cm</p>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">Item Type</span>
-                                <p class="value">{{ itemType }}</p>
+                        </div>
+
+                        <!-- Package & Order Summary -->
+                        <div class="summary-section" style="margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                            <h5>Package & Order Details</h5>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="label">Product Name</span>
+                                    <p class="value">{{ productName }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">SKU</span>
+                                    <p class="value">{{ sku }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Quantity</span>
+                                    <p class="value">{{ quantity }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Selling Price</span>
+                                    <p class="value">₹{{ sellingPrice | number:'1.2-2' }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Discount</span>
+                                    <p class="value">₹{{ discount | number:'1.2-2' }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Tax</span>
+                                    <p class="value">₹{{ tax | number:'1.2-2' }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Order Value</span>
+                                    <p class="value">₹{{ declaredValue | number:'1.2-2' }}</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Payment Method</span>
+                                    <p class="value">{{ paymentMethod }}</p>
+                                </div>
+                                @if(isCOD) {
+                                    <div class="summary-item">
+                                        <span class="label">COD Amount</span>
+                                        <p class="value">₹{{ codAmount | number:'1.2-2' }}</p>
+                                    </div>
+                                }
+                                <div class="summary-item">
+                                    <span class="label">Weight</span>
+                                    <p class="value">{{ weight }} kg</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Dimensions</span>
+                                    <p class="value">{{ length }} x {{ width }} x {{ height }} cm</p>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="label">Item Type</span>
+                                    <p class="value">{{ itemType }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -305,6 +537,11 @@
                                         <div>
                                             <p class="courier-name">{{ courier.name }}</p>
                                             <span class="courier-type">{{ courier.type }}</span>
+                                            @if(courier.etd) {
+                                                <span class="courier-etd" style="display: block; font-size: 11px; color: #16a34a; font-weight: 500; margin-top: 2px;">
+                                                    Estimated Delivery: {{ courier.etd }}
+                                                </span>
+                                            }
                                         </div>
                                     </div>
                                     <div class="courier-right">
@@ -316,15 +553,19 @@
                         </div>
                     </div>
 
+                    @if(errorMessage && currentStep() === 4){
+                        <div class="form-error" style="margin-top: 12px; margin-bottom: 12px;">{{ errorMessage }}</div>
+                    }
+
                     <!-- Total Amount Display -->
                     <div class="total-bar">
                         <div>
                             <span class="total-label">Total Amount</span>
                             <h3 class="total-price">₹{{ totalAmount | number:'1.2-2' }}</h3>
                         </div>
-                        <button class="primary-btn create-shipment-btn" (click)="createShipment()">
+                        <button class="primary-btn create-shipment-btn" (click)="createShipment()" [disabled]="isSubmitting()">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                            <span>Create Shipment</span>
+                            <span>{{ isSubmitting() ? 'Booking...' : 'Create Shipment' }}</span>
                         </button>
                     </div>
 
@@ -339,6 +580,7 @@
 
         </div>
     </div>
+    } <!-- end @if(!bookingSuccess()) -->
 
     <!-- Trust Badges Section -->
     <div class="trust-badges">

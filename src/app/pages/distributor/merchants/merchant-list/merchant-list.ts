@@ -66,6 +66,7 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
         this.filteredMerchants = [];
         this.errorMessage = err?.error?.message || 'Failed to load merchants. Please try again.';
         this.isLoading = false;
+        this.applyFilters();
       },
     });
   }
