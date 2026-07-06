@@ -67,6 +67,11 @@ export class AdminPayment implements OnInit {
 
   // ── Recharge Requests ─────────────────────────────────────────────────────
   rechargeRequestsData: any[] = [];
+  rechargeRequestActionInProgress = '';
+  rechargeRequestSuccess = '';
+  rechargeRequestError   = '';
+  rejectingRequestId     = '';
+  rejectReasonInput      = '';
 
   // ── Commission ────────────────────────────────────────────────────────────
   commissionData: any[] = [];
@@ -339,34 +344,65 @@ export class AdminPayment implements OnInit {
   get rechargeRequests() { return this.rechargeRequestsData; }
 
   approveRequest(req: any) {
-    if (!confirm(`Approve recharge of ₹${req.amount.toLocaleString('en-IN')} for ${req.distributorName}?`)) return;
-    this.isLoading = true;
+    this.rechargeRequestSuccess = '';
+    this.rechargeRequestError   = '';
+    this.rechargeRequestActionInProgress = req._id;
+
     this.financeService.approveRechargeRequest(req._id).subscribe({
-      next: () => { this.isLoading = false; this.loadAll(); this.cdr.detectChanges(); },
+      next: () => {
+        this.rechargeRequestActionInProgress = '';
+        this.rechargeRequestSuccess = `₹${req.amount.toLocaleString('en-IN')} approved and credited to ${req.distributorName}'s wallet.`;
+        this.loadRechargeRequests();
+        this.loadAdminWallet();
+        this.loadDistributors();
+        this.cdr.detectChanges();
+      },
       error: (err) => {
-        alert(err?.error?.message ?? 'Approval failed.');
-        this.isLoading = false;
+        this.rechargeRequestActionInProgress = '';
+        this.rechargeRequestError = err?.error?.message ?? 'Approval failed. Please check your admin wallet balance.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  openRejectForm(req: any) {
+    this.rejectingRequestId   = req._id;
+    this.rejectReasonInput    = '';
+    this.rechargeRequestError = '';
+    this.rechargeRequestSuccess = '';
+  }
+
+  cancelRejectForm() {
+    this.rejectingRequestId = '';
+    this.rejectReasonInput  = '';
+  }
+
+  confirmRejectRequest(req: any) {
+    if (!this.rejectReasonInput.trim() || this.rejectReasonInput.trim().length < 5) {
+      this.rechargeRequestError = 'Please provide a rejection reason of at least 5 characters.';
+      return;
+    }
+    this.rechargeRequestActionInProgress = req._id;
+    this.rechargeRequestError = '';
+
+    this.financeService.rejectRechargeRequest(req._id, this.rejectReasonInput.trim()).subscribe({
+      next: () => {
+        this.rechargeRequestActionInProgress = '';
+        this.rejectingRequestId = '';
+        this.rechargeRequestSuccess = `Recharge request from ${req.distributorName} rejected.`;
+        this.loadRechargeRequests();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.rechargeRequestActionInProgress = '';
+        this.rechargeRequestError = err?.error?.message ?? 'Rejection failed. Please try again.';
         this.cdr.detectChanges();
       },
     });
   }
 
   rejectRequest(req: any) {
-    const reason = prompt(`Reason for rejecting ${req.distributorName}'s request (min 5 characters):`);
-    if (reason === null) return; // user cancelled
-    if (!reason.trim() || reason.trim().length < 5) {
-      alert('Please provide a reason of at least 5 characters.');
-      return;
-    }
-    this.isLoading = true;
-    this.financeService.rejectRechargeRequest(req._id, reason.trim()).subscribe({
-      next: () => { this.isLoading = false; this.loadAll(); this.cdr.detectChanges(); },
-      error: (err) => {
-        alert(err?.error?.message ?? 'Rejection failed.');
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
+    this.openRejectForm(req);
   }
 
   // ── Razorpay Payments ─────────────────────────────────────────────────────

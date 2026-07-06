@@ -43,7 +43,7 @@ export class DistributorDashboard {
       icon: 'fa-money-bill-wave',
       expanded: false,
       children: [
-        { label: 'Fund Merchant Wallet', route: '/distributor/merchant-finance/topup' },
+        // { label: 'Fund Merchant Wallet', route: '/distributor/merchant-finance/topup' },
         { label: 'Merchant Wallets', route: '/distributor/merchant-finance/wallets' },
         { label: 'Merchant Transactions', route: '/distributor/merchant-finance/transactions' }
       ]
