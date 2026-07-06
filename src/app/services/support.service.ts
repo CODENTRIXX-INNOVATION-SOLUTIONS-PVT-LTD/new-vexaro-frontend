@@ -32,4 +32,10 @@ export class SupportService {
   addReply(id: string, message: string): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/support/${id}/reply`, { message });
   }
+
+  uploadAttachment(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.baseUrl}/support/upload`, formData);
+  }
 }

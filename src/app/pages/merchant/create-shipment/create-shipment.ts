@@ -20,7 +20,7 @@ export class CreateShipment implements OnInit {
 
   // ── Payment / order fields ────────────────────────────────────────────────
   merchantOrderRef = '';
-  declaredValue = 100;
+  declaredValue = 0;
   isCOD = false;
   codAmount = 0;
 
@@ -44,6 +44,7 @@ export class CreateShipment implements OnInit {
   warehousePincode = '';
   selectedWarehouseMongoId = '';
   warehouses: MerchantWarehouse[] = [];
+  pickupGST = '';
 
   addNewAddress(): void {
     this.router.navigate(['/merchant/warehouse']);
@@ -54,9 +55,16 @@ export class CreateShipment implements OnInit {
   receiverPhone = '';
   receiverEmail = '';
   receiverAddress = '';
+  receiverAddressLine1 = '';
+  receiverAddressLine2 = '';
+  receiverCountry = 'India';
   receiverPincode = '';
   receiverCity = '';
   receiverState = '';
+
+  updateReceiverAddress(): void {
+    this.receiverAddress = this.receiverAddressLine1.trim() + (this.receiverAddressLine2.trim() ? ', ' + this.receiverAddressLine2.trim() : '');
+  }
 
   // ── Step 3: Package details ───────────────────────────────────────────────
   weight = 0.5;
@@ -67,6 +75,33 @@ export class CreateShipment implements OnInit {
   isFragile = false;
 
   itemTypes = ['Documents', 'Parcel', 'Electronics', 'Apparel', 'Medicines'];
+
+  // ── New Order Details fields ──────────────────────────────────────────────
+  productName = '';
+  sku = '';
+  quantity = 1;
+  sellingPrice = 0;
+  discount = 0;
+  tax = 0;
+  paymentMethod = 'Prepaid';
+
+  updateOrderValue(): void {
+    const calculated = (Number(this.sellingPrice || 0) * Number(this.quantity || 0)) - Number(this.discount || 0) + Number(this.tax || 0);
+    this.declaredValue = Math.max(0, calculated);
+    if (this.paymentMethod === 'COD') {
+      this.codAmount = this.declaredValue;
+    }
+  }
+
+  onPaymentMethodChange(val: string): void {
+    this.paymentMethod = val;
+    this.isCOD = val === 'COD';
+    if (!this.isCOD) {
+      this.codAmount = 0;
+    } else {
+      this.codAmount = this.declaredValue;
+    }
+  }
 
   // ── Step 4: Rate selection ────────────────────────────────────────────────
   selectedCourierIndex = signal(0);
@@ -169,12 +204,12 @@ export class CreateShipment implements OnInit {
         }
 
         // Step 2 — get Velocity per-carrier rates for this exact shipment spec
-        // deadWeightGrams: Velocity expects weight in grams
+        // Velocity expects dead_weight in grams.
         this.shipmentService.getVelocityRates({
           journeyType:        'forward',
           originPincode:      this.warehousePincode,
           destinationPincode: this.receiverPincode,
-          deadWeightGrams:    this.weight * 1000,   // kg → grams
+          deadWeight:         this.weight * 1000,
           length:             this.length,
           width:              this.width,
           height:             this.height,
@@ -185,7 +220,10 @@ export class CreateShipment implements OnInit {
             this.isLoadingRates.set(false);
 
             // Velocity returns an array of rate objects, each with courier_name and rate
-            const velocityRates: any[] = rateRes.data || rateRes || [];
+            const velocityRates: any[] = rateRes.data?.serviceable_couriers
+              || rateRes.data
+              || rateRes
+              || [];
 
             // Build a lookup from carrier_id → Velocity rate entry
             const rateByCarrierId: Record<string, any> = {};
@@ -193,7 +231,8 @@ export class CreateShipment implements OnInit {
             if (Array.isArray(velocityRates)) {
               for (const r of velocityRates) {
                 if (r.carrier_id)   rateByCarrierId[r.carrier_id]   = r;
-                if (r.courier_name) rateByName[r.courier_name.toLowerCase()] = r;
+                const name = r.carrier_name || r.courier_name;
+                if (name) rateByName[name.toLowerCase()] = r;
               }
             }
 
@@ -207,8 +246,16 @@ export class CreateShipment implements OnInit {
                 || rateByName[carrierName.toLowerCase()]
                 || null;
 
+              const charges = rateEntry?.charges || {};
               const totalRate = rateEntry
-                ? Number(rateEntry.total_amount ?? rateEntry.rate ?? rateEntry.total ?? 0)
+                ? Number(
+                    charges.total_forward_charges
+                    ?? charges.total_return_charges
+                    ?? rateEntry.total_amount
+                    ?? rateEntry.rate
+                    ?? rateEntry.total
+                    ?? 0
+                  )
                 : 0;
 
               return {
@@ -216,7 +263,7 @@ export class CreateShipment implements OnInit {
                 name:  carrierName,
                 type:  c.mode || c.service_type || 'Forward shipment',
                 rate:  totalRate,
-                etd:   rateEntry?.etd || rateEntry?.estimated_delivery || null,
+                etd:   rateEntry?.expected_delivery?.delivery || rateEntry?.etd || rateEntry?.estimated_delivery || null,
                 logo:  'fas fa-truck-fast',
                 color: '#1e293b',
               };
@@ -267,6 +314,8 @@ export class CreateShipment implements OnInit {
       return;
     }
 
+    this.updateReceiverAddress();
+
     const payload = {
       serviceType:      'STANDARD',
       weight:           this.weight,
@@ -282,12 +331,14 @@ export class CreateShipment implements OnInit {
         city:        this.receiverCity,
         state:       this.receiverState,
         pincode:     this.receiverPincode,
+        country:     this.receiverCountry || 'India',
       },
       carrierId:        selected.id || undefined,
       isCOD:            this.isCOD,
       codAmount:        this.isCOD ? this.codAmount : 0,
       declaredValue:    this.declaredValue,
-      ...(this.merchantOrderRef ? { merchantOrderRef: this.merchantOrderRef } : {}),
+      notes:            this.productName || undefined,
+      merchantOrderRef: this.sku || undefined,
     };
 
     this.isSubmitting.set(true);
@@ -326,17 +377,30 @@ export class CreateShipment implements OnInit {
     this.receiverPhone = '';
     this.receiverEmail = '';
     this.receiverAddress = '';
+    this.receiverAddressLine1 = '';
+    this.receiverAddressLine2 = '';
+    this.receiverCountry = 'India';
     this.receiverPincode = '';
     this.receiverCity = '';
     this.receiverState = '';
     this.merchantOrderRef = '';
     this.isCOD = false;
     this.codAmount = 0;
-    this.declaredValue = 100;
+    this.declaredValue = 0;
     this.weight = 0.5;
     this.length = 10;
     this.width = 10;
     this.height = 10;
+
+    // Reset new fields
+    this.productName = '';
+    this.sku = '';
+    this.quantity = 1;
+    this.sellingPrice = 0;
+    this.discount = 0;
+    this.tax = 0;
+    this.paymentMethod = 'Prepaid';
+    this.pickupGST = '';
   }
 
   // ── Per-step form validation ──────────────────────────────────────────────
@@ -352,27 +416,52 @@ export class CreateShipment implements OnInit {
     }
 
     if (this.currentStep() === 2) {
+      this.updateReceiverAddress();
       if (
         !this.receiverName.trim() ||
         !phonePattern.test(this.receiverPhone)    ||
-        !this.receiverAddress.trim()              ||
+        !this.receiverAddressLine1.trim()         ||
         !pincodePattern.test(this.receiverPincode)||
         !this.receiverCity.trim()                 ||
         !this.receiverState.trim()
       ) {
-        this.errorMessage = 'Please enter complete receiver details with a valid 10-digit phone and 6-digit pincode.';
+        this.errorMessage = 'Please enter complete receiver details with a valid 10-digit phone, address line 1, and 6-digit pincode.';
         return false;
       }
     }
 
     if (this.currentStep() === 3 || this.currentStep() === 4) {
+      if (!this.productName.trim()) {
+        this.errorMessage = 'Product name is required.';
+        return false;
+      }
+      if (!this.sku.trim()) {
+        this.errorMessage = 'SKU is required.';
+        return false;
+      }
+      if (!this.quantity || this.quantity <= 0) {
+        this.errorMessage = 'Quantity must be greater than zero.';
+        return false;
+      }
+      if (this.sellingPrice < 0) {
+        this.errorMessage = 'Selling price cannot be negative.';
+        return false;
+      }
+      if (this.discount < 0) {
+        this.errorMessage = 'Discount cannot be negative.';
+        return false;
+      }
+      if (this.tax < 0) {
+        this.errorMessage = 'Tax cannot be negative.';
+        return false;
+      }
       if (!this.weight || this.weight <= 0 || !this.length || !this.width || !this.height ||
           this.length <= 0 || this.width <= 0 || this.height <= 0) {
         this.errorMessage = 'Package weight and dimensions must be greater than zero.';
         return false;
       }
       if (!this.declaredValue || this.declaredValue <= 0) {
-        this.errorMessage = 'Declared value must be greater than zero.';
+        this.errorMessage = 'Order value must be greater than zero.';
         return false;
       }
       if (this.isCOD) {
@@ -381,7 +470,7 @@ export class CreateShipment implements OnInit {
           return false;
         }
         if (this.codAmount > this.declaredValue) {
-          this.errorMessage = 'COD amount cannot exceed the declared value.';
+          this.errorMessage = 'COD amount cannot exceed the total order value.';
           return false;
         }
       }

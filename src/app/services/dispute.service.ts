@@ -34,11 +34,15 @@ export class DisputeService {
   }
 
   submitProof(id: string, proofImages: string[]): Observable<any> {
-    // Calls the submit proof endpoint
-    return this.http.patch<any>(`${this.baseUrl}/disputes/${id}/proof`, { proofImages });
+    return this.http.patch<any>(`${this.baseUrl}/disputes/weight-dispute/${id}/proof`, { proofImages });
   }
 
+  /**
+   * Add a comment/reply to a dispute.
+   * The disputes module uses PATCH /:id with a "comment" field —
+   * there is no separate /reply route (unlike support tickets).
+   */
   addComment(id: string, message: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/disputes/${id}/reply`, { message });
+    return this.http.patch<any>(`${this.baseUrl}/disputes/${id}`, { comment: message });
   }
 }

@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { FinanceService } from '../../../services/finance.service';
 import { DisputeService } from '../../../services/dispute.service';
+import { SupportService } from '../../../services/support.service';
 
 export interface MerchantTransaction {
   id: string;
@@ -68,6 +69,7 @@ export interface DistributorTopupRequest {
 export class Payments implements OnInit, OnDestroy {
   private financeService = inject(FinanceService);
   private disputeService = inject(DisputeService);
+  private supportService = inject(SupportService);
   private destroy$ = new Subject<void>();
 
   // ── Active Tab ────────────────────────────────────────────────────────────
@@ -131,9 +133,10 @@ export class Payments implements OnInit, OnDestroy {
   showContestModal = false;
   contestingDispute: WeightDispute | null = null;
   contestNote = '';
+  selectedFiles: File[] = [];
   selectedFileNames: string[] = [];
+  isContestSubmitting = false;
   contestError = '';
-  contestSuccess = '';
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
@@ -436,11 +439,12 @@ export class Payments implements OnInit, OnDestroy {
 
   openContest(dispute: WeightDispute): void {
     this.contestingDispute = dispute;
-    this.contestNote       = '';
+    this.contestNote = '';
+    this.selectedFiles = [];
     this.selectedFileNames = [];
-    this.contestError      = '';
+    this.contestError = '';
+    this.showContestModal = true;
     this.contestSuccess    = '';
-    this.showContestModal  = true;
   }
 
   closeContest(): void {
@@ -450,7 +454,12 @@ export class Payments implements OnInit, OnDestroy {
 
   onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files) this.selectedFileNames = Array.from(input.files).map(f => f.name);
+    if (input.files) {
+      this.selectedFiles = Array.from(input.files);
+      this.selectedFileNames = this.selectedFiles.map(f => f.name);
+      this.contestError = '';
+    }
+//     if (input.files) this.selectedFileNames = Array.from(input.files).map(f => f.name);
   }
 
   submitContest(): void {
@@ -458,16 +467,32 @@ export class Payments implements OnInit, OnDestroy {
       this.contestError = 'Please describe why you believe this deduction is incorrect.';
       return;
     }
-    if (this.contestingDispute) {
-      const mockImageUrls = this.selectedFileNames.map(f => `/uploads/proofs/${f}`);
-      this.disputeService.submitProof(this.contestingDispute.id, mockImageUrls).subscribe({
-        next: () => {
-          this.contestSuccess = 'Dispute proof submitted successfully.';
-          this.loadDisputes();
-          setTimeout(() => this.closeContest(), 1500);
+    if (!this.selectedFiles.length) {
+      this.contestError = 'Please attach at least one proof file.';
+      return;
+    }
+    if (this.contestingDispute && !this.isContestSubmitting) {
+      this.isContestSubmitting = true;
+      this.contestError = '';
+      forkJoin(this.selectedFiles.map(file => this.supportService.uploadAttachment(file))).subscribe({
+        next: (uploadResponses) => {
+          const proofUrls = uploadResponses.map(res => res?.data?.url).filter(Boolean);
+          this.disputeService.submitProof(this.contestingDispute!.id, proofUrls).subscribe({
+            next: () => {
+              alert('Dispute proof submitted successfully!');
+              this.isContestSubmitting = false;
+              this.loadDisputes();
+              this.closeContest();
+            },
+            error: (err) => {
+              this.isContestSubmitting = false;
+              this.contestError = err.error?.message || 'Failed to submit proof.';
+            },
+          });
         },
         error: (err) => {
-          this.contestError = err?.error?.message || 'Failed to submit proof.';
+          this.isContestSubmitting = false;
+          this.contestError = err.error?.message || 'Failed to upload proof files.';
         },
       });
     }

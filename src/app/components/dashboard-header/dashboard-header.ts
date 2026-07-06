@@ -50,7 +50,7 @@ export class DashboardHeader implements OnInit {
 
   ngOnInit() {
     // ── Step 1: Show defaults from localStorage immediately (no API wait) ──
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem('user') ?? sessionStorage.getItem('user');
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
@@ -58,13 +58,16 @@ export class DashboardHeader implements OnInit {
         this.email = user.email ?? '';
         this.role = this.roleDisplayMap[user.role] ?? user.role ?? '';
       } catch {
-        const storedRole = localStorage.getItem('userRole') ?? '';
+        const storedRole = localStorage.getItem('userRole') ?? sessionStorage.getItem('userRole') ?? '';
         this.role = this.roleDisplayMap[storedRole] ?? storedRole;
       }
     } else {
-      const storedRole = localStorage.getItem('userRole') ?? '';
+      const storedRole = localStorage.getItem('userRole') ?? sessionStorage.getItem('userRole') ?? '';
       this.role = this.roleDisplayMap[storedRole] ?? storedRole;
     }
+
+    // Load notifications and messages from localStorage
+    this.loadData();
 
     // ── Step 2: Refresh from API in background (updates if data changed) ──
     this.authService.getMe().subscribe({
@@ -73,10 +76,7 @@ export class DashboardHeader implements OnInit {
         this.email = res.data.email;
         this.role = this.roleDisplayMap[res.data.role] ?? res.data.role;
       },
-      error: (err) => {
-        console.error('Could not refresh user from /me:', err);
-        // silently keep the localStorage values already shown
-      }
+      error: () => { /* silently keep the localStorage values already shown */ },
     });
 
     // Global click listener to close dropdowns on outer clicks

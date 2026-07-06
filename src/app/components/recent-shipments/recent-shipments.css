@@ -122,6 +122,8 @@ td {
     white-space: nowrap;
     vertical-align: middle;
     box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .header {

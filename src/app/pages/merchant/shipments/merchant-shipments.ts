@@ -100,13 +100,13 @@ export class MerchantShipments implements OnInit {
     },
     {
       title: 'Average Delivery Time',
-      value: '3.2 Days',
+      value: '—',
       icon: 'fas fa-clock',
       bgColor: '#e0f2fe',
       iconColor: '#0284c7',
       percentage: 0,
       symbol: '-',
-      compairTo: 'faster than last month'
+      compairTo: 'from delivered shipments'
     }
   ];
 
@@ -347,7 +347,7 @@ export class MerchantShipments implements OnInit {
           journeyType:        'forward',
           originPincode:      this.warehousePincode,
           destinationPincode: this.receiverPincode,
-          deadWeightGrams:    this.weight * 1000,
+          deadWeight:         this.weight * 1000,
           length:             this.length,
           width:              this.width,
           height:             this.height,
@@ -367,7 +367,8 @@ export class MerchantShipments implements OnInit {
             if (Array.isArray(velocityRates)) {
               for (const r of velocityRates) {
                 if (r.carrier_id)   rateByCarrierId[r.carrier_id]              = r;
-                if (r.courier_name) rateByName[r.courier_name.toLowerCase()]   = r;
+                const name = r.carrier_name || r.courier_name;
+                if (name) rateByName[name.toLowerCase()]   = r;
               }
             }
 
@@ -377,15 +378,23 @@ export class MerchantShipments implements OnInit {
               const rateEntry   = rateByCarrierId[carrierId]
                                || rateByName[carrierName.toLowerCase()]
                                || null;
+              const charges = rateEntry?.charges || {};
               const rate = rateEntry
-                ? Number(rateEntry.total_amount ?? rateEntry.rate ?? rateEntry.total ?? 0)
+                ? Number(
+                    charges.total_forward_charges
+                    ?? charges.total_return_charges
+                    ?? rateEntry.total_amount
+                    ?? rateEntry.rate
+                    ?? rateEntry.total
+                    ?? 0
+                  )
                 : 0;
               return {
                 id:    carrierId,
                 name:  carrierName,
                 type:  c.mode || c.service_type || 'Forward shipment',
                 rate,
-                etd:   rateEntry?.etd || rateEntry?.estimated_delivery || null,
+                etd:   rateEntry?.expected_delivery?.delivery || rateEntry?.etd || rateEntry?.estimated_delivery || null,
                 logo:  'fas fa-truck-fast',
                 color: '#1e293b',
               };
