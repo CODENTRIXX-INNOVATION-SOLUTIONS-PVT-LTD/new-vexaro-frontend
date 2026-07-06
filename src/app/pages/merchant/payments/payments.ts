@@ -137,6 +137,7 @@ export class Payments implements OnInit, OnDestroy {
   selectedFileNames: string[] = [];
   isContestSubmitting = false;
   contestError = '';
+  contestSuccess = '';
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
@@ -479,10 +480,10 @@ export class Payments implements OnInit, OnDestroy {
           const proofUrls = uploadResponses.map(res => res?.data?.url).filter(Boolean);
           this.disputeService.submitProof(this.contestingDispute!.id, proofUrls).subscribe({
             next: () => {
-              alert('Dispute proof submitted successfully!');
+              this.contestSuccess = 'Dispute proof submitted successfully.';
               this.isContestSubmitting = false;
               this.loadDisputes();
-              this.closeContest();
+              setTimeout(() => this.closeContest(), 1500);
             },
             error: (err) => {
               this.isContestSubmitting = false;
