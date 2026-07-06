@@ -304,6 +304,32 @@ export class FinanceService {
     return this.http.patch<any>(`${this.baseUrl}/finance/settlements/${id}/process`, payload);
   }
 
+  // ── Merchant → Distributor top-up requests ───────────────────────────────
+
+  // Merchant: submit a top-up request to their distributor
+  createMerchantRechargeRequest(payload: { amount: number; note?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/merchant-recharge-requests`, payload);
+  }
+
+  // Merchant: list own requests  |  Distributor: list incoming requests
+  listMerchantRechargeRequests(params: { page?: number; limit?: number; status?: string } = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page)   httpParams = httpParams.set('page',   params.page.toString());
+    if (params.limit)  httpParams = httpParams.set('limit',  params.limit.toString());
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    return this.http.get<any>(`${this.baseUrl}/finance/merchant-recharge-requests`, { params: httpParams });
+  }
+
+  // Distributor: approve a merchant top-up request (transfers from distributor wallet)
+  approveMerchantRechargeRequest(requestId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/merchant-recharge-requests/${requestId}/approve`, {});
+  }
+
+  // Distributor: reject a merchant top-up request
+  rejectMerchantRechargeRequest(requestId: string, reason?: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/finance/merchant-recharge-requests/${requestId}/reject`, { reason });
+  }
+
   private loadRazorpayCheckout(): Promise<void> {
     if (window.Razorpay) return Promise.resolve();
 

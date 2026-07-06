@@ -1,652 +1,377 @@
 <div class="wallet-page">
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg> Wallet</h2>
-            <div class="breadcrumb">
-                <a href="/merchant/dashboard">Dashboard</a>
-                <span>›</span>
-                <span class="active">Wallet</span>
-            </div>
-        </div>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg> Wallet</h2>
+      <div class="breadcrumb"><a href="/merchant/dashboard">Dashboard</a><span>›</span><span class="active">Wallet</span></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="wallet-tabs">
+    <button class="tab-btn" [class.active]="activeTab==='balance'" (click)="changeTab('balance')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><circle cx="8" cy="8" r="6"></circle><circle cx="18" cy="14" r="6"></circle></svg> Balance
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='transactions'" (click)="changeTab('transactions')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Transactions
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='dist-request'" (click)="changeTab('dist-request')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      Request from Distributor
+      @if (pendingDistRequestsCount > 0) { <span class="tab-badge">{{ pendingDistRequestsCount }}</span> }
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='requests'" (click)="changeTab('requests')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+      Refund Requests
+      @if (pendingRequestsCount > 0) { <span class="tab-badge">{{ pendingRequestsCount }}</span> }
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='disputes'" (click)="changeTab('disputes')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Weight Disputes
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='payments'" (click)="changeTab('payments')">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Payments
+    </button>
+  </div>
+
+  <div class="tab-body">
+
+  <!-- ===== TAB: BALANCE + RAZORPAY TOP-UP ===== -->
+  @if (activeTab === 'balance') {
+
+  <div class="balance-hero" style="display:flex;gap:20px;align-items:stretch;flex-wrap:wrap;">
+    <div class="balance-left" style="flex:1;min-width:260px;display:flex;align-items:center;gap:20px;">
+      <div class="balance-icon-wrap" style="background:rgb(11,74,111);color:white;width:60px;height:60px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:24px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
+      </div>
+      <div>
+        <span style="font-size:13px;opacity:0.8;color:white;">Current Balance</span>
+        <div style="font-size:32px;font-weight:800;color:white;">₹{{ balance.toLocaleString('en-IN') }}</div>
+      </div>
+    </div>
+    <div class="balance-left" style="flex:1;min-width:200px;display:flex;align-items:center;gap:20px;border-left:1px solid rgba(255,255,255,0.2);padding-left:20px;">
+      <div class="balance-icon-wrap" style="background:rgb(232,116,58);color:white;width:60px;height:60px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:24px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      </div>
+      <div>
+        <span style="font-size:13px;opacity:0.8;color:white;">COD Escrow</span>
+        <div style="font-size:32px;font-weight:800;color:white;">₹{{ codEscrowBalance.toLocaleString('en-IN') }}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;">
+      <button class="hero-topup-btn" (click)="scrollToTopupForm()" style="background:rgba(255,255,255,0.18);color:white;border:1.5px solid rgba(255,255,255,0.35);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Funds
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="summary-grid">
+    <div class="summary-card"><div class="s-icon red"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div><div class="s-info"><div class="s-val">₹{{ totalSpent.toLocaleString('en-IN') }}</div><div class="s-label">Total Spent</div></div></div>
+    <div class="summary-card"><div class="s-icon amber"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="s-info"><div class="s-val">{{ pendingRequestsCount }}</div><div class="s-label">Pending Refunds</div></div></div>
+    <div class="summary-card"><div class="s-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg></div><div class="s-info"><div class="s-val">{{ razorpayPayments.length }}</div><div class="s-label">Total Top-ups</div></div></div>
+    <div class="summary-card"><div class="s-icon purple"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="s-info"><div class="s-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</div><div class="s-label">Dispute Deductions</div></div></div>
+  </div>
+
+  <!-- Razorpay Top-up Form -->
+  <div id="topup-form" class="form-card">
+    <div class="card-header">
+      <h3>Add Funds to Wallet</h3>
+      <p class="card-sub">Pay securely via Razorpay. Wallet is credited instantly after payment capture.</p>
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="wallet-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'balance'" (click)="changeTab('balance')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="8" cy="8" r="6"></circle><circle cx="18" cy="14" r="6"></circle></svg> Current Balance
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="changeTab('transactions')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Transaction History
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'requests'" (click)="changeTab('requests')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Refund Requests
-            @if (pendingRequestsCount > 0) {
-                <span class="tab-badge">{{ pendingRequestsCount }}</span>
-            }
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'refunds'" (click)="changeTab('refunds')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg> Refund History
-            @if (pendingRefundsCount > 0) {
-                <span class="tab-badge">{{ pendingRefundsCount }}</span>
-            }
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="changeTab('disputes')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Weight Disputes
-        </button>
-        <button class="tab-btn" [class.active]="activeTab === 'payments'" (click)="changeTab('payments')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Razorpay Payments
-        </button>
+    @if (topupSuccess) {
+    <div style="display:flex;align-items:center;gap:10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:14px;font-weight:500;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      {{ topupSuccess }}
+    </div>
+    }
+    @if (topupError) {
+    <div style="display:flex;align-items:center;gap:10px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:14px;font-weight:500;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      {{ topupError }}
+    </div>
+    }
+
+    <label class="form-label">Select Amount</label>
+    <div class="packages-grid">
+      @for (pkg of packages; track pkg) {
+      <button class="pkg-chip" [class.selected]="selectedPackage===pkg" (click)="selectPackage(pkg)">₹{{ pkg.toLocaleString('en-IN') }}</button>
+      }
     </div>
 
-    <div class="tab-body">
-
-        <!-- ====================== TAB 1: CURRENT BALANCE ====================== -->
-        @if (activeTab === 'balance') {
-
-        <!-- Hero Balance Card -->
-        <div class="balance-hero" style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
-            <div class="balance-left" style="flex: 1; min-width: 300px; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <div class="balance-icon-wrap" style="background: rgb(11, 74, 111); color: white; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
-                    </div>
-                    <div class="balance-info" style="display: flex; flex-direction: column;">
-                        <span class="balance-label" style="font-size: 14px; opacity: 0.8;">Current Balance</span>
-                        <span class="balance-amount" style="font-size: 32px; font-weight: bold; color: #ffffff;">₹{{ balance.toLocaleString('en-IN') }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="balance-left" style="flex: 1; min-width: 300px; display: flex; align-items: center; justify-content: space-between; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 20px;">
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <div class="balance-icon-wrap" style="background: rgb(232, 116, 58); color: white; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 24px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    </div>
-                    <div class="balance-info" style="display: flex; flex-direction: column;">
-                        <span class="balance-label" style=" opacity: 0.8;">COD Escrow (Pending)</span>
-                        <span class="balance-amount" style="font-size: 32px; font-weight: bold; color: #ffffff;">₹{{ codEscrowBalance.toLocaleString('en-IN') }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; align-items: center; ">
-                <button class="hero-topup-btn" (click)="scrollToTopupForm()" style="background: rgba(255,255,255,0.18); color: white; border: 1.5px solid rgba(255,255,255,0.35); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer;">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Funds
-                </button>
-            </div>
-        </div>
-
-        <!-- Summary Stats -->
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="s-icon red"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
-                <div class="s-info">
-                    <div class="s-val">₹{{ totalSpent.toLocaleString('en-IN') }}</div>
-                    <div class="s-label">Total Spent</div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="s-icon amber"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
-                <div class="s-info">
-                    <div class="s-val">{{ pendingRequestsCount }}</div>
-                    <div class="s-label">Pending Refund Requests</div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="s-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg></div>
-                <div class="s-info">
-                    <div class="s-val">{{ razorpayPayments.length }}</div>
-                    <div class="s-label">Total Top-ups</div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="s-icon purple"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-                <div class="s-info">
-                    <div class="s-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</div>
-                    <div class="s-label">Dispute Deductions</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Top-up Form -->
-        <div id="topup-form" class="form-card">
-            <div class="card-header">
-                <h3>Add Funds to Wallet</h3>
-                <p class="card-sub">Pay securely through Vexaro Razorpay checkout. Wallet credit is applied only after verified captured payment.</p>
-            </div>
-
-            @if (topupSuccess) {
-            <div style="display:flex;align-items:center;gap:10px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:14px;font-weight:500;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                {{ topupSuccess }}
-            </div>
-            }
-            @if (topupError) {
-            <div style="display:flex;align-items:center;gap:10px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:14px;font-weight:500;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                {{ topupError }}
-            </div>
-            }
-
-            <label class="form-label">Select Amount</label>
-            <div class="packages-grid">
-                @for (pkg of packages; track pkg) {
-                <button class="pkg-chip" [class.selected]="selectedPackage === pkg" (click)="selectPackage(pkg)">
-                    ₹{{ pkg.toLocaleString('en-IN') }}
-                </button>
-                }
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Payment Method</label>
-                    <select [(ngModel)]="topUpMethod" name="method">
-                        <option value="checkout">Razorpay Checkout</option>
-                        <option value="upi_qr">UPI / QR via Razorpay</option>
-                    </select>
-                </div>
-            </div>
-
-            @if (selectedPackage) {
-            <div class="selected-preview">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                Paying <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via <strong>{{ topUpMethod === 'upi_qr' ? 'UPI / QR via Razorpay' : 'Razorpay Checkout' }}</strong>
-            </div>
-            }
-
-            <div class="form-actions">
-                <button class="btn-submit" (click)="submitTopUp()" [disabled]="!selectedPackage || isPaymentProcessing">
-                    @if (isPaymentProcessing) {
-                    <span style="display:inline-block;width:15px;height:15px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
-                    Opening Razorpay…
-                    } @else {
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Pay with Razorpay
-                    }
-                </button>
-            </div>
-
-            <!-- Razorpay trust badge -->
-            <div style="display:flex;align-items:center;gap:8px;margin-top:18px;font-size:12px;color:#94a3b8;font-weight:500;">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#072654"/><path d="M9.5 7L15.5 12L9.5 17" stroke="#3395FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Secured by Razorpay · 256-bit SSL encryption
-            </div>
-        </div>
-
-        }
-
-        <!-- ====================== TAB 2: TRANSACTION HISTORY ====================== -->
-        @if (activeTab === 'transactions') {
-        <div class="table-card">
-            <div class="card-header">
-                <h3>Transaction History</h3>
-                <p class="card-sub">Complete log of all credits and debits on your wallet</p>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Txn ID</th>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Reference</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (txn of transactions; track txn.id) {
-                    <tr>
-                        <td class="id-cell">{{ txn.id }}</td>
-                        <td class="date-cell">{{ txn.date }}</td>
-                        <td>{{ txn.description }}</td>
-                        <td>
-                            <span class="type-badge" [class.credit]="txn.type === 'credit'" [class.debit]="txn.type === 'debit'">
-                                @if (txn.type === 'credit') {
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                                } @else {
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                                }
-                                {{ txn.type === 'credit' ? 'Credit' : 'Debit' }}
-                            </span>
-                        </td>
-                        <td [class.credit-amt]="txn.type === 'credit'" [class.debit-amt]="txn.type === 'debit'" class="amount-cell">
-                            {{ txn.type === 'credit' ? '+' : '-' }}₹{{ txn.amount.toLocaleString('en-IN') }}
-                        </td>
-                        <td class="id-cell">{{ txn.reference }}</td>
-                        <td>
-                            <span class="status-badge" [class.success]="txn.status === 'Success'" [class.pending]="txn.status === 'Pending'" [class.failed]="txn.status === 'Failed'">
-                                {{ txn.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        }
-
-        <!-- ====================== TAB 3: RECHARGE REQUESTS (Refund Requests) ====================== -->
-        @if (activeTab === 'requests') {
-        <div class="table-card">
-            <div class="card-header-row">
-                <div>
-                    <h3>Refund Requests</h3>
-                    <p class="card-sub">Refund requests submitted to your distributor for shipment issues</p>
-                </div>
-                <button class="add-btn" (click)="openRefundForm()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> New Request
-                </button>
-            </div>
-
-            @if (refundRequestsLoading) {
-            <div style="padding:32px;text-align:center;color:#64748b;font-size:14px;">Loading refund requests…</div>
-            } @else if (refundRequests.length === 0) {
-            <div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">
-                <p>No refund requests yet.</p>
-                <button class="add-btn" (click)="openRefundForm()" style="margin-top:12px;">Submit a Refund Request</button>
-            </div>
-            } @else {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Date</th>
-                        <th>AWB</th>
-                        <th>Amount</th>
-                        <th>Reason</th>
-                        <th>Review Note</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (req of refundRequests; track req.id) {
-                    <tr>
-                        <td class="id-cell" style="font-size:11px;">{{ req.id }}</td>
-                        <td class="date-cell">{{ req.date }}</td>
-                        <td class="awb-cell">{{ req.awb }}</td>
-                        <td class="credit-amt amount-cell">₹{{ req.amount.toLocaleString('en-IN') }}</td>
-                        <td style="max-width:180px;white-space:normal;font-size:13px;">{{ req.reason }}</td>
-                        <td class="note-cell" style="max-width:140px;white-space:normal;">{{ req.reviewNote }}</td>
-                        <td>
-                            <span class="status-badge"
-                                [class.success]="req.status === 'APPROVED'"
-                                [class.pending]="req.status === 'PENDING'"
-                                [class.failed]="req.status === 'REJECTED'">
-                                {{ req.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-            }
-        </div>
-        }
-
-        <!-- ====================== TAB 4: REFUND HISTORY ====================== -->
-        @if (activeTab === 'refunds') {
-        <div class="table-card">
-            <div class="card-header-row">
-                <div>
-                    <h3>Refund History</h3>
-                    <p class="card-sub">All refund requests and their approval status</p>
-                </div>
-                <button class="add-btn" (click)="openRefundForm()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Submit Request
-                </button>
-            </div>
-
-            @if (refundRequestsLoading) {
-            <div style="padding:32px;text-align:center;color:#64748b;font-size:14px;">Loading…</div>
-            } @else if (refundRequests.length === 0) {
-            <div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No refund requests found.</div>
-            } @else {
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Date</th>
-                        <th>AWB Number</th>
-                        <th>Amount</th>
-                        <th>Reason</th>
-                        <th>Review Note</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (r of refundRequests; track r.id) {
-                    <tr>
-                        <td class="id-cell" style="font-size:11px;">{{ r.id }}</td>
-                        <td class="date-cell">{{ r.date }}</td>
-                        <td class="awb-cell">{{ r.awb }}</td>
-                        <td class="credit-amt amount-cell">₹{{ r.amount.toLocaleString('en-IN') }}</td>
-                        <td style="max-width:180px;white-space:normal;font-size:13px;">{{ r.reason }}</td>
-                        <td class="note-cell" style="max-width:160px;white-space:normal;">{{ r.reviewNote }}</td>
-                        <td>
-                            <span class="status-badge"
-                                [class.success]="r.status === 'APPROVED'"
-                                [class.pending]="r.status === 'PENDING'"
-                                [class.failed]="r.status === 'REJECTED'">
-                                {{ r.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-            }
-        </div>
-        }
-
-        <!-- ====================== TAB 5: WEIGHT DISPUTE DEDUCTIONS ====================== -->
-        @if (activeTab === 'disputes') {
-
-        <div class="info-notice">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <span>Weight dispute deductions are applied when the actual shipment weight differs from the declared weight. <strong>Disputed</strong> entries can be raised as a support ticket.</span>
-        </div>
-
-        <div class="table-card">
-            <div class="card-header-row">
-                <div>
-                    <h3>Weight Dispute Deductions</h3>
-                    <p class="card-sub">Charges applied due to weight discrepancies on your shipments</p>
-                </div>
-                <div class="dispute-summary">
-                    <span class="dispute-total-label">Total Deducted</span>
-                    <span class="dispute-total-val">₹{{ totalDisputeDeductions.toLocaleString('en-IN') }}</span>
-                </div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Dispute ID</th>
-                        <th>Date</th>
-                        <th>AWB Number</th>
-                        <th>Billed Weight</th>
-                        <th>Actual Weight</th>
-                        <th>Difference</th>
-                        <th>Deduction</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (d of disputes; track d.id) {
-                    <tr>
-                        <td class="id-cell">{{ d.id }}</td>
-                        <td class="date-cell">{{ d.date }}</td>
-                        <td class="awb-cell">{{ d.awb }}</td>
-                        <td>{{ d.billedWeight }} kg</td>
-                        <td>{{ d.actualWeight }} kg</td>
-                        <td class="diff-cell">+{{ d.difference }} kg</td>
-                        <td class="debit-amt amount-cell">-₹{{ d.deduction.toLocaleString('en-IN') }}</td>
-                        <td>
-                            <span class="status-badge"
-                                [class.applied]="d.status === 'Applied'"
-                                [class.pending]="d.status === 'Disputed'"
-                                [class.success]="d.status === 'Resolved'">
-                                {{ d.status }}
-                            </span>
-                        </td>
-                        <td>
-                            @if (d.status === 'Applied') {
-                            <button class="contest-btn" (click)="openContest(d)">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Contest
-                            </button>
-                            } @else if (d.status === 'Disputed') {
-                            <span class="disputed-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Under Review</span>
-                            } @else {
-                            <span class="resolved-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Resolved</span>
-                            }
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        }
-
-        <!-- ====================== TAB 6: RAZORPAY PAYMENTS ====================== -->
-        @if (activeTab === 'payments') {
-        <div class="table-card">
-            <div class="card-header-row">
-                <div>
-                    <h3>Razorpay Payment History</h3>
-                    <p class="card-sub">All wallet top-up attempts via Razorpay</p>
-                </div>
-                <!-- Filter dropdown -->
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <select [(ngModel)]="paymentsFilter" (change)="applyPaymentsFilter()"
-                        style="border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:13px;outline:none;color:#374151;background:#f8fafc;">
-                        <option value="">All Statuses</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="SUCCESS">Success</option>
-                        <option value="FAILED">Failed</option>
-                        <option value="REFUNDED">Refunded</option>
-                    </select>
-                </div>
-            </div>
-
-            @if (paymentsLoading) {
-            <div style="display:flex;align-items:center;gap:10px;padding:32px 16px;color:#64748b;font-size:14px;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.2em;height:1.2em;animation:spin 0.7s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                Loading payments…
-            </div>
-            } @else if (razorpayPayments.length === 0) {
-            <div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:12px;color:#94a3b8;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:2.5em;height:2.5em;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                <p style="margin:0;font-size:14px;">No payments found. Go to <strong>Current Balance</strong> to make your first top-up.</p>
-            </div>
-            } @else {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Method</th>
-                        <th>Payment ID</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (p of razorpayPayments; track p.id) {
-                    <tr>
-                        <td class="id-cell" style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">{{ p.razorpayOrderId }}</td>
-                        <td class="date-cell">{{ p.date }}</td>
-                        <td class="amount-cell" [class.credit-amt]="p.status === 'SUCCESS'">
-                            ₹{{ p.amount.toLocaleString('en-IN') }}
-                        </td>
-                        <td>
-                            @if (p.method) {
-                            <span class="method-badge">{{ p.method | uppercase }}</span>
-                            } @else {
-                            <span style="color:#94a3b8">—</span>
-                            }
-                        </td>
-                        <td class="id-cell" style="font-size:11px;">{{ p.razorpayPaymentId || '—' }}</td>
-                        <td>
-                            <span class="status-badge"
-                                [class.success]="p.status === 'SUCCESS'"
-                                [class.pending]="p.status === 'PENDING'"
-                                [class.failed]="p.status === 'FAILED'"
-                                [class.applied]="p.status === 'REFUNDED'">
-                                {{ p.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-
-            <!-- Pagination -->
-            @if (paymentsTotalPages > 1) {
-            <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding-top:20px;">
-                <button (click)="prevPaymentsPage()" [disabled]="paymentsPage === 1"
-                    style="border:1.5px solid #e2e8f0;background:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:rgb(11,74,111);cursor:pointer;"
-                    [style.opacity]="paymentsPage === 1 ? '0.4' : '1'">
-                    ← Prev
-                </button>
-                <span style="font-size:13px;color:#64748b;font-weight:500;">Page {{ paymentsPage }} of {{ paymentsTotalPages }}</span>
-                <button (click)="nextPaymentsPage()" [disabled]="paymentsPage === paymentsTotalPages"
-                    style="border:1.5px solid #e2e8f0;background:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:rgb(11,74,111);cursor:pointer;"
-                    [style.opacity]="paymentsPage === paymentsTotalPages ? '0.4' : '1'">
-                    Next →
-                </button>
-            </div>
-            }
-            }
-        </div>
-        }
-
+    @if (selectedPackage) {
+    <div class="selected-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      You are paying <strong>₹{{ selectedPackage.toLocaleString('en-IN') }}</strong> via Razorpay
     </div>
-</div>
+    }
 
-<!-- ====================== SUBMIT REFUND REQUEST MODAL ====================== -->
-@if (showRefundForm) {
-<div class="modal-overlay" (click)="closeRefundForm()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-
-        <div class="modal-header">
-            <div class="modal-title-group">
-                <div class="modal-icon" style="background:#eff6ff;color:rgb(11,74,111);">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;display:inline-block;vertical-align:middle;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
-                </div>
-                <div>
-                    <h3>Submit Refund Request</h3>
-                    <p class="modal-sub">Raise a refund request for a shipment issue</p>
-                </div>
-            </div>
-            <button class="modal-close-btn" (click)="closeRefundForm()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-
-        <div class="modal-body">
-            @if (refundFormSuccess) {
-            <div style="background:#dcfce7;color:#15803d;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                {{ refundFormSuccess }}
-            </div>
-            }
-            @if (refundFormError) {
-            <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                {{ refundFormError }}
-            </div>
-            }
-
-            <div class="modal-field">
-                <label>Shipment ID <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="newRefund.shipmentId" name="shipmentId"
-                    placeholder="Paste the MongoDB shipment _id" />
-            </div>
-
-            <div class="modal-field">
-                <label>Refund Amount (₹) <span class="req">*</span></label>
-                <input type="number" [(ngModel)]="newRefund.amount" name="refundAmount"
-                    min="1" placeholder="e.g. 500" />
-            </div>
-
-            <div class="modal-field">
-                <label>Reason <span class="req">*</span></label>
-                <textarea [(ngModel)]="newRefund.reason" name="refundReason" rows="3"
-                    placeholder="Describe the issue (e.g. Shipment was damaged, wrong delivery, COD mismatch…)"></textarea>
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button class="btn-cancel" (click)="closeRefundForm()">Cancel</button>
-            <button class="btn-submit" (click)="submitRefundRequest()" [disabled]="refundSubmitting">
-                @if (refundSubmitting) {
-                <span style="display:inline-block;width:14px;height:14px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
-                Submitting…
-                } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                Submit Request
-                }
-            </button>
-        </div>
-
+    <div class="form-actions">
+      <button class="btn-submit" (click)="submitTopUp()" [disabled]="!selectedPackage || isPaymentProcessing">
+        @if (isPaymentProcessing) {
+        <span style="display:inline-block;width:15px;height:15px;border:2.5px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></span> Opening Razorpay…
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Pay with Razorpay
+        }
+      </button>
     </div>
-</div>
-}
-
-<!-- ====================== CONTEST DISPUTE MODAL ====================== -->
-@if (showContestModal && contestingDispute) {
-<div class="modal-overlay" (click)="closeContest()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-
-        <div class="modal-header">
-            <div class="modal-title-group">
-                <div class="modal-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
-                <div>
-                    <h3>Contest Weight Dispute</h3>
-                    <p class="modal-sub">AWB: <strong>{{ contestingDispute.awb }}</strong> &nbsp;|&nbsp; Deduction: <strong class="red-text">-₹{{ contestingDispute.deduction }}</strong></p>
-                </div>
-            </div>
-            <button class="modal-close-btn" (click)="closeContest()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-        </div>
-
-        <div class="modal-body">
-
-            <!-- Dispute Details Summary -->
-            <div class="dispute-detail-row">
-                <div class="detail-chip">
-                    <span class="chip-label">Billed Weight</span>
-                    <span class="chip-val">{{ contestingDispute.billedWeight }} kg</span>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="chip-arrow svg-icon"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                <div class="detail-chip red">
-                    <span class="chip-label">Actual (Charged)</span>
-                    <span class="chip-val">{{ contestingDispute.actualWeight }} kg</span>
-                </div>
-                <div class="detail-chip amber">
-                    <span class="chip-label">Difference</span>
-                    <span class="chip-val">+{{ contestingDispute.difference }} kg</span>
-                </div>
-            </div>
-
-            <!-- Description -->
-            <div class="modal-field">
-                <label>Describe the Issue <span class="req">*</span></label>
-                <textarea
-                    [(ngModel)]="contestNote"
-                    name="contestNote"
-                    rows="4"
-                    placeholder="e.g. The actual package weight was 0.5 kg as stated. Please refer to the attached photos of the parcel label and weighing scale.">
-                </textarea>
-            </div>
-
-            <!-- File Upload -->
-            <div class="modal-field">
-                <label>Attach Evidence <span class="label-hint">(photos, invoice, scale screenshot)</span></label>
-                <div class="upload-zone">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path><polyline points="12 12 12 16"></polyline><polyline points="9 13 12 10 15 13"></polyline></svg>
-                    <span>Drag &amp; drop files or <label class="upload-link">browse<input type="file" multiple accept="image/*,.pdf" (change)="onFileChange($event)" hidden /></label></span>
-                    <span class="upload-hint">Supported: JPG, PNG, PDF &mdash; Max 5MB each</span>
-                </div>
-                @if (selectedFileNames.length > 0) {
-                <ul class="file-list">
-                    @for (name of selectedFileNames; track name) {
-                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="9.5" cy="11.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> {{ name }}</li>
-                    }
-                </ul>
-                }
-            </div>
-
-        </div>
-
-        <div class="modal-footer">
-            <button class="btn-cancel" (click)="closeContest()">Cancel</button>
-            <button class="btn-submit" (click)="submitContest()" [disabled]="!contestNote.trim()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Submit Dispute to Distributor
-            </button>
-        </div>
-
+    <div style="display:flex;align-items:center;gap:8px;margin-top:18px;font-size:12px;color:#94a3b8;font-weight:500;">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#072654"/><path d="M9.5 7L15.5 12L9.5 17" stroke="#3395FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Secured by Razorpay · 256-bit SSL encryption
     </div>
-</div>
-}
+  </div>
+  }
+
+  <!-- ===== TAB: TRANSACTIONS ===== -->
+  @if (activeTab === 'transactions') {
+  <div class="table-card">
+    <div class="card-header"><h3>Transaction History</h3><p class="card-sub">All wallet credits and debits</p></div>
+    @if (txLoading) { <div class="loading-row"><span class="mini-spin"></span> Loading…</div> }
+    @else if (transactions.length === 0) { <div class="empty-msg">No transactions yet.</div> }
+    @else {
+    <div class="table-wrapper">
+      <table><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Reference</th></tr></thead>
+        <tbody>
+          @for (t of transactions; track t.id) {
+          <tr>
+            <td class="date-cell">{{ t.date }}</td>
+            <td>{{ t.description }}</td>
+            <td><span class="type-badge" [class.credit]="t.type==='credit'" [class.debit]="t.type==='debit'">{{ t.type === 'credit' ? '↓ Credit' : '↑ Debit' }}</span></td>
+            <td class="amount-cell" [class.credit-amt]="t.type==='credit'" [class.debit-amt]="t.type==='debit'">{{ t.type === 'credit' ? '+' : '-' }}₹{{ t.amount.toLocaleString('en-IN') }}</td>
+            <td class="date-cell">{{ t.reference }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ===== TAB: REQUEST FROM DISTRIBUTOR ===== -->
+  @if (activeTab === 'dist-request') {
+  <div class="form-card">
+    <div class="card-header">
+      <h3>Request Wallet Top-up from Distributor</h3>
+      <p class="card-sub">Your distributor will receive a notification and can approve the transfer directly from their wallet.</p>
+    </div>
+
+    @if (distRequestSuccess) {
+    <div class="alert-success-box"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{{ distRequestSuccess }}</div>
+    }
+    @if (distRequestError) {
+    <div class="alert-error-box"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>{{ distRequestError }}</div>
+    }
+
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label">Amount (₹) <span style="color:#ef4444;">*</span></label>
+        <input type="number" [(ngModel)]="distRequestAmount" min="1" placeholder="e.g. 5000" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (optional)</label>
+        <input type="text" [(ngModel)]="distRequestNote" placeholder="e.g. Low balance, need recharge" class="form-input" />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-submit" (click)="submitDistributorRequest()" [disabled]="!distRequestAmount || distRequestAmount <= 0 || distRequestSubmitting">
+        @if (distRequestSubmitting) { <span class="mini-spin white"></span> Sending… }
+        @else { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Request to Distributor }
+      </button>
+    </div>
+  </div>
+
+  <!-- My request history -->
+  @if (distRequestsLoading) { <div class="loading-row" style="margin-top:20px;"><span class="mini-spin"></span> Loading requests…</div> }
+  @else if (distributorRequests.length > 0) {
+  <div class="table-card" style="margin-top:20px;">
+    <div class="card-header"><h3>My Top-up Requests</h3><p class="card-sub">Requests sent to your distributor</p></div>
+    <div class="table-wrapper">
+      <table><thead><tr><th>Date</th><th>Amount</th><th>Note</th><th>Status</th><th>Reason</th></tr></thead>
+        <tbody>
+          @for (r of distributorRequests; track r.id) {
+          <tr>
+            <td class="date-cell">{{ r.date }}</td>
+            <td class="amount-cell credit-amt">₹{{ r.amount.toLocaleString('en-IN') }}</td>
+            <td>{{ r.note }}</td>
+            <td><span class="status-badge" [class.success]="r.status==='APPROVED'" [class.pending]="r.status==='PENDING'" [class.failed]="r.status==='REJECTED'">{{ r.status }}</span></td>
+            <td class="date-cell">{{ r.rejectionReason !== '—' ? r.rejectionReason : '' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+  }
+
+  <!-- ===== TAB: REFUND REQUESTS ===== -->
+  @if (activeTab === 'requests') {
+  <div class="form-card">
+    <div class="card-header-row">
+      <div><h3>Refund Requests</h3><p class="card-sub">Submit a refund for a shipment dispute</p></div>
+      <button class="btn-primary-sm" (click)="openRefundForm()">+ New Request</button>
+    </div>
+    @if (showRefundForm) {
+    <div class="inline-form">
+      @if (refundFormSuccess) { <div class="alert-success-box">{{ refundFormSuccess }}</div> }
+      @if (refundFormError) { <div class="alert-error-box">{{ refundFormError }}</div> }
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Shipment ID</label><input type="text" [(ngModel)]="newRefund.shipmentId" placeholder="Shipment ObjectId" class="form-input"/></div>
+        <div class="form-group"><label class="form-label">Amount (₹)</label><input type="number" [(ngModel)]="newRefund.amount" placeholder="e.g. 250" class="form-input" min="1"/></div>
+        <div class="form-group"><label class="form-label">Reason</label><input type="text" [(ngModel)]="newRefund.reason" placeholder="Brief description" class="form-input"/></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-submit" style="flex:1;" (click)="submitRefundRequest()" [disabled]="refundSubmitting">{{ refundSubmitting ? 'Submitting…' : 'Submit' }}</button>
+        <button class="btn-cancel" (click)="closeRefundForm()">Cancel</button>
+      </div>
+    </div>
+    }
+    @if (refundRequestsLoading) { <div class="loading-row"><span class="mini-spin"></span> Loading…</div> }
+    @else if (refundRequests.length === 0) { <div class="empty-msg">No refund requests yet.</div> }
+    @else {
+    <div class="table-wrapper" style="margin-top:16px;">
+      <table><thead><tr><th>Date</th><th>AWB</th><th>Amount</th><th>Reason</th><th>Status</th><th>Review Note</th></tr></thead>
+        <tbody>
+          @for (r of refundRequests; track r.id) {
+          <tr>
+            <td class="date-cell">{{ r.date }}</td>
+            <td><code>{{ r.awb }}</code></td>
+            <td class="amount-cell credit-amt">₹{{ r.amount.toLocaleString('en-IN') }}</td>
+            <td>{{ r.reason }}</td>
+            <td><span class="status-badge" [class.success]="r.status==='APPROVED'" [class.pending]="r.status==='PENDING'" [class.failed]="r.status==='REJECTED'">{{ r.status }}</span></td>
+            <td class="date-cell">{{ r.reviewNote }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ===== TAB: WEIGHT DISPUTES ===== -->
+  @if (activeTab === 'disputes') {
+  <div class="table-card">
+    <div class="card-header"><h3>Weight Disputes</h3><p class="card-sub">Courier-reported weight discrepancies on your shipments</p></div>
+    @if (disputes.length === 0) { <div class="empty-msg">No weight disputes found.</div> }
+    @else {
+    <div class="table-wrapper">
+      <table><thead><tr><th>Date</th><th>AWB</th><th>Billed</th><th>Actual</th><th>Diff</th><th>Deduction</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          @for (d of disputes; track d.id) {
+          <tr>
+            <td class="date-cell">{{ d.date }}</td>
+            <td><code>{{ d.awb }}</code></td>
+            <td>{{ d.billedWeight }} kg</td>
+            <td>{{ d.actualWeight }} kg</td>
+            <td style="color:#c2410c;font-weight:600;">+{{ d.difference }} kg</td>
+            <td style="color:#b91c1c;font-weight:700;">₹{{ d.deduction.toLocaleString('en-IN') }}</td>
+            <td><span class="status-badge" [class.failed]="d.status==='Applied'" [class.pending]="d.status==='Open'">{{ d.status }}</span></td>
+            <td>
+              @if (d.status === 'Open') {
+              <button class="btn-primary-sm" (click)="openContest(d)">Contest</button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ===== TAB: PAYMENTS ===== -->
+  @if (activeTab === 'payments') {
+  <div class="table-card">
+    <div class="card-header-row">
+      <div><h3>Razorpay Payments</h3><p class="card-sub">All top-up payment attempts</p></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <select [(ngModel)]="paymentsFilter" (change)="applyPaymentsFilter()" class="filter-select">
+          <option value="">All Statuses</option>
+          <option value="SUCCESS">Success</option>
+          <option value="PENDING">Pending</option>
+          <option value="FAILED">Failed</option>
+          <option value="REFUNDED">Refunded</option>
+        </select>
+      </div>
+    </div>
+    @if (paymentsLoading) { <div class="loading-row"><span class="mini-spin"></span> Loading…</div> }
+    @else if (razorpayPayments.length === 0) { <div class="empty-msg">No payment records found.</div> }
+    @else {
+    <div class="table-wrapper">
+      <table><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Order ID</th><th>Payment ID</th><th>Status</th></tr></thead>
+        <tbody>
+          @for (p of razorpayPayments; track p.id) {
+          <tr>
+            <td class="date-cell">{{ p.date }}</td>
+            <td class="amount-cell" [class.credit-amt]="p.status==='SUCCESS'">₹{{ p.amount.toLocaleString('en-IN') }}</td>
+            <td>{{ p.method || '—' }}</td>
+            <td class="id-cell">{{ p.razorpayOrderId }}</td>
+            <td class="id-cell">{{ p.razorpayPaymentId || '—' }}</td>
+            <td><span class="status-badge" [class.success]="p.status==='SUCCESS'" [class.pending]="p.status==='PENDING'" [class.failed]="p.status==='FAILED'" [class.refunded]="p.status==='REFUNDED'">{{ p.status }}</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (paymentsTotalPages > 1) {
+    <div class="pagination">
+      <button class="page-btn" (click)="prevPaymentsPage()" [disabled]="paymentsPage===1">← Prev</button>
+      <span class="page-info">Page {{ paymentsPage }} of {{ paymentsTotalPages }}</span>
+      <button class="page-btn" (click)="nextPaymentsPage()" [disabled]="paymentsPage===paymentsTotalPages">Next →</button>
+    </div>
+    }
+    }
+  </div>
+  }
+
+  <!-- ===== CONTEST MODAL ===== -->
+  @if (showContestModal && contestingDispute) {
+  <div style="position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:white;border-radius:16px;padding:28px;width:500px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+      <h3 style="margin:0 0 4px;font-size:18px;">Contest Deduction</h3>
+      <p style="margin:0 0 20px;font-size:13px;color:#64748b;">AWB: <code>{{ contestingDispute.awb }}</code> · ₹{{ contestingDispute.deduction }}</p>
+      @if (contestError) { <div class="alert-error-box">{{ contestError }}</div> }
+      @if (contestSuccess) { <div class="alert-success-box">{{ contestSuccess }}</div> }
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Why is this incorrect? *</label>
+        <textarea [(ngModel)]="contestNote" rows="3" placeholder="Describe the issue…" style="width:100%;border:1px solid #dbe2ea;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Proof Images (optional)</label>
+        <input type="file" multiple accept="image/*" (change)="onFileChange($event)" style="font-size:13px;"/>
+        @for (f of selectedFileNames; track f) { <div style="font-size:12px;color:#64748b;">{{ f }}</div> }
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-submit" style="flex:1;" (click)="submitContest()">Submit Proof</button>
+        <button class="btn-cancel" (click)="closeContest()">Cancel</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  </div><!-- end .tab-body -->
+</div><!-- end .wallet-page -->
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.mini-spin { display:inline-block;width:14px;height:14px;border:2.5px solid #cbd5e1;border-top-color:rgb(11,74,111);border-radius:50%;animation:spin 0.7s linear infinite; }
+.mini-spin.white { border-color:rgba(255,255,255,0.35);border-top-color:white; }
+.alert-success-box { display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-size:13px;color:#15803d;margin-bottom:14px; }
+.alert-error-box { display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:13px;color:#b91c1c;margin-bottom:14px; }
+.loading-row { display:flex;align-items:center;gap:10px;padding:30px;color:#64748b;font-size:14px; }
+.empty-msg { padding:40px;text-align:center;color:#94a3b8;font-size:14px; }
+.form-row-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+.form-row-3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px; }
+.form-input { width:100%;padding:10px 14px;border:1px solid #dbe2ea;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;transition:.2s; }
+.form-input:focus { border-color:rgb(11,74,111);box-shadow:0 0 0 3px rgba(11,74,111,0.1); }
+.inline-form { background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px; }
+.btn-cancel { padding:10px 20px;border:1.5px solid #e2e8f0;background:white;color:#374151;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer; }
+.btn-primary-sm { padding:7px 14px;background:rgb(11,74,111);color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer; }
+.filter-select { padding:8px 12px;border:1px solid #dbe2ea;border-radius:8px;font-size:13px;outline:none;background:#f8fafc; }
+.id-cell { font-family:monospace;font-size:11px;color:#64748b; }
+</style>
