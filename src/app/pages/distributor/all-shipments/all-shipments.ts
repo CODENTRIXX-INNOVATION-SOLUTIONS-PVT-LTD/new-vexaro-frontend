@@ -22,14 +22,14 @@ interface ShipmentRow {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  ORDER_CREATED:    'Pending',
-  PICKED_UP:        'Picked Up',
-  ARRIVED_AT_HUB:   'At Hub',
+  ORDER_CREATED: 'Pending',
+  PICKED_UP: 'Picked Up',
+  ARRIVED_AT_HUB: 'At Hub',
   OUT_FOR_DELIVERY: 'Out for Delivery',
-  DELIVERED:        'Delivered',
-  DELIVERY_FAILED:  'Failed',
-  RTO:              'RTO',
-  CANCELLED:        'Cancelled',
+  DELIVERED: 'Delivered',
+  DELIVERY_FAILED: 'Failed',
+  RTO: 'RTO',
+  CANCELLED: 'Cancelled',
 };
 
 @Component({
@@ -41,23 +41,23 @@ const STATUS_LABELS: Record<string, string> = {
 })
 export class AllShipments implements OnInit {
   private shipmentService = inject(ShipmentService);
-  private csvService      = inject(CsvExportService);
-  private route           = inject(ActivatedRoute);
-  private router          = inject(Router);
+  private csvService = inject(CsvExportService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   shipments: ShipmentRow[] = [];
-  isLoading  = false;
-  error      = '';
+  isLoading = false;
+  error = '';
 
   // Filters
-  searchTerm    = '';
-  statusFilter  = '';
+  searchTerm = '';
+  statusFilter = '';
   merchantFilterId = '';   // pre-filled when coming from a merchant profile
 
   // Pagination
-  page        = 1;
+  page = 1;
   readonly limit = 20;
-  total       = 0;
+  total = 0;
 
   get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
@@ -75,34 +75,34 @@ export class AllShipments implements OnInit {
 
   loadShipments(): void {
     this.isLoading = true;
-    this.error     = '';
+    this.error = '';
 
     const params: any = { page: this.page, limit: this.limit };
-    if (this.statusFilter)    params.status   = this.statusFilter;
+    if (this.statusFilter) params.status = this.statusFilter;
     if (this.merchantFilterId) params.merchant = this.merchantFilterId;
 
     this.shipmentService.listShipments(params).subscribe({
       next: (res) => {
         this.total = res?.meta?.total ?? 0;
         this.shipments = (res?.data?.shipments ?? []).map((s: any): ShipmentRow => ({
-          id:          s._id,
-          awb:         s.awb,
+          id: s._id,
+          awb: s.awb,
           merchantName: s.merchantId?.companyName ?? s.merchantId?.firstName ?? '—',
-          dest:        `${s.destination?.city ?? '—'}, ${s.destination?.state ?? ''}`.replace(/,\s*$/, ''),
+          dest: `${s.destination?.city ?? '—'}, ${s.destination?.state ?? ''}`.replace(/,\s*$/, ''),
           destPincode: s.destination?.pincode ?? '—',
-          status:      STATUS_LABELS[s.status] ?? s.status,
-          rawStatus:   s.status,
+          status: STATUS_LABELS[s.status] ?? s.status,
+          rawStatus: s.status,
           paymentType: s.isCOD ? 'COD' : 'Prepaid',
-          codAmount:   s.codAmount ?? 0,
-          weight:      s.weight ?? 0,
-          amount:      s.merchantCost ?? 0,
-          carrier:     s.carrier ?? '—',
-          date:        new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          codAmount: s.codAmount ?? 0,
+          weight: s.weight ?? 0,
+          amount: s.merchantCost ?? 0,
+          carrier: s.carrier ?? '—',
+          date: new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
         }));
         this.isLoading = false;
       },
       error: (err) => {
-        this.error     = err?.error?.message || 'Failed to load shipments.';
+        this.error = err?.error?.message || 'Failed to load shipments.';
         this.isLoading = false;
       },
     });

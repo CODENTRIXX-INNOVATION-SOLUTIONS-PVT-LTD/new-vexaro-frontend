@@ -68,6 +68,23 @@
     outline: none;
     font-size: 14px;
     width: 100%;
+    flex: 1;
+}
+
+.search-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.search-btn:hover {
+    background: #4f46e5;
 }
 
 .table-card {

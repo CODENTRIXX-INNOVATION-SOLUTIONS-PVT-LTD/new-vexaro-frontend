@@ -96,16 +96,11 @@
               </button>
             </div>
           } @else {
-            <div class="form-group">
-              <label>Add Reply / Comment</label>
-              <textarea [(ngModel)]="remarks" rows="4" placeholder="Enter remarks to reply to this dispute..."></textarea>
-            </div>
-            
-            <div class="action-footer" style="margin-top: 15px;">
-              <button class="btn-primary" [disabled]="!remarks.trim() || isSubmitting" (click)="submitAction()">
-                @if (isSubmitting) { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Posting... }
-                @else { Post Reply }
-              </button>
+            <!-- Distributor: read-only view — dispute resolution is handled by Super Admin -->
+            <div class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.8em; height: 1.8em; display: inline-block; vertical-align: middle;" class="text-muted svg-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <h3 style="margin: 12px 0 6px;">Awaiting Admin Review</h3>
+              <p style="color: #64748b; font-size: 14px;">This dispute is under review by the Super Admin. You will be notified once a resolution is applied.</p>
             </div>
           }
         </div>

@@ -34,7 +34,6 @@ export class DistributorDashboard {
       expanded: false,
       children: [
         { label: 'AWB Search', route: '/distributor/tracking/search' },
-        { label: 'Live Tracking', route: '/distributor/tracking/live' },
         { label: 'Tracking History', route: '/distributor/tracking/history' }
       ]
     },
@@ -43,7 +42,6 @@ export class DistributorDashboard {
       icon: 'fa-money-bill-wave',
       expanded: false,
       children: [
-        // { label: 'Fund Merchant Wallet', route: '/distributor/merchant-finance/topup' },
         { label: 'Merchant Wallets', route: '/distributor/merchant-finance/wallets' },
         { label: 'Merchant Transactions', route: '/distributor/merchant-finance/transactions' }
       ]
@@ -53,8 +51,7 @@ export class DistributorDashboard {
       icon: 'fa-wallet',
       expanded: false,
       children: [
-        { label: 'My Wallet (Razorpay)', route: '/distributor/wallet' },
-        // { label: 'My Wallet', route: '/distributor/finance/wallet' },
+        { label: 'My Wallet', route: '/distributor/wallet' },
         { label: 'Transactions', route: '/distributor/finance/transactions' },
         { label: 'Settlements', route: '/distributor/finance/settlements' }
       ]
@@ -82,11 +79,10 @@ export class DistributorDashboard {
       icon: 'fa-chart-line',
       expanded: false,
       children: [
+        { label: 'Shipment Reports', route: '/distributor/reports/shipment-reports' },
         { label: 'Merchant Revenue', route: '/distributor/reports/merchant-revenue' },
         { label: 'Profit Analysis', route: '/distributor/reports/profit' },
-        { label: 'Shipment Reports', route: '/distributor/reports/shipment-reports' },
-        { label: 'Dispute Reports', route: '/distributor/reports/disputes' },
-        { label: 'Business Analytics', route: '/distributor/reports/performance-analytics' }
+        { label: 'Dispute Reports', route: '/distributor/reports/disputes' }
       ]
     },
     {
@@ -95,8 +91,7 @@ export class DistributorDashboard {
       expanded: false,
       children: [
         { label: 'Tickets', route: '/distributor/support/tickets' },
-        { label: 'Create Ticket', route: '/distributor/support/create-ticket' },
-        { label: 'FAQs', route: '/distributor/support/faqs' }
+        { label: 'Create Ticket', route: '/distributor/support/create-ticket' }
       ]
     },
     {
@@ -105,8 +100,6 @@ export class DistributorDashboard {
       expanded: false,
       children: [
         { label: 'Profile', route: '/distributor/settings/profile' },
-        { label: 'Company Details', route: '/distributor/settings/company-details' },
-        // { label: 'Notifications', route: '/distributor/settings/notifications' },
         { label: 'Security', route: '/distributor/settings/security' }
       ]
     },
