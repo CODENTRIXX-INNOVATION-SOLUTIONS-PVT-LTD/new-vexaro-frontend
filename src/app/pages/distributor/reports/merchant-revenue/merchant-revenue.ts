@@ -1,18 +1,20 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { FinanceService } from '../../../../services/finance.service';
+import { HttpClient } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
 import { CsvExportService } from '../../../../shared/csv-export.service';
 
 interface MerchantRow {
   id: string;
   name: string;
   email: string;
-  walletBalance: number;
-  codEscrow: number;
-  status: string;
+  totalShipments: number;
+  delivered: number;
+  failed: number;
+  codTotal: number;
+  deliveryRate: string;
 }
 
 @Component({
@@ -20,49 +22,60 @@ interface MerchantRow {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './merchant-revenue.html',
+  styleUrl: './merchant-revenue.css',
 })
-export class MerchantRevenueReport implements OnInit {
-  private financeService = inject(FinanceService);
-  private csvService     = inject(CsvExportService);
+export class MerchantRevenueReport implements OnInit, OnDestroy {
+  private http       = inject(HttpClient);
+  private csvService = inject(CsvExportService);
+  private destroy$   = new Subject<void>();
+  private readonly base = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
 
-  isLoading   = false;
-  error       = '';
-  searchTerm  = '';
+  isLoading  = false;
+  error      = '';
+  searchTerm = '';
 
   data: MerchantRow[]         = [];
   filteredData: MerchantRow[] = [];
 
-  get totalBalance(): number { return this.data.reduce((s, d) => s + d.walletBalance, 0); }
-  get totalEscrow():  number { return this.data.reduce((s, d) => s + d.codEscrow, 0); }
-  get activeCount():  number { return this.data.filter(d => d.status === 'Active').length; }
+  get totalShipments(): number { return this.data.reduce((s, d) => s + d.totalShipments, 0); }
+  get totalDelivered(): number { return this.data.reduce((s, d) => s + d.delivered, 0); }
+  get totalCOD():       number { return this.data.reduce((s, d) => s + d.codTotal, 0); }
 
   ngOnInit(): void { this.load(); }
+  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
   load(): void {
     this.isLoading = true;
     this.error     = '';
 
-    this.financeService.listWallets({ limit: 200 }).pipe(catchError(() => of(null))).subscribe({
-      next: (res) => {
-        const wallets: any[] = res?.data?.wallets ?? [];
-        this.data = wallets
-          .filter((w: any) => w.userId?.role === 'MERCHANT')
-          .map((w: any): MerchantRow => ({
-            id:            w.userId?._id ?? w._id,
-            name:          w.userId?.companyName ?? w.userId?.firstName ?? 'Unknown',
-            email:         w.userId?.email ?? '—',
-            walletBalance: w.balance ?? 0,
-            codEscrow:     w.codEscrowBalance ?? 0,
-            status:        w.isActive === false ? 'Inactive' : 'Active',
-          }));
-        this.applyFilters();
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.error     = err?.error?.message || 'Failed to load merchant data.';
-        this.isLoading = false;
-      },
-    });
+    this.http.get<any>(`${this.base}/reports/merchant-revenue`)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.isLoading = false; }))
+      .subscribe({
+        next: (res) => {
+          // Response: { data: [ { merchant: {...}, shipments: { total, delivered, failed, codTotal } } ] }
+          const raw: any[] = res?.data ?? [];
+          this.data = raw.map((item: any): MerchantRow => {
+            const m  = item.merchant;
+            const s  = item.shipments;
+            const total = s?.total ?? 0;
+            const del   = s?.delivered ?? 0;
+            return {
+              id:             m.id ?? m._id,
+              name:           m.companyName || `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || '—',
+              email:          m.email ?? '—',
+              totalShipments: total,
+              delivered:      del,
+              failed:         s?.failed ?? 0,
+              codTotal:       s?.codTotal ?? 0,
+              deliveryRate:   total > 0 ? ((del / total) * 100).toFixed(1) + '%' : '—',
+            };
+          });
+          this.applyFilters();
+        },
+        error: (err) => {
+          this.error = err?.error?.message || 'Failed to load merchant revenue report.';
+        },
+      });
   }
 
   applyFilters(): void {
@@ -73,8 +86,10 @@ export class MerchantRevenueReport implements OnInit {
   }
 
   exportCSV(): void {
-    const headers = ['Merchant', 'Email', 'Wallet Balance', 'COD Escrow', 'Status'];
-    const rows = this.filteredData.map(d => [d.name, d.email, d.walletBalance, d.codEscrow, d.status]);
-    this.csvService.export('merchant_wallet_report', headers, rows);
+    const headers = ['Merchant', 'Email', 'Total Shipments', 'Delivered', 'Failed', 'Delivery Rate', 'COD Total'];
+    const rows = this.filteredData.map(d => [
+      d.name, d.email, d.totalShipments, d.delivered, d.failed, d.deliveryRate, d.codTotal,
+    ]);
+    this.csvService.export('merchant_revenue_report', headers, rows);
   }
 }

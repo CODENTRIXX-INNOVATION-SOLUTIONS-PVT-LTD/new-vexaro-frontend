@@ -295,25 +295,7 @@
       }
     </div>
 
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Payment Method</label>
-        <select [(ngModel)]="requestPaymentMethod" name="requestPaymentMethod">
-          <option value="UPI">UPI</option>
-          <option value="NEFT">NEFT</option>
-          <option value="IMPS">IMPS</option>
-          <option value="RTGS">RTGS</option>
-          <option value="Cash">Cash</option>
-          <option value="Cheque">Cheque</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Payment Reference ID (optional)</label>
-        <input type="text" [(ngModel)]="requestReferenceId" name="requestRef"
-          placeholder="e.g. UTR / Transaction ID" />
-      </div>
-    </div>
-
+ 
     <div class="form-actions">
       <button class="btn-submit" (click)="submitRechargeRequest()" [disabled]="!selectedPackage || requestLoading">
         @if (requestLoading) {

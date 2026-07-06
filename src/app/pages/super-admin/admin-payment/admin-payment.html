@@ -12,9 +12,7 @@
             <button class="tab-btn" [class.active]="activeTab === 'wallet'" (click)="changeTab('wallet')">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Distributor Wallets
             </button>
-            <button class="tab-btn" [class.active]="activeTab === 'recharge'" (click)="changeTab('recharge')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Transfer to Distributor
-            </button>
+        
             <button class="tab-btn" [class.active]="activeTab === 'razorpay'" (click)="changeTab('razorpay')">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" class="svg-icon"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Razorpay Payments
             </button>
@@ -75,16 +73,6 @@
                 }
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px;">
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                    <label style="font-size:13px;font-weight:600;color:#374151;">Payment Method</label>
-                    <select [(ngModel)]="adminTopupMode" name="adminTopupMode"
-                        style="border:1.5px solid #e2e8f0;border-radius:10px;padding:11px 14px;font-size:14px;outline:none;background:#f8fafc;">
-                        <option value="checkout">Razorpay Checkout (Card / UPI / Net Banking)</option>
-                        <option value="upi_qr">UPI / QR via Razorpay</option>
-                    </select>
-                </div>
-            </div>
 
             @if (adminSelectedPackage) {
             <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:13px 18px;font-size:14px;color:rgb(11,74,111);display:flex;align-items:center;gap:10px;margin-bottom:20px;">
@@ -131,7 +119,7 @@
                             <th>Last Recharge</th>
                             <th>Last Recharge Date</th>
                             <th>Status</th>
-                            <th class="text-right">Actions</th>
+                    
                         </tr>
                     </thead>
                     <tbody>
@@ -151,11 +139,6 @@
                                     [class.failed]="dist.status === 'Inactive'">
                                     {{ dist.status }}
                                 </span>
-                            </td>
-                            <td class="text-right">
-                                <button class="btn-action-primary" (click)="quickRecharge(dist.id)" [disabled]="dist.status === 'Inactive'">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Recharge
-                                </button>
                             </td>
                         </tr>
                         @if (distributors.length === 0) {
@@ -330,49 +313,6 @@
                 </div>
                 }
                 }
-            </div>
-
-            <!-- TAB 4: Transactions Log -->
-            <div class="table-card" *ngIf="activeTab === 'transactions'">
-                <div class="card-header">
-                    <h3>Wallet Transactions Log</h3>
-                    <p class="card-subtitle">History of all credit and recharge transactions across distributors</p>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Transaction ID</th>
-                            <th>Distributor</th>
-                            <th>Recharge Amount</th>
-                            <th>Payment Method</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let payment of payments">
-                            <td class="txn-cell">{{ payment.transactionId }}</td>
-                            <td class="name-cell">{{ payment.distributor }}</td>
-                            <td class="amount-cell">₹{{ payment.rechargeAmount.toLocaleString('en-IN') }}</td>
-                            <td>
-                                <span class="method-badge">{{ payment.paymentMethod }}</span>
-                            </td>
-                            <td class="date-cell">{{ payment.date }}</td>
-                            <td>
-                                <span class="badge status-badge"
-                                    [class.success]="payment.status === 'Success'"
-                                    [class.failed]="payment.status === 'Failed'">
-                                    {{ payment.status }}
-                                </span>
-                            </td>
-                        </tr>
-                        @if (payments.length === 0) {
-                        <tr>
-                            <td colspan="6" class="no-data">No transactions found</td>
-                        </tr>
-                        }
-                    </tbody>
-                </table>
             </div>
 
             <!-- TAB 4: Transactions Log -->

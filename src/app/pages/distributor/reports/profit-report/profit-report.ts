@@ -10,6 +10,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './profit-report.html',
+  styleUrl: './profit-report.css',
 })
 export class ProfitReport implements OnInit {
   private http = inject(HttpClient);

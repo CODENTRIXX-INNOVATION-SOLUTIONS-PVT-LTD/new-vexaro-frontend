@@ -14,6 +14,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './dispute-report.html',
+  styleUrl: './dispute-report.css',
 })
 export class DisputeReport implements OnInit {
   private disputeService = inject(DisputeService);
