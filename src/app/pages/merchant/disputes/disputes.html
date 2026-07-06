@@ -194,7 +194,7 @@
               <div class="image-gallery">
                 @for (img of selectedDispute()?.proofImages; track img) {
                   <div class="gallery-thumb">
-                    <img [src]="img" alt="Uploaded Proof" />
+                    <img [src]="resolveProofUrl(img)" alt="Uploaded Proof" />
                   </div>
                 }
               </div>
@@ -208,29 +208,35 @@
                 <h4>Upload Weight Verification Image</h4>
                 <p>Provide package photos showing the weight on scales alongside the AWB barcode label.</p>
                 
-                <div class="upload-dropzone" (click)="simulateFileSelect()">
+                <label class="upload-dropzone">
                   <span class="material-icons upload-icon">cloud_upload</span>
-                  <span>Click to select simulated image proof</span>
-                  @if (isUploadingSimulated()) {
+                  <span>Click to select image proof</span>
+                  <input type="file" multiple accept="image/*,.pdf" (change)="onProofFilesSelected($event)" hidden />
+                  @if (isUploadingProof()) {
                     <span class="spinner-small"></span>
                   }
-                </div>
+                </label>
 
-                @if (simulatedUploads().length > 0) {
+                @if (proofUploadError()) {
+                  <p class="no-proof-text">{{ proofUploadError() }}</p>
+                }
+
+                @if (proofFiles().length > 0) {
                   <div class="preview-thumbnails">
-                    @for (thumb of simulatedUploads(); track thumb; let idx = $index) {
+                    @for (file of proofFiles(); track file.name; let idx = $index) {
                       <div class="thumb-wrap">
-                        <img [src]="thumb" />
-                        <button class="remove-thumb-btn" (click)="removeSimulatedUpload(idx)">
+                        <span class="material-icons">description</span>
+                        <small>{{ file.name }}</small>
+                        <button class="remove-thumb-btn" (click)="removeProofFile(idx)">
                           <span class="material-icons">close</span>
                         </button>
                       </div>
                     }
                   </div>
                   
-                  <button class="primary-btn submit-proof-btn" (click)="submitProof()">
+                  <button class="primary-btn submit-proof-btn" (click)="submitProof()" [disabled]="isUploadingProof()">
                     <span class="material-icons">send</span>
-                    Submit Proof to Admin
+                    {{ isUploadingProof() ? 'Uploading...' : 'Submit Proof to Admin' }}
                   </button>
                 }
               </div>

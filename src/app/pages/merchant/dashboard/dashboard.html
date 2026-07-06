@@ -1,8 +1,6 @@
 <div class="dashboard">
 
-    <app-dashboard-header role="Merchant" userName="Sahil Gour" email="sahil@gmail.com"
-        profileImage="https://i.pravatar.cc/150?img=12">
-    </app-dashboard-header>
+    <app-dashboard-header role="Merchant"></app-dashboard-header>
 
     <app-stats-cards [cards]="cards"></app-stats-cards>
 
@@ -14,7 +12,7 @@
 
             <h3>Quick Actions</h3>
 
-            <button routerLink="/merchant/shipments" class="action-btn primary">
+            <button routerLink="/merchant/create-shipment" class="action-btn primary">
                 <span class="material-icons">add</span>
                 Create Shipment
             </button>
@@ -33,8 +31,8 @@
         </div>
     </div>
     <div class="chart-section">
-        <app-shipment-overview></app-shipment-overview>
-        <app-top-destinations></app-top-destinations>
+        <app-shipment-overview [trend]="dashboardStats?.statusTrend || []"></app-shipment-overview>
+        <app-top-destinations [destinations]="dashboardStats?.topDestinations || []"></app-top-destinations>
     </div>
 
     <!-- Print Labels Modal -->
@@ -63,7 +61,18 @@
                             <span class="selected-badge">{{ getSelectedPrintCount() }} Selected</span>
                         </div>
 
+                        <div class="pagination-strip">
+                            <button class="pager-btn" (click)="changeShipmentPage(-1, 'print')" [disabled]="!shipmentMeta?.hasPrevPage || isShipmentsLoading()">Previous</button>
+                            <span>Page {{ shipmentMeta?.page || 1 }} of {{ shipmentMeta?.pages || 1 }}</span>
+                            <button class="pager-btn" (click)="changeShipmentPage(1, 'print')" [disabled]="!shipmentMeta?.hasNextPage || isShipmentsLoading()">Next</button>
+                        </div>
+
                         <div class="shipment-items-scroll">
+                            @if (isShipmentsLoading()) {
+                                <div class="empty-state">Loading shipments...</div>
+                            } @else if (!shipments.length) {
+                                <div class="empty-state">No shipments available for label printing.</div>
+                            }
                             @for (s of shipments; track s.id) {
                                 <div class="shipment-item-card" [class.active]="selectedShipmentForPreview()?.id === s.id" (click)="selectPreview(s)">
                                     <label class="checkbox-container" (click)="$event.stopPropagation()">
@@ -72,7 +81,7 @@
                                     </label>
                                     <div class="item-details">
                                         <div class="item-top">
-                                            <span class="item-awb">{{ s.id }}</span>
+                                            <span class="item-awb">{{ s.carrierAWB || s.awb }}</span>
                                             <span class="courier-tag">{{ s.courier }}</span>
                                         </div>
                                         <div class="item-bottom">
@@ -89,14 +98,19 @@
                     <div class="modal-right-preview">
                         <h4>Label Live Preview</h4>
                         @if (selectedShipmentForPreview()) {
-                            <div class="live-label-container">
-                                <div class="live-label-header">
-                                    <span class="live-courier-title">{{ selectedShipmentForPreview().courier }}</span>
-                                    <span class="live-awb-tag">AWB: {{ selectedShipmentForPreview().id }}</span>
+                                <div class="live-label-container">
+                                @if (selectedShipmentForPreview().labelUrl) {
+                                    <a class="label-url-link" [href]="selectedShipmentForPreview().labelUrl" target="_blank" rel="noopener">
+                                        Open Velocity Label
+                                    </a>
+                                }
+                                    <div class="live-label-header">
+                                        <span class="live-courier-title">{{ selectedShipmentForPreview().courier }}</span>
+                                    <span class="live-awb-tag">AWB: {{ selectedShipmentForPreview().carrierAWB || selectedShipmentForPreview().awb }}</span>
                                 </div>
                                 <div class="live-barcode-area">
                                     <div class="live-barcode-bars"></div>
-                                    <div class="live-barcode-text">{{ selectedShipmentForPreview().id }}</div>
+                                    <div class="live-barcode-text">{{ selectedShipmentForPreview().carrierAWB || selectedShipmentForPreview().awb }}</div>
                                 </div>
                                 <div class="live-address-area">
                                     <div class="live-address-block">
@@ -114,7 +128,7 @@
                                     <div>Date: {{ selectedShipmentForPreview().date }}</div>
                                     <div>Weight: {{ selectedShipmentForPreview().weight }}</div>
                                     <div class="live-amount-badge">
-                                        {{ selectedShipmentForPreview().status === 'Pending' ? 'COD: ' + selectedShipmentForPreview().amount : 'PREPAID' }}
+                                        {{ selectedShipmentForPreview().isCOD ? 'COD: INR ' + selectedShipmentForPreview().codAmount : 'PREPAID' }}
                                     </div>
                                 </div>
                             </div>
@@ -161,9 +175,21 @@
                                 <span class="checkmark"></span>
                                 <span class="checkbox-label">Select All Shipments</span>
                             </label>
+                            <span class="selected-badge">{{ getSelectedManifestCount() }} Selected</span>
+                        </div>
+
+                        <div class="pagination-strip">
+                            <button class="pager-btn" (click)="changeShipmentPage(-1, 'manifest')" [disabled]="!shipmentMeta?.hasPrevPage || isShipmentsLoading()">Previous</button>
+                            <span>Page {{ shipmentMeta?.page || 1 }} of {{ shipmentMeta?.pages || 1 }}</span>
+                            <button class="pager-btn" (click)="changeShipmentPage(1, 'manifest')" [disabled]="!shipmentMeta?.hasNextPage || isShipmentsLoading()">Next</button>
                         </div>
 
                         <div class="shipment-items-scroll">
+                            @if (isShipmentsLoading()) {
+                                <div class="empty-state">Loading shipments...</div>
+                            } @else if (!shipments.length) {
+                                <div class="empty-state">No shipments available for manifest export.</div>
+                            }
                             @for (s of shipments; track s.id) {
                                 <div class="shipment-item-card static">
                                     <label class="checkbox-container">
@@ -172,7 +198,7 @@
                                     </label>
                                     <div class="item-details">
                                         <div class="item-top">
-                                            <span class="item-awb">{{ s.id }}</span>
+                                            <span class="item-awb">{{ s.carrierAWB || s.awb }}</span>
                                             <span class="courier-tag">{{ s.courier }}</span>
                                         </div>
                                         <div class="item-bottom">

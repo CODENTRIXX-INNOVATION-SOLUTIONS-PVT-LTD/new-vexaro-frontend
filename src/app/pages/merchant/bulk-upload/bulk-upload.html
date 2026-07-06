@@ -17,7 +17,7 @@
 
     <button class="secondary-btn" (click)="downloadSampleTemplate()">
       <span class="material-icons">download</span>
-      Download Sample CSV Template
+      Download CSV Template
     </button>
   </header>
 
@@ -55,6 +55,95 @@
   </div>
 
   @if (csvPreview().length > 0) {
+
+  <div class="card actions-panel">
+    <div class="left-desc">
+      <span class="material-icons info-symbol">info</span>
+      <p>
+        Review the first rows, then upload the file. The backend will validate and process shipments asynchronously.
+      </p>
+    </div>
+    <div class="btn-group">
+      <button class="secondary-btn" (click)="clearUpload()" [disabled]="uploadState() === 'uploading' || uploadState() === 'queued' || uploadState() === 'processing'">
+        <span class="material-icons">delete</span>
+        Discard
+      </button>
+      <button class="primary-btn" (click)="submitUpload()" [disabled]="uploadState() === 'uploading' || uploadState() === 'queued' || uploadState() === 'processing'">
+        <span class="material-icons">cloud_upload</span>
+        Upload Shipments
+      </button>
+    </div>
+  </div>
+
+  @if (uploadState() !== 'idle') {
+  <div class="card progress-card">
+    <span class="material-icons spinner-icon" [class.rotate]="uploadState() === 'uploading' || uploadState() === 'queued' || uploadState() === 'processing'">
+      {{ uploadState() === 'complete' ? 'check_circle' : uploadState() === 'failed' ? 'error' : 'sync' }}
+    </span>
+    <h3>
+      @if (uploadState() === 'complete') {
+        Upload complete
+      } @else if (uploadState() === 'failed') {
+        Upload failed
+      } @else if (uploadState() === 'processing') {
+        Processing shipments
+      } @else if (uploadState() === 'queued') {
+        Upload queued
+      } @else {
+        Uploading file
+      }
+    </h3>
+    @if (jobId()) {
+      <p class="filename">Job ID: {{ jobId() }}</p>
+    }
+    @if (errorMessage()) {
+      <p class="error-text">{{ errorMessage() }}</p>
+    }
+    <div class="progress-bar-wrapper">
+      <div class="progress-fill" [style.width.%]="uploadProgress()"></div>
+    </div>
+    <span class="progress-pct">{{ uploadProgress() }}%</span>
+  </div>
+
+  <div class="metrics-row">
+    <div class="card metric-card total">
+      <span class="material-icons">format_list_numbered</span>
+      <div><span class="label">Total Rows</span><span class="val">{{ totalRows() }}</span></div>
+    </div>
+    <div class="card metric-card success">
+      <span class="material-icons">check_circle</span>
+      <div><span class="label">Created</span><span class="val">{{ validRows() }}</span></div>
+    </div>
+    <div class="card metric-card error">
+      <span class="material-icons">error</span>
+      <div><span class="label">Failed</span><span class="val">{{ errorCount() }}</span></div>
+    </div>
+  </div>
+  }
+
+  @if (parsingErrors().length > 0) {
+  <div class="card table-card">
+    <div class="card-header">
+      <h3>Processing Errors</h3>
+      <span class="badge danger">{{ parsingErrors().length }}</span>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr><th>Row</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          @for(error of parsingErrors(); track $index) {
+          <tr>
+            <td class="row-num-cell">{{ error.row }}</td>
+            <td><span class="reason-text">{{ error.reason }}</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
 
   <div class="card table-card">
 

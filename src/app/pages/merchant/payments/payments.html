@@ -636,13 +636,16 @@
                     }
                 </ul>
                 }
+                @if (contestError) {
+                <div style="margin-top:10px;color:#b91c1c;font-size:13px;font-weight:600;">{{ contestError }}</div>
+                }
             </div>
 
         </div>
 
         <div class="modal-footer">
             <button class="btn-cancel" (click)="closeContest()">Cancel</button>
-            <button class="btn-submit" (click)="submitContest()" [disabled]="!contestNote.trim()">
+            <button class="btn-submit" (click)="submitContest()" [disabled]="!contestNote.trim() || isContestSubmitting">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Submit Dispute to Distributor
             </button>
         </div>

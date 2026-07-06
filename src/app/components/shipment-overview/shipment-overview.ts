@@ -1,5 +1,13 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, Input, OnChanges } from '@angular/core';
 import Chart from 'chart.js/auto';
+
+type ShipmentTrendRow = {
+  label?: string;
+  date?: string;
+  delivered?: number;
+  inTransit?: number;
+  pending?: number;
+};
 
 @Component({
   selector: 'app-shipment-overview',
@@ -7,43 +15,90 @@ import Chart from 'chart.js/auto';
   templateUrl: './shipment-overview.html',
   styleUrl: './shipment-overview.css'
 })
-export class ShipmentOverview implements AfterViewInit {
+export class ShipmentOverview implements AfterViewInit, OnChanges {
+  @Input() trend: ShipmentTrendRow[] = [];
+
+  private chart?: Chart;
+  private viewReady = false;
 
   ngAfterViewInit() {
+    this.viewReady = true;
+    this.renderChart();
+  }
 
-    new Chart("shipmentChart", {
+  ngOnChanges() {
+    if (this.viewReady) this.renderChart();
+  }
+
+  private renderChart(): void {
+    const canvas = document.getElementById('shipmentChart') as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    const rows = this.trend?.length ? this.trend : this.emptyTrend();
+    this.chart?.destroy();
+
+    this.chart = new Chart(canvas, {
       type: 'line',
       data: {
-        labels: [
-          '01 May',
-          '05 May',
-          '10 May',
-          '15 May',
-          '20 May',
-          '25 May',
-          '30 May'
-        ],
+        labels: rows.map(row => row.label || row.date || ''),
         datasets: [
           {
             label: 'Delivered',
-            data: [4000,6000,4500,5500,5000,8000,7600]
+            data: rows.map(row => row.delivered || 0),
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22, 163, 74, 0.12)',
+            tension: 0.35,
+            fill: true
           },
           {
             label: 'In Transit',
-            data: [2000,3500,2500,3200,2800,4500,3600]
+            data: rows.map(row => row.inTransit || 0),
+            borderColor: '#0b4a6f',
+            backgroundColor: 'rgba(11, 74, 111, 0.1)',
+            tension: 0.35,
+            fill: true
           },
           {
             label: 'Pending',
-            data: [800,1800,900,1200,1000,2000,1300]
+            data: rows.map(row => row.pending || 0),
+            borderColor: '#f97316',
+            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+            tension: 0.35,
+            fill: true
           }
         ]
       },
       options:{
         responsive:true,
-        maintainAspectRatio:false
+        maintainAspectRatio:false,
+        plugins: {
+          legend: {
+            labels: { boxWidth: 10, usePointStyle: true }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        }
       }
     });
-
   }
 
+  private emptyTrend(): ShipmentTrendRow[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (6 - index));
+      return {
+        label: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+        delivered: 0,
+        inTransit: 0,
+        pending: 0,
+      };
+    });
+  }
 }

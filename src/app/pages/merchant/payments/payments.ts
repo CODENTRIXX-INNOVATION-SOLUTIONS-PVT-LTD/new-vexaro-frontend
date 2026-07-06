@@ -1,8 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { FinanceService } from '../../../services/finance.service';
 import { DisputeService } from '../../../services/dispute.service';
+import { SupportService } from '../../../services/support.service';
 
 export interface MerchantTransaction {
   id: string;
@@ -57,6 +59,7 @@ export interface WeightDispute {
 export class Payments implements OnInit {
   private financeService = inject(FinanceService);
   private disputeService = inject(DisputeService);
+  private supportService = inject(SupportService);
 
   // ── Active Tab ────────────────────────────────────────────────────────────
   activeTab = 'balance';
@@ -114,7 +117,10 @@ export class Payments implements OnInit {
   showContestModal = false;
   contestingDispute: WeightDispute | null = null;
   contestNote = '';
+  selectedFiles: File[] = [];
   selectedFileNames: string[] = [];
+  isContestSubmitting = false;
+  contestError = '';
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
@@ -352,7 +358,9 @@ export class Payments implements OnInit {
   openContest(dispute: WeightDispute): void {
     this.contestingDispute = dispute;
     this.contestNote = '';
+    this.selectedFiles = [];
     this.selectedFileNames = [];
+    this.contestError = '';
     this.showContestModal = true;
   }
 
@@ -364,7 +372,9 @@ export class Payments implements OnInit {
   onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      this.selectedFileNames = Array.from(input.files).map(f => f.name);
+      this.selectedFiles = Array.from(input.files);
+      this.selectedFileNames = this.selectedFiles.map(f => f.name);
+      this.contestError = '';
     }
   }
 
@@ -373,15 +383,33 @@ export class Payments implements OnInit {
       alert('Please describe why you believe this deduction is incorrect.');
       return;
     }
-    if (this.contestingDispute) {
-      const mockImageUrls = this.selectedFileNames.map(f => `/uploads/proofs/${f}`);
-      this.disputeService.submitProof(this.contestingDispute.id, mockImageUrls).subscribe({
-        next: () => {
-          alert('Dispute proof submitted successfully!');
-          this.loadDisputes();
-          this.closeContest();
+    if (!this.selectedFiles.length) {
+      this.contestError = 'Please attach at least one proof file.';
+      return;
+    }
+    if (this.contestingDispute && !this.isContestSubmitting) {
+      this.isContestSubmitting = true;
+      this.contestError = '';
+      forkJoin(this.selectedFiles.map(file => this.supportService.uploadAttachment(file))).subscribe({
+        next: (uploadResponses) => {
+          const proofUrls = uploadResponses.map(res => res?.data?.url).filter(Boolean);
+          this.disputeService.submitProof(this.contestingDispute!.id, proofUrls).subscribe({
+            next: () => {
+              alert('Dispute proof submitted successfully!');
+              this.isContestSubmitting = false;
+              this.loadDisputes();
+              this.closeContest();
+            },
+            error: (err) => {
+              this.isContestSubmitting = false;
+              this.contestError = err.error?.message || 'Failed to submit proof.';
+            },
+          });
         },
-        error: (err) => alert(err.error?.message || 'Failed to submit proof.'),
+        error: (err) => {
+          this.isContestSubmitting = false;
+          this.contestError = err.error?.message || 'Failed to upload proof files.';
+        },
       });
     }
   }

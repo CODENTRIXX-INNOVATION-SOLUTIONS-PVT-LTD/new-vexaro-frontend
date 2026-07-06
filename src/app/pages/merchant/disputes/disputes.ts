@@ -1,13 +1,19 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize, forkJoin } from 'rxjs';
+
 import { DisputeService } from '../../../services/dispute.service';
-import { finalize } from 'rxjs';
+import { SupportService } from '../../../services/support.service';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  WEIGHT_DISPUTE: 'Weight Mismatch', LOST: 'Package Lost',
-  DAMAGED: 'Damaged Package', DELAY: 'Delivery Delay',
-  WRONG_DELIVERY: 'Incorrect Delivery', COD_MISMATCH: 'COD Cash Mismatch', OTHER: 'Other Issue',
+  WEIGHT_DISPUTE: 'Weight Mismatch',
+  LOST: 'Package Lost',
+  DAMAGED: 'Damaged Package',
+  DELAY: 'Delivery Delay',
+  WRONG_DELIVERY: 'Incorrect Delivery',
+  COD_MISMATCH: 'COD Cash Mismatch',
+  OTHER: 'Other Issue',
 };
 
 @Component({
@@ -19,45 +25,43 @@ const CATEGORY_LABELS: Record<string, string> = {
 })
 export class MerchantDisputesComponent implements OnInit {
   private disputeService = inject(DisputeService);
+  private supportService = inject(SupportService);
+  private readonly apiOrigin = ((window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '');
 
-  // ── List state ────────────────────────────────────────────────────────────
   private _disputes: any[] = [];
-  isLoading  = signal(false);
-  listError  = signal('');
-  page = 1; total = 0;
+  isLoading = signal(false);
+  listError = signal('');
+  page = 1;
+  total = 0;
   readonly limit = 20;
   get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
-  // Filters
   categoryFilter = signal('ALL');
-  statusFilter   = signal('ALL');
-  searchQuery    = signal('');
+  statusFilter = signal('ALL');
+  searchQuery = signal('');
 
-  // ── View ──────────────────────────────────────────────────────────────────
-  viewMode        = signal<'list' | 'detail' | 'create'>('list');
+  viewMode = signal<'list' | 'detail' | 'create'>('list');
   selectedDispute = signal<any>(null);
 
-  // ── Create form fields — template binds to newAwb ─────────────────────────
-  newAwb         = '';
-  newCategory    = 'OTHER';
+  newAwb = '';
+  newCategory = 'OTHER';
   newDescription = '';
-  isCreating     = signal(false);
-  createError    = signal('');
+  isCreating = signal(false);
+  createError = signal('');
 
-  // ── Comment ───────────────────────────────────────────────────────────────
   newCommentText = '';
-  isCommenting   = signal(false);
+  isCommenting = signal(false);
 
-  // ── Proof upload — template calls simulateFileSelect / simulatedUploads ──
-  // Kept as simulated (no real file server) — just shows a local preview
-  simulatedUploads    = signal<string[]>([]);
-  isUploadingSimulated = signal(false);
+  proofFiles = signal<File[]>([]);
+  isUploadingProof = signal(false);
+  proofUploadError = signal('');
 
   readonly categoryLabels = CATEGORY_LABELS;
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+  }
 
-  // ── List ──────────────────────────────────────────────────────────────────
   load(): void {
     this.isLoading.set(true);
     this.listError.set('');
@@ -68,9 +72,9 @@ export class MerchantDisputesComponent implements OnInit {
       finalize(() => this.isLoading.set(false)),
     ).subscribe({
       next: (res) => {
-        this.total      = res?.meta?.total ?? 0;
+        this.total = res?.meta?.total ?? 0;
         const raw: any[] = res?.data?.disputes ?? res?.data?.items ?? [];
-        this._disputes  = raw.map(d => this.mapDispute(d));
+        this._disputes = raw.map(d => this.mapDispute(d));
       },
       error: (err) => this.listError.set(err?.error?.message || 'Failed to load disputes.'),
     });
@@ -78,80 +82,92 @@ export class MerchantDisputesComponent implements OnInit {
 
   private mapDispute(d: any): any {
     return {
-      id:             d._id,
-      awb:            d.shipmentId?.awb ?? d.shipmentAWB ?? '—',
-      shipmentId:     d.shipmentId?._id ?? d.shipmentId ?? '',
-      category:       d.category,
-      status:         d.status,
-      createdAt:      d.createdAt,
-      description:    d.description,
-      originalWeight: d.billedWeight   ?? null,
-      actualWeight:   d.actualWeight   ?? null,
-      extraCharge:    d.extraCharge    ?? null,
-      proofImages:    d.proofImages    ?? [],
-      comments: (d.replies ?? d.comments ?? []).map((r: any) => ({
-        sender: r.sender?.role === 'MERCHANT'     ? 'Merchant'
-               : r.sender?.role === 'SUPER_ADMIN' ? 'Super Admin'
-               : r.sender?.role === 'DISTRIBUTOR' ? 'Distributor' : 'Support',
-        text:   r.message ?? r.text ?? '',
-        date:   r.createdAt ?? r.date ?? '',
+      id: d._id,
+      awb: d.shipmentId?.awb ?? d.shipmentAWB ?? '-',
+      shipmentId: d.shipmentId?._id ?? d.shipmentId ?? '',
+      category: d.category,
+      status: d.status,
+      createdAt: d.createdAt,
+      description: d.description,
+      originalWeight: d.billedWeight ?? null,
+      actualWeight: d.actualWeight ?? null,
+      extraCharge: d.extraCharge ?? null,
+      proofImages: d.proofImages ?? [],
+      comments: (d.replies ?? d.comments ?? []).map((reply: any) => ({
+        sender: reply.sender?.role === 'MERCHANT' ? 'Merchant'
+          : reply.sender?.role === 'SUPER_ADMIN' ? 'Super Admin'
+          : reply.sender?.role === 'DISTRIBUTOR' ? 'Distributor'
+          : 'Support',
+        text: reply.message ?? reply.text ?? '',
+        date: reply.createdAt ?? reply.date ?? '',
       })),
     };
   }
 
-  applyFilters(): void { this.page = 1; this.load(); }
+  applyFilters(): void {
+    this.page = 1;
+    this.load();
+  }
 
-  // Template calls getFilteredDisputes()
   getFilteredDisputes(): any[] {
-    const q   = this.searchQuery().trim().toLowerCase();
-    const cat = this.categoryFilter();
-    return this._disputes.filter(d =>
-      (!q   || (d.id || '').toLowerCase().includes(q) || (d.awb || '').toLowerCase().includes(q)) &&
-      (cat === 'ALL' || d.category === cat)
+    const query = this.searchQuery().trim().toLowerCase();
+    const category = this.categoryFilter();
+    return this._disputes.filter(dispute =>
+      (!query || (dispute.id || '').toLowerCase().includes(query) || (dispute.awb || '').toLowerCase().includes(query)) &&
+      (category === 'ALL' || dispute.category === category),
     );
   }
 
-  // ── Detail ────────────────────────────────────────────────────────────────
   selectDispute(dispute: any): void {
     this.viewMode.set('detail');
+    this.proofFiles.set([]);
+    this.proofUploadError.set('');
     this.disputeService.getDisputeById(dispute.id).subscribe({
-      next:  (res) => this.selectedDispute.set(this.mapDispute(res?.data ?? res)),
-      error: ()    => this.selectedDispute.set(dispute),
+      next: (res) => this.selectedDispute.set(this.mapDispute(res?.data ?? res)),
+      error: () => this.selectedDispute.set(dispute),
     });
   }
 
-  closeDetail(): void { this.selectedDispute.set(null); this.viewMode.set('list'); }
+  closeDetail(): void {
+    this.selectedDispute.set(null);
+    this.viewMode.set('list');
+  }
 
-  // ── Create ────────────────────────────────────────────────────────────────
   openCreateForm(): void {
-    this.newAwb = ''; this.newCategory = 'OTHER'; this.newDescription = '';
+    this.newAwb = '';
+    this.newCategory = 'OTHER';
+    this.newDescription = '';
     this.createError.set('');
     this.viewMode.set('create');
   }
 
-  closeCreateForm(): void { this.viewMode.set('list'); }
+  closeCreateForm(): void {
+    this.viewMode.set('list');
+  }
 
   createDispute(): void {
     if (!this.newAwb.trim() || !this.newDescription.trim()) {
       this.createError.set('AWB and description are required.');
       return;
     }
+
     this.isCreating.set(true);
     this.createError.set('');
-
     this.disputeService.createDispute({
-      shipmentId:  this.newAwb.trim(),
-      category:    this.newCategory,
+      shipmentId: this.newAwb.trim(),
+      category: this.newCategory,
       description: this.newDescription.trim(),
     }).pipe(finalize(() => this.isCreating.set(false))).subscribe({
-      next: () => { this.viewMode.set('list'); this.load(); },
+      next: () => {
+        this.viewMode.set('list');
+        this.load();
+      },
       error: (err) => this.createError.set(err?.error?.message || 'Failed to create dispute.'),
     });
   }
 
-  // ── Comment ───────────────────────────────────────────────────────────────
   addComment(): void {
-    const text    = this.newCommentText.trim();
+    const text = this.newCommentText.trim();
     const dispute = this.selectedDispute();
     if (!text || !dispute) return;
 
@@ -159,48 +175,60 @@ export class MerchantDisputesComponent implements OnInit {
     this.disputeService.addComment(dispute.id, text).pipe(
       finalize(() => this.isCommenting.set(false)),
     ).subscribe({
-      next: () => { this.newCommentText = ''; this.selectDispute(dispute); },
+      next: () => {
+        this.newCommentText = '';
+        this.selectDispute(dispute);
+      },
       error: () => {
-        // Optimistic local append
-        this.selectedDispute.update(d => d
-          ? { ...d, comments: [...d.comments, { sender: 'Merchant', text, date: new Date().toISOString() }] }
-          : d
+        this.selectedDispute.update(current => current
+          ? { ...current, comments: [...current.comments, { sender: 'Merchant', text, date: new Date().toISOString() }] }
+          : current,
         );
         this.newCommentText = '';
       },
     });
   }
 
-  // ── Simulated file upload (template calls simulateFileSelect) ─────────────
-  simulateFileSelect(): void {
-    this.isUploadingSimulated.set(true);
-    setTimeout(() => {
-      this.isUploadingSimulated.set(false);
-      const placeholders = [
-        'https://placehold.co/200x200?text=Proof+1',
-        'https://placehold.co/200x200?text=Proof+2',
-        'https://placehold.co/200x200?text=Proof+3',
-      ];
-      const next = placeholders[this.simulatedUploads().length % placeholders.length];
-      this.simulatedUploads.update(u => [...u, next]);
-    }, 800);
+  onProofFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.proofFiles.set(Array.from(input.files || []));
+    this.proofUploadError.set('');
+    input.value = '';
   }
 
-  removeSimulatedUpload(idx: number): void {
-    this.simulatedUploads.update(u => u.filter((_, i) => i !== idx));
+  removeProofFile(index: number): void {
+    this.proofFiles.update(files => files.filter((_, i) => i !== index));
   }
 
-  // Submit the simulated (or real) proof URLs
   submitProof(): void {
     const dispute = this.selectedDispute();
-    if (!dispute || !this.simulatedUploads().length) return;
+    const files = this.proofFiles();
+    if (!dispute || !files.length || this.isUploadingProof()) return;
 
-    this.disputeService.submitProof(dispute.id, this.simulatedUploads()).subscribe({
-      next: () => {
-        this.simulatedUploads.set([]);
-        this.selectDispute(dispute);
+    this.isUploadingProof.set(true);
+    this.proofUploadError.set('');
+    forkJoin(files.map(file => this.supportService.uploadAttachment(file))).subscribe({
+      next: (uploadResponses) => {
+        const proofUrls = uploadResponses.map(res => res?.data?.url).filter(Boolean);
+        this.disputeService.submitProof(dispute.id, proofUrls).pipe(
+          finalize(() => this.isUploadingProof.set(false)),
+        ).subscribe({
+          next: () => {
+            this.proofFiles.set([]);
+            this.selectDispute(dispute);
+          },
+          error: (err) => this.proofUploadError.set(err?.error?.message || 'Failed to submit proof.'),
+        });
       },
-      error: () => { /* non-critical — just clear uploads */ this.simulatedUploads.set([]); },
+      error: (err) => {
+        this.isUploadingProof.set(false);
+        this.proofUploadError.set(err?.error?.message || 'Failed to upload proof files.');
+      },
     });
+  }
+
+  resolveProofUrl(url: string): string {
+    if (!url || /^https?:\/\//i.test(url)) return url;
+    return `${this.apiOrigin}${url.startsWith('/') ? url : '/' + url}`;
   }
 }

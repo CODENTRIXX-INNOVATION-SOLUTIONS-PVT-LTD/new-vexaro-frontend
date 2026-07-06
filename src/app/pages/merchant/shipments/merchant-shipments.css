@@ -135,6 +135,8 @@ td {
     border-top: 1px solid #edf2f7;
     color: #334155;
     font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 tbody tr:hover {
@@ -216,6 +218,8 @@ td{
 
 td{
     border-top:1px solid #edf2f7;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 tbody tr:hover{

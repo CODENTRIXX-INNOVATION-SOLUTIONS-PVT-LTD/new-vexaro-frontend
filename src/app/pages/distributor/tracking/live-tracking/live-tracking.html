@@ -3,51 +3,60 @@
         <div class="d-flex align-center gap-15">
             <button class="back-btn" (click)="goBack()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
             <div>
-                <h2 style="margin: 0; font-size: 20px;">Live Tracking: {{awb}}</h2>
-                <span class="status transit" style="margin-top: 5px;">Out for Delivery</span>
+                <h2 style="margin: 0; font-size: 20px;">Tracking: {{awb || 'No AWB selected'}}</h2>
+                <span class="status transit" style="margin-top: 5px;">{{shipment?.status || 'Awaiting tracking data'}}</span>
             </div>
         </div>
         <div class="actions">
-            <button class="view-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> Contact Driver</button>
+            @if (trackingUrl) {
+                <a class="view-btn" [href]="trackingUrl" target="_blank" rel="noopener">Open Carrier Tracking</a>
+            }
         </div>
     </div>
 
     <div class="tracking-layout mt-4">
-        <!-- Map Placeholder -->
         <div class="map-container">
             <div class="mock-map">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="map-icon svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
-                <h3>Mapbox / Google Maps Integration</h3>
-                <p>Live coordinates stream via WebSocket</p>
+                @if (isLoading) {
+                    <h3>Loading tracking details</h3>
+                    <p>Please wait while Velocity tracking is fetched.</p>
+                } @else if (error) {
+                    <h3>Tracking unavailable</h3>
+                    <p>{{error}}</p>
+                } @else {
+                    <h3>{{shipment?.destination?.city || 'Destination'}}{{shipment?.destination?.state ? ', ' + shipment.destination.state : ''}}</h3>
+                    <p>{{latestEvent?.note || latestEvent?.status || 'No tracking event has been received yet.'}}</p>
+                }
             </div>
             
             <div class="telemetry-strip">
                 <div class="telemetry-item">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     <div>
-                        <span>Driver</span>
-                        <strong>Ramesh Singh</strong>
+                        <span>Carrier</span>
+                        <strong>{{shipment?.carrier || '—'}}</strong>
                     </div>
                 </div>
                 <div class="telemetry-item">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     <div>
-                        <span>Vehicle</span>
-                        <strong>MH02 AB 1234</strong>
+                        <span>Carrier AWB</span>
+                        <strong>{{shipment?.carrierAWB || '—'}}</strong>
                     </div>
                 </div>
                 <div class="telemetry-item">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     <div>
-                        <span>Speed</span>
-                        <strong>{{speed}}</strong>
+                        <span>Service</span>
+                        <strong>{{shipment?.serviceType || '—'}}</strong>
                     </div>
                 </div>
                 <div class="telemetry-item">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M2 20h.01M7 20v-4M12 20v-8M17 20v-12M22 20V4"></path></svg>
                     <div>
-                        <span>Last Ping</span>
-                        <strong style="color: #16a34a;">{{lastPing}}</strong>
+                        <span>Last Update</span>
+                        <strong style="color: #16a34a;">{{latestEvent?.timestamp ? (latestEvent.timestamp | date:'medium') : '—'}}</strong>
                     </div>
                 </div>
             </div>
