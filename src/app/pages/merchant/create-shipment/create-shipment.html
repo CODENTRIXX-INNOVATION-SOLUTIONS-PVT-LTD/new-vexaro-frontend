@@ -263,6 +263,11 @@
                             <input type="text" class="form-control" placeholder="Enter product name" [(ngModel)]="productName">
                         </div>
 
+                        <div class="form-group">
+                            <label>Order ID / Reference</label>
+                            <input type="text" class="form-control" placeholder="Enter merchant order ID" [(ngModel)]="merchantOrderRef">
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group flex-1">
                                 <label>SKU *</label>
@@ -475,6 +480,10 @@
                                     <p class="value">{{ productName }}</p>
                                 </div>
                                 <div class="summary-item">
+                                    <span class="label">Order ID</span>
+                                    <p class="value">{{ merchantOrderRef || '—' }}</p>
+                                </div>
+                                <div class="summary-item">
                                     <span class="label">SKU</span>
                                     <p class="value">{{ sku }}</p>
                                 </div>
@@ -528,6 +537,12 @@
                     <div class="couriers-section">
                         <h4>Select Courier & Service</h4>
                         <div class="courier-list">
+                            @if(isLoadingRates()) {
+                                <div class="empty-state">Fetching live Velocity rates...</div>
+                            }
+                            @if(!isLoadingRates() && !couriers.length) {
+                                <div class="empty-state">No live priced couriers available.</div>
+                            }
                             @for(courier of couriers; track courier.name; let idx = $index){
                                 <div class="courier-item" [class.selected]="selectedCourierIndex() === idx" (click)="selectedCourierIndex.set(idx)">
                                     <div class="courier-left">
@@ -563,7 +578,7 @@
                             <span class="total-label">Total Amount</span>
                             <h3 class="total-price">₹{{ totalAmount | number:'1.2-2' }}</h3>
                         </div>
-                        <button class="primary-btn create-shipment-btn" (click)="createShipment()" [disabled]="isSubmitting()">
+                        <button class="primary-btn create-shipment-btn" (click)="createShipment()" [disabled]="!canSubmitShipment">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                             <span>{{ isSubmitting() ? 'Booking...' : 'Create Shipment' }}</span>
                         </button>

@@ -156,6 +156,11 @@ export class CreateShipment implements OnInit {
     return this.couriers[this.selectedCourierIndex()]?.rate || 0;
   }
 
+  get canSubmitShipment(): boolean {
+    const selected = this.couriers[this.selectedCourierIndex()];
+    return Boolean(!this.isSubmitting() && !this.isLoadingRates() && selected?.id && Number(selected.rate) > 0);
+  }
+
   // ── Step navigation ───────────────────────────────────────────────────────
   nextStep(): void {
     this.errorMessage = '';
@@ -267,7 +272,12 @@ export class CreateShipment implements OnInit {
                 logo:  'fas fa-truck-fast',
                 color: '#1e293b',
               };
-            });
+            }).filter((courier: any) => courier.id && Number(courier.rate) > 0);
+
+            if (!this.couriers.length) {
+              this.errorMessage = 'No live priced courier is available for this shipment. Please change the route/package details and try again.';
+              return;
+            }
 
             // Sort by rate ascending (cheapest first), unknown rates go to bottom
             this.couriers.sort((a, b) => {
@@ -281,16 +291,8 @@ export class CreateShipment implements OnInit {
             // Velocity rates failed — still show carriers but without pricing
             console.error('Velocity rates fetch failed:', err);
             this.isLoadingRates.set(false);
-            this.couriers = carriers.map((c: any) => ({
-              id:    c.carrier_id  || c.carrierId  || '',
-              name:  c.carrier_name || c.carrierName || c.name || 'Courier',
-              type:  c.mode || c.service_type || 'Forward shipment',
-              rate:  0,
-              etd:   null,
-              logo:  'fas fa-truck-fast',
-              color: '#1e293b',
-            }));
-            this.errorMessage = 'Could not fetch live carrier rates. Charges will be calculated at booking.';
+            this.couriers = [];
+            this.errorMessage = 'Could not fetch live Velocity rates. Booking is blocked until a live priced courier is available.';
           },
         });
       },
@@ -311,6 +313,10 @@ export class CreateShipment implements OnInit {
     const selected = this.couriers[this.selectedCourierIndex()];
     if (!selected) {
       this.errorMessage = 'Please select a courier to book shipment.';
+      return;
+    }
+    if (!selected.id || Number(selected.rate) <= 0) {
+      this.errorMessage = 'Please select a live priced courier before booking.';
       return;
     }
 
@@ -335,10 +341,16 @@ export class CreateShipment implements OnInit {
       },
       carrierId:        selected.id || undefined,
       isCOD:            this.isCOD,
+      paymentMethod:    this.isCOD ? 'COD' : 'PREPAID',
       codAmount:        this.isCOD ? this.codAmount : 0,
       declaredValue:    this.declaredValue,
-      notes:            this.productName || undefined,
-      merchantOrderRef: this.sku || undefined,
+      productName:      this.productName,
+      sku:              this.sku,
+      quantity:         this.quantity,
+      sellingPrice:     this.sellingPrice,
+      discount:         this.discount,
+      tax:              this.tax,
+      merchantOrderRef: this.merchantOrderRef || undefined,
     };
 
     this.isSubmitting.set(true);

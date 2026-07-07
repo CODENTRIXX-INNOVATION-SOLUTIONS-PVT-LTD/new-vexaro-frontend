@@ -105,6 +105,20 @@ export class MerchantService {
     return this.http.get<MerchantWarehousesResponse>(`${this.baseUrl}/users/warehouses`);
   }
 
+  updateWarehouseContact(
+    id: string,
+    payload: { contactPerson?: string; phone?: string; email?: string },
+  ): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/users/warehouses/${id}/contact`, payload);
+  }
+
+  requestWarehouseAddressChange(
+    id: string,
+    payload: { addressLine: string; city: string; state: string; pincode: string; country?: string },
+  ): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/users/warehouses/${id}/address-change-request`, payload);
+  }
+
   /**
    * GET /users?role=DISTRIBUTOR&search=...&page=...&limit=...
    */

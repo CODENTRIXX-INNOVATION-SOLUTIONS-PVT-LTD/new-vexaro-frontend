@@ -111,6 +111,15 @@ export class MerchantShipments implements OnInit {
   ];
 
   shipments: any[] = [];
+  isLoadingShipments = false;
+  shipmentListError = '';
+  shipmentSearch = '';
+  shipmentPage = 1;
+  shipmentLimit = 20;
+  shipmentTotal = 0;
+  shipmentTotalPages = 1;
+  shipmentHasNextPage = false;
+  shipmentHasPrevPage = false;
 
   // Modal visibility
   showCreateModal = signal(false);
@@ -178,6 +187,26 @@ export class MerchantShipments implements OnInit {
 
   itemTypes = ['Documents', 'Parcel', 'Electronics', 'Apparel', 'Medicines'];
 
+  productName = '';
+  sku = '';
+  quantity = 1;
+  sellingPrice = 100;
+  discount = 0;
+  tax = 0;
+  paymentMethod = 'PREPAID';
+
+  updateOrderValue(): void {
+    const calculated = (Number(this.sellingPrice || 0) * Number(this.quantity || 0)) - Number(this.discount || 0) + Number(this.tax || 0);
+    this.declaredValue = Math.max(0, calculated);
+    if (this.isCOD) this.codAmount = this.declaredValue;
+  }
+
+  onPaymentMethodChange(value: string): void {
+    this.paymentMethod = value === 'COD' ? 'COD' : 'PREPAID';
+    this.isCOD = this.paymentMethod === 'COD';
+    this.codAmount = this.isCOD ? this.declaredValue : 0;
+  }
+
   selectedCourierIndex = signal(0);
   couriers: any[] = [];
   isLoadingRates = signal(false);
@@ -188,17 +217,83 @@ export class MerchantShipments implements OnInit {
     this.loadWarehouseDetails();
   }
 
+  private formatDateTime(value: string | Date | null | undefined): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+
+  private formatDatePart(value: string | Date | null | undefined): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  private formatTimePart(value: string | Date | null | undefined): string {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+
   loadShipments(): void {
-    this.shipmentService.listShipments({ limit: 100 }).subscribe({
+    this.isLoadingShipments = true;
+    this.shipmentListError = '';
+
+    const query: any = {
+      page: this.shipmentPage,
+      limit: this.shipmentLimit,
+    };
+    const search = this.shipmentSearch.trim();
+    if (search) query.search = search;
+
+    this.shipmentService.listShipments(query).pipe(
+      finalize(() => { this.isLoadingShipments = false; }),
+    ).subscribe({
       next: (res) => {
+        const meta = res.meta || {};
+        this.shipmentTotal = meta.total ?? 0;
+        this.shipmentTotalPages = meta.pages ?? 1;
+        this.shipmentHasNextPage = Boolean(meta.hasNextPage);
+        this.shipmentHasPrevPage = Boolean(meta.hasPrevPage);
+
         if (res.data && res.data.shipments) {
           this.shipments = res.data.shipments.map((s: any) => ({
             id: s._id,
             awb: s.awb,
             carrierAWB: s.carrierAWB,
+            trackingId: s.carrierAWB || s.awb || s._id,
+            labelUrl: s.labelUrl || null,
+            trackingUrl: s.trackingUrl || null,
+            merchantOrderRef: s.merchantOrderRef || '',
+            velocityShipmentId: s.velocityShipmentId || '',
+            velocityOrderId: s.velocityOrderId || '',
+            subStatus: s.subStatus || '',
+            shipmentType: s.shipmentType || '',
+            estimatedDelivery: this.formatDateTime(s.estimatedDelivery || s.originalEstimatedDelivery),
+            deliveredAt: this.formatDateTime(s.deliveredAt),
             customerName: s.destination?.name || '—',
             destination: `${s.destination?.city || ''}, ${s.destination?.state || ''}`,
-            date: new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            date: this.formatDateTime(s.createdAt),
+            dateOnly: this.formatDatePart(s.createdAt),
+            timeOnly: this.formatTimePart(s.createdAt),
             amount: `₹${s.merchantCost?.toFixed(2) || '0.00'}`,
             status: s.status,
             courier: s.carrier || '—',
@@ -209,21 +304,64 @@ export class MerchantShipments implements OnInit {
             receiverEmail: s.destination?.email || '',
             receiverAddress: `${s.destination?.addressLine || ''}, ${s.destination?.city || ''}, ${s.destination?.state || ''} - ${s.destination?.pincode || ''}`,
             weight: s.weight,
+            declaredWeight: s.declaredWeight,
+            volumetricWeight: s.volumetricWeight,
+            billingWeight: s.billingWeight,
             length: s.length,
             width: s.breadth,
             height: s.height,
+            declaredValue: s.declaredValue,
+            paymentMethod: s.paymentMethod || (s.isCOD ? 'COD' : 'PREPAID'),
+            codAmount: s.codAmount || 0,
+            orderItems: s.orderItems || [],
+            productName: s.orderItems?.[0]?.productName || s.productName || s.itemType || 'Parcel',
+            sku: s.orderItems?.[0]?.sku || '',
             itemType: s.itemType || 'Parcel',
             isFragile: s.isFragile || false,
             timeline: (s.statusHistory || []).map((h: any) => ({
               title: h.status,
-              date: new Date(h.updatedAt).toLocaleString('en-IN'),
+              date: this.formatDateTime(h.timestamp || h.updatedAt),
               status: 'completed'
             }))
           }));
         }
       },
-      error: (err) => console.error('Failed to load shipments:', err)
+      error: (err) => {
+        this.shipments = [];
+        this.shipmentListError = err?.error?.message || 'Failed to load shipments.';
+      }
     });
+  }
+
+  applyShipmentSearch(): void {
+    this.shipmentPage = 1;
+    this.loadShipments();
+  }
+
+  clearShipmentSearch(): void {
+    this.shipmentSearch = '';
+    this.applyShipmentSearch();
+  }
+
+  nextShipmentPage(): void {
+    if (!this.shipmentHasNextPage) return;
+    this.shipmentPage += 1;
+    this.loadShipments();
+  }
+
+  prevShipmentPage(): void {
+    if (!this.shipmentHasPrevPage) return;
+    this.shipmentPage -= 1;
+    this.loadShipments();
+  }
+
+  get shipmentRangeStart(): number {
+    if (!this.shipmentTotal) return 0;
+    return ((this.shipmentPage - 1) * this.shipmentLimit) + 1;
+  }
+
+  get shipmentRangeEnd(): number {
+    return Math.min(this.shipmentPage * this.shipmentLimit, this.shipmentTotal);
   }
 
   loadStats(): void {
@@ -271,27 +409,7 @@ export class MerchantShipments implements OnInit {
   errorMessage = '';
 
   openCreateModal(): void {
-    this.showCreateModal.set(true);
-    this.currentStep.set(1);
-    this.selectedCourierIndex.set(0);
-    this.errorMessage = '';
-    this.receiverName = '';
-    this.receiverPhone = '';
-    this.receiverEmail = '';
-    this.receiverAddress = '';
-    this.receiverPincode = '';
-    this.receiverCity = '';
-    this.receiverState = '';
-    this.weight = 0.5;
-    this.length = 10;
-    this.width = 10;
-    this.height = 10;
-    this.itemType = 'Parcel';
-    this.isFragile = false;
-    this.merchantOrderRef = '';
-    this.declaredValue = 100;
-    this.isCOD = false;
-    this.codAmount = 0;
+    this.router.navigate(['/merchant/create-shipment']);
   }
 
   closeCreateModal(): void {
@@ -461,8 +579,15 @@ export class MerchantShipments implements OnInit {
       },
       carrierId:        selected.id || undefined,
       isCOD:            this.isCOD,
+      paymentMethod:    this.isCOD ? 'COD' : 'PREPAID',
       codAmount:        this.isCOD ? this.codAmount : 0,
       declaredValue:    this.declaredValue,
+      productName:      this.productName,
+      sku:              this.sku,
+      quantity:         this.quantity,
+      sellingPrice:     this.sellingPrice,
+      discount:         this.discount,
+      tax:              this.tax,
       ...(this.merchantOrderRef ? { merchantOrderRef: this.merchantOrderRef } : {}),
     };
 
@@ -503,6 +628,22 @@ export class MerchantShipments implements OnInit {
     }
 
     if (this.currentStep() === 3 || this.currentStep() === 4) {
+      if (!this.productName.trim()) {
+        this.errorMessage = 'Product name is required.';
+        return false;
+      }
+      if (!this.sku.trim()) {
+        this.errorMessage = 'SKU is required.';
+        return false;
+      }
+      if (!this.quantity || this.quantity <= 0) {
+        this.errorMessage = 'Quantity must be greater than zero.';
+        return false;
+      }
+      if (this.sellingPrice < 0 || this.discount < 0 || this.tax < 0) {
+        this.errorMessage = 'Selling price, discount, and tax cannot be negative.';
+        return false;
+      }
       if (!this.weight || this.weight <= 0 || !this.length || !this.width || !this.height || this.length <= 0 || this.width <= 0 || this.height <= 0) {
         this.errorMessage = 'Package weight and dimensions must be greater than zero.';
         return false;
@@ -527,7 +668,7 @@ export class MerchantShipments implements OnInit {
   }
 
   cancelShipment(id: string): void {
-    if (!confirm('Are you sure you want to cancel this shipment? This will refund the shipping cost to your wallet.')) return;
+    if (!confirm('Cancel this shipment? This is only allowed before the shipment moves beyond order creation.')) return;
     this.shipmentService.cancelShipment(id).subscribe({
       next: () => {
         this.closeDetailsModal();
@@ -538,6 +679,10 @@ export class MerchantShipments implements OnInit {
         this.errorMessage = err.error?.message || 'Failed to cancel shipment.';
       },
     });
+  }
+
+  canCancelShipment(shipment: any): boolean {
+    return shipment?.status === 'ORDER_CREATED';
   }
 
   viewShipmentDetails(shipment: any): void {
