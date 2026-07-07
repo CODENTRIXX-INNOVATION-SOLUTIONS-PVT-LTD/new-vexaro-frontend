@@ -1,28 +1,9 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-
-interface NotificationItem {
-  id: string;
-  role: string;
-  message: string;
-  icon: string;
-  timeAgo: string;
-  read: boolean;
-}
-
-interface MessageItem {
-  id: string;
-  sender: string;
-  recipient: string;
-  title: string;
-  body: string;
-  timestamp: string;
-  readBy: string[]; // roles that have read this message
-  expanded?: boolean;
-}
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-dashboard-header',
@@ -31,25 +12,65 @@ interface MessageItem {
   templateUrl: './dashboard-header.html',
   styleUrl: './dashboard-header.css'
 })
-export class DashboardHeader implements OnInit {
+export class DashboardHeader implements OnInit, OnDestroy {
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private router = inject(Router);
 
   @Input() role = '';
   @Input() userName = '';
   @Input() email = '';
-  @Input() profileImage = '';
+  @Input() profileImage = 'https://i.pravatar.cc/150?img=12';
 
-
-
-  // Maps backend role enums to display strings used in notifications/filters
+  // Maps backend role enums to display strings
   private readonly roleDisplayMap: Record<string, string> = {
     SUPER_ADMIN: 'Super Admin',
     DISTRIBUTOR: 'Distributor',
     MERCHANT: 'Merchant',
   };
 
+  // Toggle Panel States
+  isQueryPanelOpen = false;
+  isNotificationsOpen = false;
+  isProfileOpen = false;
+  isSettingsOpen = false;
+
+  // Modals States
+  isPasswordModalOpen = false;
+  isAllNotificationsModalOpen = false;
+  isAvatarModalOpen = false;
+
+  // Change Password Form
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
+
+  // Avatar Selection Form
+  uploadedFileName = '';
+  uploadedBase64 = '';
+  presetAvatars: string[] = [
+    'https://i.pravatar.cc/150?img=12', // default Super Admin
+    'https://i.pravatar.cc/150?img=47', // default Merchant
+    'https://i.pravatar.cc/150?img=33',
+    'https://i.pravatar.cc/150?img=56',
+    'https://i.pravatar.cc/150?img=60',
+    'https://i.pravatar.cc/150?img=68'
+  ];
+  selectedAvatar = '';
+
+  // Query Alert Form
+  querySubject = '';
+  queryMessage = '';
+  queryOrderId = '';
+  isSubmittingQuery = false;
+
+  // Dynamic Lists
+  allNotifications: any[] = [];
+  unreadNotificationsCount = 0;
+  private pollInterval: any;
+
   ngOnInit() {
-    // ── Step 1: Show defaults from localStorage immediately (no API wait) ──
+    // Load cached profile data from localStorage
     const storedUser = localStorage.getItem('user') ?? sessionStorage.getItem('user');
     if (storedUser) {
       try {
@@ -66,213 +87,166 @@ export class DashboardHeader implements OnInit {
       this.role = this.roleDisplayMap[storedRole] ?? storedRole;
     }
 
-    // Load notifications and messages from localStorage
-    this.loadData();
+    // Load saved profile picture
+    const savedAvatar = localStorage.getItem('vexaro_avatar_' + this.role);
+    if (savedAvatar) {
+      this.profileImage = savedAvatar;
+    }
 
-    // ── Step 2: Refresh from API in background (updates if data changed) ──
+    // Load actual notifications from backend
+    this.fetchNotifications();
+
+    // Set up polling (every 30 seconds)
+    this.pollInterval = setInterval(() => {
+      this.fetchNotifications();
+    }, 30000);
+
+    // Refresh user profile details in the background
     this.authService.getMe().subscribe({
       next: (res) => {
         this.userName = `${res.data.firstName} ${res.data.lastName}`;
         this.email = res.data.email;
         this.role = this.roleDisplayMap[res.data.role] ?? res.data.role;
       },
-      error: () => { /* silently keep the localStorage values already shown */ },
+      error: () => { /* fallback gracefully to localStorage values */ },
     });
 
-    // Global click listener to close dropdowns on outer clicks
-    window.addEventListener('click', (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.profile') && !target.closest('.profile-dropdown')) {
-        this.isProfileOpen = false;
-      }
-      if (!target.closest('.notification') && !target.closest('.notifications-dropdown') && !target.closest('.all-notifications-modal')) {
-        this.isNotificationsOpen = false;
+    // Close dropdowns on outer click
+    window.addEventListener('click', this.handleOuterClick);
+  }
+
+  ngOnDestroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
+    window.removeEventListener('click', this.handleOuterClick);
+  }
+
+  private handleOuterClick = (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.profile') && !target.closest('.profile-dropdown')) {
+      this.isProfileOpen = false;
+    }
+    if (!target.closest('.notification') && !target.closest('.notifications-dropdown') && !target.closest('.all-notifications-modal')) {
+      this.isNotificationsOpen = false;
+    }
+    if (!target.closest('.query-trigger') && !target.closest('.slide-over-panel')) {
+      this.isQueryPanelOpen = false;
+    }
+    if (!target.closest('.settings-dropdown') && !target.closest('.icon-btn')) {
+      this.isSettingsOpen = false;
+    }
+  };
+
+  // Fetch all user notifications from the API
+  fetchNotifications() {
+    this.notificationService.listNotifications({ limit: 50 }).subscribe({
+      next: (res) => {
+        this.allNotifications = res.data.notifications || [];
+        this.unreadNotificationsCount = res.data.unreadCount ?? 0;
+      },
+      error: (err) => {
+        console.error('Failed to load notifications:', err);
       }
     });
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-  private router = inject(Router);
-
-  // Toggle Panel States
-  isMessagesOpen = false;
-  isNotificationsOpen = false;
-  isProfileOpen = false;
-
-  // Modals States
-  isPasswordModalOpen = false;
-  isAllNotificationsModalOpen = false;
-  isAvatarModalOpen = false;
-
-  // Change Password Form
-  currentPassword = '';
-  newPassword = '';
-  confirmPassword = '';
-
-  // Avatar Selection Form
-  uploadedFileName = '';
-  uploadedBase64 = '';
-  presetAvatars: string[] = [
-    'https://i.pravatar.cc/150?img=12', // Vishwas Gour (Super Admin / default)
-    'https://i.pravatar.cc/150?img=47', // Sahil Gour (Merchant / default)
-    'https://i.pravatar.cc/150?img=33',
-    'https://i.pravatar.cc/150?img=56',
-    'https://i.pravatar.cc/150?img=60',
-    'https://i.pravatar.cc/150?img=68'
-  ];
-  selectedAvatar = '';
-
-  // Announcement Form (Super Admin only)
-  announcementTitle = '';
-  announcementBody = '';
-  announcementTarget = 'All'; // 'All' | 'All Distributors' | 'Merchant:Sahil Gour'
-  activeMessagesTab: 'history' | 'send' = 'history';
-
-  // State Lists
-  allNotifications: NotificationItem[] = [];
-  allMessages: MessageItem[] = [];
-
-  loadData() {
-    // 0. Load Avatar
-    const savedAvatar = localStorage.getItem('vexaro_avatar_' + this.role);
-    if (savedAvatar) {
-      this.profileImage = savedAvatar;
-    }
-
-    // 1. Load Notifications
-    const storedNotifications = localStorage.getItem('vexaro_notifications');
-    if (storedNotifications) {
-      this.allNotifications = JSON.parse(storedNotifications);
-    } else {
-      const defaultNotifications: NotificationItem[] = [
-        // Super Admin
-        { id: 'sa-1', role: 'Super Admin', message: 'New distributor wallet topup request: Distributor D101 requested ₹50,000 topup', icon: 'account_balance_wallet', timeAgo: '5 mins ago', read: false },
-        { id: 'sa-2', role: 'Super Admin', message: 'Weight dispute escalated for shipment AWB9082', icon: 'gavel', timeAgo: '2 hours ago', read: false },
-        { id: 'sa-3', role: 'Super Admin', message: 'New distributor (Vexaro East) has registered', icon: 'person_add', timeAgo: '1 day ago', read: true },
-
-        // Distributor
-        { id: 'dist-1', role: 'Distributor', message: 'Merchant Sahil Gour created a shipment (AWB8801)', icon: 'local_shipping', timeAgo: '10 mins ago', read: false },
-        { id: 'dist-2', role: 'Distributor', message: 'Weight dispute raised on shipment AWB8802 by Sahil Gour', icon: 'gavel', timeAgo: '1 hour ago', read: false },
-        { id: 'dist-3', role: 'Distributor', message: 'Your wallet was topped up by ₹1,00,000 by Super Admin', icon: 'account_balance_wallet', timeAgo: '4 hours ago', read: true },
-        { id: 'dist-4', role: 'Distributor', message: 'Merchant Sahil Gour requested a wallet topup of ₹10,000', icon: 'account_balance_wallet', timeAgo: '5 hours ago', read: true },
-
-        // Merchant
-        { id: 'merch-1', role: 'Merchant', message: 'Your shipment AWB8801 has been picked up', icon: 'local_shipping', timeAgo: '15 mins ago', read: false },
-        { id: 'merch-2', role: 'Merchant', message: 'Your shipment AWB8801 has been delivered successfully', icon: 'check_circle', timeAgo: '3 hours ago', read: false },
-        { id: 'merch-3', role: 'Merchant', message: 'Weight dispute raised by courier on shipment AWB8802', icon: 'gavel', timeAgo: '5 hours ago', read: false },
-        { id: 'merch-4', role: 'Merchant', message: 'Your wallet has been topped up by ₹10,000 by Distributor', icon: 'account_balance_wallet', timeAgo: '1 day ago', read: true },
-        { id: 'merch-5', role: 'Merchant', message: 'COD of ₹4,500 has been released to your wallet for shipment AWB8801', icon: 'account_balance_wallet', timeAgo: '2 days ago', read: true }
-      ];
-      this.allNotifications = defaultNotifications;
-      this.saveNotifications();
-    }
-
-    // 2. Load Messages/Announcements
-    const storedMessages = localStorage.getItem('vexaro_messages');
-    if (storedMessages) {
-      this.allMessages = JSON.parse(storedMessages);
-    } else {
-      const defaultMessages: MessageItem[] = [
-        { id: 'msg-1', sender: 'Super Admin', recipient: 'All', title: 'Welcome to Vexaro Courier Solutions!', body: 'We are thrilled to launch the new Vexaro Logistics platform. Start booking shipments, tracking deliveries, and managing wallets seamlessly. For support, please raise a ticket under the Support section.', timestamp: '2 days ago', readBy: ['Distributor', 'Merchant'] },
-        { id: 'msg-2', sender: 'Super Admin', recipient: 'All Distributors', title: 'Margin Configuration Alert', body: 'Please review and update your merchant margin configurations in the Rate Margin tab. Several courier networks have updated their base charges for the upcoming month.', timestamp: '1 day ago', readBy: [] },
-        { id: 'msg-3', sender: 'Super Admin', recipient: 'All', title: 'System Scheduled Maintenance', body: 'The Vexaro portal will undergo routine database maintenance on Sunday, July 5th, from 02:00 AM to 04:00 AM IST. Some services may be temporarily offline.', timestamp: '5 hours ago', readBy: [] }
-      ];
-      this.allMessages = defaultMessages;
-      this.saveMessages();
-    }
-  }
-
-  saveNotifications() {
-    localStorage.setItem('vexaro_notifications', JSON.stringify(this.allNotifications));
-  }
-
-  saveMessages() {
-    localStorage.setItem('vexaro_messages', JSON.stringify(this.allMessages));
-  }
-
-  // Get notifications for current user role
-  get filteredNotifications(): NotificationItem[] {
-    return this.allNotifications.filter(n => n.role === this.role);
-  }
-
-  // Get unread notifications count for badge
-  get unreadNotificationsCount(): number {
-    return this.filteredNotifications.filter(n => !n.read).length;
-  }
-
-  // Get announcements visible to the current role
-  get visibleAnnouncements(): MessageItem[] {
-    if (this.role === 'Super Admin') {
-      // Super Admin sees everything they sent (history)
-      return this.allMessages;
-    }
-    if (this.role === 'Distributor') {
-      return this.allMessages.filter(m => m.recipient === 'All' || m.recipient === 'All Distributors');
-    }
-    // Merchant
-    return this.allMessages.filter(m => m.recipient === 'All' || m.recipient === 'Merchant:Sahil Gour');
-  }
-
-  // Get unread announcements count for badge
-  get unreadMessagesCount(): number {
-    if (this.role === 'Super Admin') {
-      return 0; // Super Admin only sends
-    }
-    return this.visibleAnnouncements.filter(m => !m.readBy.includes(this.role)).length;
-  }
-
-  // Toggle handlers
-  toggleMessages(event: Event) {
-    event.stopPropagation();
-    this.isMessagesOpen = !this.isMessagesOpen;
-    this.isNotificationsOpen = false;
-    this.isProfileOpen = false;
-  }
-
+  // Toggle dropdowns
   toggleNotifications(event: Event) {
     event.stopPropagation();
     this.isNotificationsOpen = !this.isNotificationsOpen;
-    this.isMessagesOpen = false;
+    this.isQueryPanelOpen = false;
     this.isProfileOpen = false;
+    this.isSettingsOpen = false;
   }
 
   toggleProfile(event: Event) {
     event.stopPropagation();
     this.isProfileOpen = !this.isProfileOpen;
-    this.isMessagesOpen = false;
+    this.isQueryPanelOpen = false;
     this.isNotificationsOpen = false;
   }
 
-  // Notification Operations
+  toggleSettings(event: Event) {
+    event.stopPropagation();
+    this.isSettingsOpen = !this.isSettingsOpen;
+    this.isQueryPanelOpen = false;
+    this.isNotificationsOpen = false;
+    this.isProfileOpen = false;
+  }
+
+  toggleQueryPanel(event: Event) {
+    event.stopPropagation();
+    this.isQueryPanelOpen = !this.isQueryPanelOpen;
+    this.isNotificationsOpen = false;
+    this.isProfileOpen = false;
+  }
+
+  // Mark a single notification read
   markNotificationRead(id: string, event?: Event) {
     if (event) {
       event.stopPropagation();
     }
-    const notif = this.allNotifications.find(n => n.id === id);
-    if (notif) {
-      notif.read = true;
-      this.saveNotifications();
+    const notif = this.allNotifications.find(n => n._id === id);
+    if (notif && !notif.isRead) {
+      this.notificationService.markAsRead(id).subscribe({
+        next: () => {
+          notif.isRead = true;
+          this.unreadNotificationsCount = Math.max(0, this.unreadNotificationsCount - 1);
+          if (notif.link) {
+            this.isNotificationsOpen = false;
+            this.isAllNotificationsModalOpen = false;
+            this.router.navigateByUrl(notif.link);
+          }
+        },
+        error: (err) => console.error('Failed to mark read:', err)
+      });
+    } else if (notif && notif.link) {
+      this.isNotificationsOpen = false;
+      this.isAllNotificationsModalOpen = false;
+      this.router.navigateByUrl(notif.link);
     }
   }
 
+  // Mark all notifications read
   markAllNotificationsRead() {
-    this.allNotifications.forEach(n => {
-      if (n.role === this.role) {
-        n.read = true;
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.allNotifications.forEach(n => n.isRead = true);
+        this.unreadNotificationsCount = 0;
+      },
+      error: (err) => console.error('Failed to mark all read:', err)
+    });
+  }
+
+  // Submit Query Alert Notification
+  submitQueryAlert() {
+    if (!this.querySubject.trim() || !this.queryMessage.trim()) {
+      alert('Please fill in both subject and message.');
+      return;
+    }
+    this.isSubmittingQuery = true;
+    const payload = {
+      subject: this.querySubject.trim(),
+      message: this.queryMessage.trim(),
+      orderId: this.queryOrderId.trim() || undefined
+    };
+
+    this.notificationService.raiseQuery(payload).subscribe({
+      next: () => {
+        this.isSubmittingQuery = false;
+        this.querySubject = '';
+        this.queryMessage = '';
+        this.queryOrderId = '';
+        this.isQueryPanelOpen = false;
+        alert('Query alert raised successfully!');
+        this.fetchNotifications();
+      },
+      error: (err) => {
+        this.isSubmittingQuery = false;
+        alert('Failed to send query alert: ' + (err.error?.message || 'Server error'));
       }
     });
-    this.saveNotifications();
   }
 
   viewAllNotifications() {
@@ -284,80 +258,76 @@ export class DashboardHeader implements OnInit {
     this.isAllNotificationsModalOpen = false;
   }
 
-  // Announcement Operations
-  markMessageRead(id: string) {
-    if (this.role === 'Super Admin') return;
-    const msg = this.allMessages.find(m => m.id === id);
-    if (msg) {
-      if (!msg.readBy.includes(this.role)) {
-        msg.readBy.push(this.role);
-        this.saveMessages();
-      }
-      msg.expanded = !msg.expanded;
+  // Icon mapping helpers
+  getNotificationIcon(type: string): string {
+    switch (type) {
+      case 'SHIPMENT': return 'local_shipping';
+      case 'PAYMENT': return 'account_balance_wallet';
+      case 'DISPUTE': return 'gavel';
+      case 'SYSTEM': return 'settings';
+      case 'INVITE': return 'person_add';
+      case 'QUERY': return 'contact_support';
+      default: return 'notifications';
     }
   }
 
-  toggleMessageExpand(msg: MessageItem) {
-    msg.expanded = !msg.expanded;
-    if (this.role !== 'Super Admin' && !msg.readBy.includes(this.role)) {
-      msg.readBy.push(this.role);
-      this.saveMessages();
+  getPriorityClass(priority: string): string {
+    switch (priority) {
+      case 'SUCCESS': return 'priority-success';
+      case 'INFO': return 'priority-info';
+      case 'WARNING': return 'priority-warning';
+      case 'CRITICAL': return 'priority-critical';
+      default: return 'priority-info';
     }
   }
 
-  sendAnnouncement() {
-    if (!this.announcementTitle.trim() || !this.announcementBody.trim()) {
-      alert('Please enter both title and body for the announcement.');
-      return;
-    }
+  getFormattedTime(dateStr: string): string {
+    if (!dateStr) return '';
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-    const newMsg: MessageItem = {
-      id: 'msg-' + Date.now(),
-      sender: 'Super Admin',
-      recipient: this.announcementTarget,
-      title: this.announcementTitle,
-      body: this.announcementBody,
-      timestamp: 'Just now',
-      readBy: []
-    };
-
-    this.allMessages.unshift(newMsg);
-    this.saveMessages();
-
-    // Add alert notification for target roles
-    const timestampStr = 'Just now';
-    if (this.announcementTarget === 'All' || this.announcementTarget === 'All Distributors') {
-      this.allNotifications.unshift({
-        id: 'notif-sa-dist-' + Date.now(),
-        role: 'Distributor',
-        message: `New announcement: "${this.announcementTitle}"`,
-        icon: 'notifications_active',
-        timeAgo: timestampStr,
-        read: false
-      });
-    }
-    if (this.announcementTarget === 'All' || this.announcementTarget === 'Merchant:Sahil Gour') {
-      this.allNotifications.unshift({
-        id: 'notif-sa-merch-' + Date.now(),
-        role: 'Merchant',
-        message: `New announcement: "${this.announcementTitle}"`,
-        icon: 'notifications_active',
-        timeAgo: timestampStr,
-        read: false
-      });
-    }
-    this.saveNotifications();
-
-    this.announcementTitle = '';
-    this.announcementBody = '';
-    this.activeMessagesTab = 'history';
-    alert('Announcement successfully sent!');
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   }
 
-  // Profile operations
   navigateTo(path: string) {
     this.isProfileOpen = false;
     this.router.navigate([path]);
+  }
+
+  openSettings() {
+    if (this.role === 'Super Admin') {
+      this.router.navigate(['/super-admin/settings']);
+    } else if (this.role === 'Distributor') {
+      this.router.navigate(['/distributor/settings/profile']);
+    } else if (this.role === 'Merchant') {
+      this.router.navigate(['/merchant/profile']);
+    }
+  }
+
+  navigateToSenderProfile(senderId: string, senderRole: string) {
+    const currentRole = this.role;
+    let url = '';
+
+    if (currentRole === 'Distributor' && senderRole === 'MERCHANT') {
+      url = `/distributor/merchants/${senderId}`;
+    } else if (currentRole === 'Super Admin' && senderRole === 'DISTRIBUTOR') {
+      url = `/super-admin/distributors/${senderId}`;
+    } else if (currentRole === 'Super Admin' && senderRole === 'MERCHANT') {
+      url = `/super-admin/merchants/${senderId}`;
+    } else {
+      return;
+    }
+
+    this.isNotificationsOpen = false;
+    this.isAllNotificationsModalOpen = false;
+    this.router.navigate([url]);
   }
 
   openChangePasswordModal() {
@@ -385,8 +355,6 @@ export class DashboardHeader implements OnInit {
       alert('Password must be at least 6 characters.');
       return;
     }
-
-    // Success simulation
     alert('Password updated successfully!');
     this.closeChangePasswordModal();
   }
@@ -400,7 +368,6 @@ export class DashboardHeader implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  // Profile Picture Methods
   openAvatarModal() {
     this.isProfileOpen = false;
     this.selectedAvatar = this.profileImage;
@@ -434,12 +401,10 @@ export class DashboardHeader implements OnInit {
 
   updateProfileImage() {
     const finalUrl = this.selectedAvatar;
-
     if (!finalUrl) {
       alert('Please select an avatar or upload an image file.');
       return;
     }
-
     try {
       this.profileImage = finalUrl;
       localStorage.setItem('vexaro_avatar_' + this.role, finalUrl);
