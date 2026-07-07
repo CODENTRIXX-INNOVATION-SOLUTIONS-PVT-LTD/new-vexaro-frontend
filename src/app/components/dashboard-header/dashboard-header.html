@@ -1,17 +1,102 @@
 <div class="header">
 
-    <div class="search-box">
-        <span class="material-icons">search</span>
-        <input type="text" placeholder="Search anything..." />
+    <div class="header-left">
+        <!-- Profile Section -->
+        <div class="profile-inline">
+            <div class="profile-image-container-inline" (click)="openAvatarModal()">
+                <img [src]="profileImage" [alt]="userName">
+            </div>
+            <div class="profile-info-inline">
+                <span class="role">{{ role }}</span>
+                <h4>{{ userName }}</h4>
+                <p>{{ email }}</p>
+            </div>
+        </div>
     </div>
 
     <div class="header-right">
 
-        <!-- Message Envelope Icon Button -->
+        <!-- Settings Icon Button with Dropdown -->
         <div style="position: relative;">
-            <button class="icon-btn" (click)="toggleMessages($event)">
-                <span class="material-icons">mail_outline</span>
-                <span class="badge" *ngIf="unreadMessagesCount > 0">{{ unreadMessagesCount }}</span>
+            <button class="icon-btn" (click)="toggleSettings($event)" title="Settings">
+                <span class="material-icons">settings</span>
+            </button>
+
+            <!-- Settings Dropdown -->
+            <div class="settings-dropdown" *ngIf="isSettingsOpen" (click)="$event.stopPropagation()">
+                <div class="profile-dropdown-header">
+                    <h4>{{ userName }}</h4>
+                    <p>{{ email }}</p>
+                    <button class="btn-edit-avatar" (click)="openAvatarModal()">Change Photo</button>
+                </div>
+                <div class="divider"></div>
+                <ul class="dropdown-menu-list">
+                    <!-- Super Admin Menu -->
+                    <ng-container *ngIf="role === 'Super Admin'">
+                        <li>
+                            <button (click)="navigateTo('/super-admin/settings')">
+                                <span class="material-icons">person</span> My Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/change-credentials')">
+                                <span class="material-icons">lock</span> Change Password
+                            </button>
+                        </li>
+                    </ng-container>
+
+                    <!-- Distributor Menu -->
+                    <ng-container *ngIf="role === 'Distributor'">
+                        <li>
+                            <button (click)="navigateTo('/distributor/settings/profile')">
+                                <span class="material-icons">person</span> My Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/distributor/settings/company-details')">
+                                <span class="material-icons">business</span> Company Details
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/distributor/settings/security')">
+                                <span class="material-icons">lock</span> Change Password
+                            </button>
+                        </li>
+                    </ng-container>
+
+                    <!-- Merchant Menu -->
+                    <ng-container *ngIf="role === 'Merchant'">
+                        <li>
+                            <button (click)="navigateTo('/merchant/profile')">
+                                <span class="material-icons">person</span> My Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="navigateTo('/merchant/warehouse')">
+                                <span class="material-icons">warehouse</span> My Warehouse
+                            </button>
+                        </li>
+                        <li>
+                            <button (click)="openChangePasswordModal()">
+                                <span class="material-icons">lock</span> Change Password
+                            </button>
+                        </li>
+                    </ng-container>
+
+                    <div class="divider"></div>
+                    <li class="logout-item">
+                        <button (click)="logout()">
+                            <span class="material-icons">logout</span> Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Query Alert Trigger Icon Button (Only for Merchants & Distributors) -->
+        <div style="position: relative;" *ngIf="role !== 'Super Admin'">
+            <button class="icon-btn query-trigger" (click)="toggleQueryPanel($event)" title="Raise Query Alert">
+                <span class="material-icons">contact_support</span>
             </button>
         </div>
 
@@ -29,19 +114,30 @@
                     <button class="btn-text" (click)="markAllNotificationsRead()" [disabled]="unreadNotificationsCount === 0">Mark all as read</button>
                 </div>
                 <div class="dropdown-list">
-                    <div class="no-notifications" *ngIf="filteredNotifications.length === 0">
+                    <div class="no-notifications" *ngIf="allNotifications.length === 0">
                         <span class="material-icons">notifications_off</span>
                         <p>No notifications yet</p>
                     </div>
-                    <div class="notification-item" *ngFor="let notif of filteredNotifications.slice(0, 10)" [class.unread]="!notif.read" (click)="markNotificationRead(notif.id, $event)">
-                        <div class="notif-icon-wrapper" [ngClass]="notif.icon">
-                            <span class="material-icons">{{ notif.icon }}</span>
+                    <div class="notification-item"
+                         *ngFor="let notif of allNotifications.slice(0, 10)"
+                         [class.unread]="!notif.isRead"
+                         (click)="markNotificationRead(notif._id, $event)">
+                        <div class="notif-icon-wrapper" [ngClass]="getPriorityClass(notif.priority)">
+                            <span class="material-icons">{{ getNotificationIcon(notif.type) }}</span>
                         </div>
                         <div class="notif-content">
-                            <p class="notif-message">{{ notif.message }}</p>
-                            <span class="notif-time">{{ notif.timeAgo }}</span>
+                            <p class="notif-message">
+                                <strong>{{ notif.title }}</strong>
+                                @if (notif.senderId) {
+                                    <span class="sender-name" (click)="navigateToSenderProfile(notif.senderId._id, notif.senderId.role); $event.stopPropagation()">
+                                        from {{ notif.senderId.firstName }} {{ notif.senderId.lastName }}
+                                    </span>
+                                }
+                                : {{ notif.message }}
+                            </p>
+                            <span class="notif-time">{{ getFormattedTime(notif.createdAt) }}</span>
                         </div>
-                        <span class="unread-dot" *ngIf="!notif.read"></span>
+                        <span class="unread-dot" *ngIf="!notif.isRead"></span>
                     </div>
                 </div>
                 <div class="dropdown-footer">
@@ -50,8 +146,8 @@
             </div>
         </div>
 
-        <!-- Profile Wrapper Dropdown -->
-        <div style="position: relative;">
+        <!-- Profile Dropdown Trigger (Hidden, kept for avatar modal access) -->
+        <div style="display: none;">
             <div class="profile" (click)="toggleProfile($event)">
                 <div class="profile-image-container" (click)="openAvatarModal(); $event.stopPropagation()">
                     <img [src]="profileImage" [alt]="userName">
@@ -144,73 +240,46 @@
 
 </div>
 
-<!-- Messages Slide-over Panel -->
-<div class="slide-over-backdrop" *ngIf="isMessagesOpen" (click)="isMessagesOpen = false"></div>
-<div class="slide-over-panel" [class.open]="isMessagesOpen">
+<!-- Query Alert Slide-over Panel -->
+<div class="slide-over-backdrop" *ngIf="isQueryPanelOpen" (click)="isQueryPanelOpen = false"></div>
+<div class="slide-over-panel" [class.open]="isQueryPanelOpen">
     <div class="panel-header">
         <div class="panel-header-title">
-            <span class="material-icons text-primary">mail</span>
-            <h3>Announcements</h3>
+            <span class="material-icons text-primary">contact_support</span>
+            <h3>Raise Query Alert</h3>
         </div>
-        <button class="close-btn" (click)="isMessagesOpen = false">
+        <button class="close-btn" (click)="isQueryPanelOpen = false">
             <span class="material-icons">close</span>
         </button>
     </div>
 
-    <!-- Super Admin specific tab toggle -->
-    <div class="panel-tabs" *ngIf="role === 'Super Admin'">
-        <button class="tab-btn" [class.active]="activeMessagesTab === 'history'" (click)="activeMessagesTab = 'history'">History</button>
-        <button class="tab-btn" [class.active]="activeMessagesTab === 'send'" (click)="activeMessagesTab = 'send'">Send New</button>
-    </div>
-
     <div class="panel-content">
-        <!-- Announcements list (visible to everyone, tab history for Super Admin) -->
-        <div class="messages-tab-content" *ngIf="role !== 'Super Admin' || activeMessagesTab === 'history'">
-            <div class="no-messages" *ngIf="visibleAnnouncements.length === 0">
-                <span class="material-icons">announcement</span>
-                <p>No announcements yet</p>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px; line-height: 1.5;">
+            Submit a direct query alert to your upstream manager. This will trigger a critical in-app notification for resolution.
+        </p>
+        <div class="announcement-form">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Recipient</label>
+                <input type="text" class="form-control" [value]="role === 'Merchant' ? 'Assigned Distributor' : 'Super Admin'" disabled style="background-color: #f1f5f9; cursor: not-allowed; border-color: #cbd5e1; color: #64748b; font-weight: 500; width: 100%; box-sizing: border-box; height: 38px; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1;" />
             </div>
-            <div class="message-card" *ngFor="let msg of visibleAnnouncements" [class.unread]="role !== 'Super Admin' && !msg.readBy.includes(role)" (click)="toggleMessageExpand(msg)">
-                <div class="message-card-header">
-                    <div class="message-meta">
-                        <span class="sender">{{ msg.sender }}</span>
-                        <span class="time">{{ msg.timestamp }}</span>
-                    </div>
-                    <h4>{{ msg.title }}</h4>
-                </div>
-                <div class="message-card-body" [class.expanded]="msg.expanded">
-                    <p>{{ msg.body }}</p>
-                    <div class="recipient-tag" *ngIf="role === 'Super Admin'">
-                        <span class="material-icons">person</span>
-                        To: {{ msg.recipient }}
-                    </div>
-                </div>
-                <div class="expand-indicator">
-                    <span class="material-icons">{{ msg.expanded ? 'expand_less' : 'expand_more' }}</span>
-                </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Query Subject</label>
+                <input type="text" class="form-control" placeholder="Brief subject (e.g. Delayed pickup)" [(ngModel)]="querySubject" style="width: 100%; box-sizing: border-box; height: 38px; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1;" />
+                <span style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: block;">Minimum 3 characters, maximum 100 characters</span>
             </div>
-        </div>
-
-        <!-- Send announcement form (Super Admin tab send) -->
-        <div class="announcement-form" *ngIf="role === 'Super Admin' && activeMessagesTab === 'send'">
-            <div class="form-group">
-                <label>Target Audience</label>
-                <select class="form-control" [(ngModel)]="announcementTarget">
-                    <option value="All">All Distributors & Merchants</option>
-                    <option value="All Distributors">All Distributors Only</option>
-                    <option value="Merchant:Sahil Gour">Merchant Sahil Gour Only</option>
-                </select>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Order / Shipment ID (Optional)</label>
+                <input type="text" class="form-control" placeholder="Enter Order ID" [(ngModel)]="queryOrderId" style="width: 100%; box-sizing: border-box; height: 38px; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1;" />
             </div>
-            <div class="form-group">
-                <label>Announcement Title</label>
-                <input type="text" class="form-control" placeholder="Enter title" [(ngModel)]="announcementTitle">
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">Detailed Message</label>
+                <textarea class="form-control" rows="6" placeholder="Describe the issue in detail..." [(ngModel)]="queryMessage" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; resize: vertical; font-family: inherit; font-size: 14px;"></textarea>
+                <span style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: block;">Minimum 10 characters, maximum 1000 characters</span>
             </div>
-            <div class="form-group">
-                <label>Announcement Body</label>
-                <textarea class="form-control" rows="8" placeholder="Type announcement details here..." [(ngModel)]="announcementBody"></textarea>
-            </div>
-            <button class="btn-primary-action" (click)="sendAnnouncement()">
-                <span class="material-icons">send</span> Send Announcement
+            <button class="btn-primary-action" (click)="submitQueryAlert()" [disabled]="isSubmittingQuery" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                <span class="material-icons" *ngIf="!isSubmittingQuery">send</span>
+                <span class="material-icons animate-spin" *ngIf="isSubmittingQuery">sync</span>
+                {{ isSubmittingQuery ? 'Sending...' : 'Submit Query Alert' }}
             </button>
         </div>
     </div>
@@ -255,19 +324,30 @@
         </button>
     </div>
     <div class="modal-body scrollable-body">
-        <div class="no-notifications" *ngIf="filteredNotifications.length === 0">
+        <div class="no-notifications" *ngIf="allNotifications.length === 0">
             <span class="material-icons">notifications_off</span>
             <p>No notifications yet</p>
         </div>
-        <div class="full-notification-item" *ngFor="let notif of filteredNotifications" [class.unread]="!notif.read" (click)="markNotificationRead(notif.id)">
-            <div class="notif-icon-wrapper" [ngClass]="notif.icon">
-                <span class="material-icons">{{ notif.icon }}</span>
+        <div class="full-notification-item"
+             *ngFor="let notif of allNotifications"
+             [class.unread]="!notif.isRead"
+             (click)="markNotificationRead(notif._id)">
+            <div class="notif-icon-wrapper" [ngClass]="getPriorityClass(notif.priority)">
+                <span class="material-icons">{{ getNotificationIcon(notif.type) }}</span>
             </div>
             <div class="notif-detail-content">
-                <p class="notif-text">{{ notif.message }}</p>
-                <span class="notif-time">{{ notif.timeAgo }}</span>
+                <p class="notif-text">
+                    <strong>{{ notif.title }}</strong>
+                    @if (notif.senderId) {
+                        <span class="sender-name" (click)="navigateToSenderProfile(notif.senderId._id, notif.senderId.role); $event.stopPropagation()">
+                            from {{ notif.senderId.firstName }} {{ notif.senderId.lastName }}
+                        </span>
+                    }
+                    : {{ notif.message }}
+                </p>
+                <span class="notif-time">{{ getFormattedTime(notif.createdAt) }}</span>
             </div>
-            <span class="unread-dot-badge" *ngIf="!notif.read"></span>
+            <span class="unread-dot-badge" *ngIf="!notif.isRead"></span>
         </div>
     </div>
     <div class="modal-footer">
