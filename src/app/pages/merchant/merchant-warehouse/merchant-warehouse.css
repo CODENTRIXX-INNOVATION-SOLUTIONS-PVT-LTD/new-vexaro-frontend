@@ -41,6 +41,20 @@
   padding: 24px;
 }
 
+.error-box,
+.form-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.form-error {
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -88,6 +102,28 @@
   border-radius: 20px;
   font-size: 13px;
   color: rgb(10, 10, 10);
+}
+
+.warehouse-selector {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 20px;
+  max-width: 420px;
+}
+
+.warehouse-selector label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(10, 10, 10, 0.55);
+  text-transform: uppercase;
+}
+
+.warehouse-selector select {
+  width: 100%;
+  border: 1.5px solid rgba(10, 10, 10, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
 }
 
 .card-body {
@@ -223,6 +259,11 @@
   box-shadow: 0 0 0 3px rgba(11, 74, 111, 0.1);
 }
 
+.form-group input[readonly] {
+  background: #f8fafc;
+  color: #64748b;
+}
+
 .form-actions {
   margin-top: 24px;
 }
@@ -245,6 +286,12 @@
 
 .btn-save:hover {
   background: rgb(8, 56, 84);
+}
+
+.btn-save:disabled,
+.btn-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* Toast Notifications */
