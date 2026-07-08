@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { FinanceService } from '../../services/finance.service';
 
 @Component({
   selector: 'app-dashboard-header',
@@ -15,6 +16,7 @@ import { NotificationService } from '../../services/notification.service';
 export class DashboardHeader implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+  private financeService = inject(FinanceService);
   private router = inject(Router);
 
   @Input() role = '';
@@ -34,6 +36,10 @@ export class DashboardHeader implements OnInit, OnDestroy {
   isNotificationsOpen = false;
   isProfileOpen = false;
   isSettingsOpen = false;
+
+  // Wallet balance
+  walletBalance = signal<number>(0);
+  isLoadingWallet = signal<boolean>(false);
 
   // Modals States
   isPasswordModalOpen = false;
@@ -96,9 +102,13 @@ export class DashboardHeader implements OnInit, OnDestroy {
     // Load actual notifications from backend
     this.fetchNotifications();
 
+    // Load wallet balance
+    this.fetchWalletBalance();
+
     // Set up polling (every 30 seconds)
     this.pollInterval = setInterval(() => {
       this.fetchNotifications();
+      this.fetchWalletBalance();
     }, 30000);
 
     // Refresh user profile details in the background
@@ -147,6 +157,21 @@ export class DashboardHeader implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Failed to load notifications:', err);
+      }
+    });
+  }
+
+  // Fetch wallet balance from the API
+  fetchWalletBalance() {
+    this.isLoadingWallet.set(true);
+    this.financeService.getMyWallet().subscribe({
+      next: (res) => {
+        this.walletBalance.set(res.data.balance || 0);
+        this.isLoadingWallet.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load wallet balance:', err);
+        this.isLoadingWallet.set(false);
       }
     });
   }

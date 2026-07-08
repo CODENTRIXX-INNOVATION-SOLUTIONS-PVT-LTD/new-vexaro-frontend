@@ -16,6 +16,16 @@
 
     <div class="header-right">
 
+        <!-- Wallet Balance Display -->
+        <div class="wallet-balance-display">
+            <span class="material-icons wallet-icon">account_balance_wallet</span>
+            @if (isLoadingWallet()) {
+                <span class="wallet-amount">Loading...</span>
+            } @else {
+                <span class="wallet-amount">₹{{ walletBalance() | number:'1.2-2' }}</span>
+            }
+        </div>
+
         <!-- Settings Icon Button with Dropdown -->
         <div style="position: relative;">
             <button class="icon-btn" (click)="toggleSettings($event)" title="Settings">

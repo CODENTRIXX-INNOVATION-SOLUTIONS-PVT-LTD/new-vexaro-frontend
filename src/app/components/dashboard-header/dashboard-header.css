@@ -82,6 +82,29 @@
     gap: 16px;
 }
 
+.wallet-balance-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.wallet-icon {
+    color: #10b981;
+    font-size: 18px;
+}
+
+.wallet-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.3px;
+}
+
 .icon-btn {
     width: 44px;
     height: 44px;
