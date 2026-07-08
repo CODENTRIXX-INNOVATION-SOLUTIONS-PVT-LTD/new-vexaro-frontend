@@ -122,7 +122,6 @@
   }
 
   @if (parsingErrors().length > 0) {
-  @if (csvPreview().length > 0) {
   <div class="card table-card">
     <div class="card-header">
       <h3>Processing Errors</h3>
@@ -146,6 +145,7 @@
   </div>
   }
 
+  @if (csvPreview().length > 0) {
   <div class="card table-card">
 
     <div class="card-header">

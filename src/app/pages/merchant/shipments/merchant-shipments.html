@@ -19,12 +19,23 @@
 
     <!-- Table Section -->
     <div class="table-card">
-        <div class="search-box">
-            <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></i>
-            <input type="text" placeholder="Search shipments by tracking ID or customer..." [(ngModel)]="shipmentSearch" (keyup.enter)="applyShipmentSearch()">
-            @if(shipmentSearch) {
-                <button class="search-clear-btn" type="button" (click)="clearShipmentSearch()">Clear</button>
-            }
+        <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <div class="search-box" style="flex: 1; min-width: 250px; margin-bottom: 0;">
+                <i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></i>
+                <input type="text" placeholder="Search shipments by tracking ID or customer..." [(ngModel)]="shipmentSearch" (keyup.enter)="applyShipmentSearch()">
+                @if(shipmentSearch) {
+                    <button class="search-clear-btn" type="button" (click)="clearShipmentSearch()">Clear</button>
+                }
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 13px; font-weight: 500; color: #475569; white-space: nowrap;">Shipment Type:</label>
+                <select [ngModel]="shipmentTypeFilter()" (ngModelChange)="shipmentTypeFilter.set($event); applyShipmentFilters()" class="form-control" style="width: auto; padding: 0.375rem 2.5rem 0.375rem 1rem; font-size: 13px; border-radius: 0.375rem; border: 1px solid #cbd5e1; height: 38px;">
+                    <option value="all">All Shipments</option>
+                    <option value="forward">Forward Orders</option>
+                    <option value="return">Returns / Reverse Pickups</option>
+                </select>
+            </div>
         </div>
 
   <div class="table-wrapper">
@@ -685,12 +696,61 @@
                                             <span>{{ item.quantity || 1 }}</span>
                                             <span>₹{{ item.sellingPrice || 0 }}</span>
                                         </div>
+                                        @if(item.qcEnable) {
+                                            <div style="margin-left: 1rem; margin-bottom: 0.75rem; font-size: 12px; color: #475569; display: flex; flex-direction: column; gap: 4px; background: #f8fafc; padding: 6px 10px; border-radius: 4px;">
+                                                <div><strong>QC Verification Info:</strong></div>
+                                                @if(item.qcProductName) {
+                                                    <div>Expected Product Name: {{ item.qcProductName }}</div>
+                                                }
+                                                @if(item.qcBrand) {
+                                                    <div>Expected Brand: {{ item.qcBrand }}</div>
+                                                }
+                                                @if(item.qcProductImage) {
+                                                    <div>Reference Image: <a [href]="item.qcProductImage" target="_blank" style="color: rgb(11, 74, 111); text-decoration: underline; font-weight: 500;">View Image URL</a></div>
+                                                }
+                                            </div>
+                                        }
                                     }
                                 </div>
                             } @else {
                                 <p class="detail-value">{{ selectedShipment().productName }}</p>
                             }
                         </div>
+
+                        @if (selectedShipment().isReturn) {
+                            <div class="info-group-card">
+                                <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Return Quality Control (QC)</h4>
+                                <div class="info-grid-2col" style="margin-bottom: 1rem;">
+                                    <div>
+                                        <span class="detail-label">QC Status</span>
+                                        <p class="detail-value" [style.color]="selectedShipment().qcStatus === 'PASSED' ? '#16a34a' : (selectedShipment().qcStatus === 'FAILED' ? '#dc2626' : 'rgb(11, 74, 111)')" style="font-weight: 600;">
+                                            {{ selectedShipment().qcStatus || 'PENDING' }}
+                                        </p>
+                                    </div>
+                                    @if(selectedShipment().qcCheckedAt) {
+                                        <div><span class="detail-label">QC Checked At</span><p class="detail-value">{{ selectedShipment().qcCheckedAt }}</p></div>
+                                    }
+                                    @if(selectedShipment().qcFailureReason) {
+                                        <div style="grid-column: span 2; margin-top: 0.5rem;">
+                                            <span class="detail-label">Failure Reason</span>
+                                            <p class="detail-value" style="color: #dc2626; background-color: #fef2f2; padding: 6px 10px; border-radius: 4px;">{{ selectedShipment().qcFailureReason }}</p>
+                                        </div>
+                                    }
+                                </div>
+                                @if(selectedShipment().qcImages && selectedShipment().qcImages.length > 0) {
+                                    <div>
+                                        <span class="detail-label">Verification Images</span>
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                                            @for(img of selectedShipment().qcImages; track img) {
+                                                <a [href]="img" target="_blank" rel="noopener noreferrer">
+                                                    <img [src]="img" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
 
                     <!-- Right: Live Tracking Timeline -->
@@ -769,7 +829,171 @@
                     @if (canInitiateRto(selectedShipment())) {
                         <button class="secondary-btn" type="button" [disabled]="isShipmentActionLoading()" (click)="initiateRto(selectedShipment())">Initiate RTO</button>
                     }
+                    @if (selectedShipment()?.status === 'DELIVERED' && !selectedShipment()?.isReturn) {
+                        <button class="primary-btn" type="button" [disabled]="isShipmentActionLoading()" (click)="openReverseModal(selectedShipment())" style="background-color: rgb(11, 74, 111); color: white;">Book Return</button>
+                    }
                     <button class="secondary-btn" (click)="closeDetailsModal()">Close Details</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Book Reverse Pickup Modal -->
+    @if(showReverseModal()){
+        <div class="modal-overlay" (click)="closeReverseModal()">
+            <div class="modal-content-wrapper" (click)="$event.stopPropagation()" style="max-width: 800px; width: 90%;">
+                
+                <!-- Modal Header -->
+                <div class="modal-header-bar">
+                    <div>
+                        <h3>Book Reverse Pickup / Return</h3>
+                        <p>Configure pickup customer details, QC verification, and booking parameters</p>
+                    </div>
+                    <button class="close-modal-btn" (click)="closeReverseModal()">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    </button>
+                </div>
+
+                <!-- Form Content -->
+                <div class="wizard-grid" style="grid-template-columns: 1fr; padding: 1.5rem; max-height: 65vh; overflow-y: auto; gap: 16px;">
+                    <!-- Step 1: Pickup Customer Details -->
+                    <div class="info-group-card" style="margin: 0; padding: 1.5rem;">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; color: rgb(11, 74, 111); font-size: 15px;">Pickup Customer Details (From)</h4>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Name</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupName">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Phone</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupPhone">
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-top: 1rem;">
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Email</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupEmail">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Address Line</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupAddress">
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-top: 1rem;">
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">City</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupCity">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">State</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupState">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Pincode</label>
+                                <input class="form-control" type="text" [(ngModel)]="reversePickupPincode">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Shipping Destination (Warehouse) -->
+                    <div class="info-group-card" style="margin: 0; padding: 1.5rem;">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; color: rgb(11, 74, 111); font-size: 15px;">Shipping Warehouse Destination (To)</h4>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-weight: 500; font-size: 13px;">Destination Warehouse</label>
+                            <select class="form-control" [ngModel]="reverseWarehouseMongoId" (ngModelChange)="selectReverseWarehouse($event)">
+                                @for(wh of warehouses; track getWarehouseOptionId(wh)) {
+                                    <option [value]="getWarehouseOptionId(wh)">{{ wh.name }} ({{ wh.pincode }})</option>
+                                }
+                            </select>
+                        </div>
+                        <div style="margin-top: 0.75rem; font-size: 12px; color: #475569; background-color: #f8fafc; padding: 8px 12px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            <strong>Delivery Address:</strong> {{ reverseWarehouseAddress || 'No warehouse selected' }}
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Package Specifications -->
+                    <div class="info-group-card" style="margin: 0; padding: 1.5rem;">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; color: rgb(11, 74, 111); font-size: 15px;">Package Specifications</h4>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Weight (kg)</label>
+                                <input class="form-control" type="number" step="0.1" [(ngModel)]="reverseWeight">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Length (cm)</label>
+                                <input class="form-control" type="number" [(ngModel)]="reverseLength">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Width (cm)</label>
+                                <input class="form-control" type="number" [(ngModel)]="reverseBreadth">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label style="font-weight: 500; font-size: 13px;">Height (cm)</label>
+                                <input class="form-control" type="number" [(ngModel)]="reverseHeight">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Order Items & QC Config -->
+                    <div class="info-group-card" style="margin: 0; padding: 1.5rem;">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; color: rgb(11, 74, 111); font-size: 15px;">Order Items & QC Configuration</h4>
+                        <div class="items-table" style="margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                            <div class="items-row items-head" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 12px;">
+                                <span>Product Name</span>
+                                <span>SKU</span>
+                                <span>Qty</span>
+                                <span>Price (₹)</span>
+                                <span style="text-align: center;">QC Check?</span>
+                            </div>
+                            @for(item of reverseOrderItems; track $index) {
+                                <div style="display: flex; flex-direction: column; border-bottom: 1px solid #e2e8f0; padding: 10px; background-color: #fff;">
+                                    <div class="items-row" style="border-bottom: none; padding: 0; align-items: center;">
+                                        <input class="form-control" type="text" [(ngModel)]="item.name" style="font-size: 12px; padding: 6px 10px; height: 34px;">
+                                        <input class="form-control" type="text" [(ngModel)]="item.sku" style="font-size: 12px; padding: 6px 10px; height: 34px;">
+                                        <input class="form-control" type="number" [(ngModel)]="item.units" (change)="calculateReverseSubTotal()" style="font-size: 12px; padding: 6px 10px; height: 34px;">
+                                        <input class="form-control" type="number" [(ngModel)]="item.selling_price" (change)="calculateReverseSubTotal()" style="font-size: 12px; padding: 6px 10px; height: 34px;">
+                                        <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+                                            <input type="checkbox" [(ngModel)]="item.qc_enable" style="width: 18px; height: 18px; cursor: pointer;">
+                                        </div>
+                                    </div>
+                                    @if(item.qc_enable) {
+                                        <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem; flex-wrap: wrap; background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                                            <div class="form-group flex-1" style="min-width: 140px; margin-bottom: 0;">
+                                                <label style="font-size: 11px; font-weight: 500; color: #475569; margin-bottom: 2px;">QC Product Name</label>
+                                                <input class="form-control" type="text" [(ngModel)]="item.qc_product_name" style="font-size: 11px; padding: 4px 8px; height: 28px;">
+                                            </div>
+                                            <div class="form-group flex-1" style="min-width: 140px; margin-bottom: 0;">
+                                                <label style="font-size: 11px; font-weight: 500; color: #475569; margin-bottom: 2px;">QC Brand</label>
+                                                <input class="form-control" type="text" [(ngModel)]="item.qc_brand" style="font-size: 11px; padding: 4px 8px; height: 28px;">
+                                            </div>
+                                            <div class="form-group flex-1" style="min-width: 180px; margin-bottom: 0;">
+                                                <label style="font-size: 11px; font-weight: 500; color: #475569; margin-bottom: 2px;">QC Reference Image URL</label>
+                                                <input class="form-control" type="text" [(ngModel)]="item.qc_product_image" style="font-size: 11px; padding: 4px 8px; height: 28px;" placeholder="https://image-link.jpg">
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button class="secondary-btn" type="button" (click)="addReverseOrderItem()" style="font-size: 12px; padding: 6px 12px; height: 34px;">+ Add Item</button>
+                            <div style="font-weight: 600; font-size: 14px; color: rgb(11, 74, 111);">Sub-total: ₹{{ reverseSubTotal | number:'1.2-2' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="modal-footer-bar">
+                    @if (shipmentActionError) {
+                        <div class="form-error" style="margin-right: auto; margin-bottom: 0;">{{ shipmentActionError }}</div>
+                    }
+                    @if (shipmentActionSuccess) {
+                        <div class="form-success" style="margin-right: auto; margin-bottom: 0;">{{ shipmentActionSuccess }}</div>
+                    }
+                    <button class="secondary-btn" type="button" (click)="closeReverseModal()" [disabled]="isShipmentActionLoading()">Cancel</button>
+                    <button class="primary-btn" type="button" (click)="submitReversePickup()" [disabled]="isShipmentActionLoading()" style="background-color: rgb(11, 74, 111); color: white;">
+                        {{ isShipmentActionLoading() ? 'Booking Return...' : 'Book Return / Reverse Pickup' }}
+                    </button>
                 </div>
             </div>
         </div>

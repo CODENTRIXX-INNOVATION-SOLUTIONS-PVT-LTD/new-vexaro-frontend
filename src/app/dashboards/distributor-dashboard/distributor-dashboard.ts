@@ -25,7 +25,8 @@ export class DistributorDashboard {
       icon: 'fa-box-open',
       expanded: false,
       children: [
-        { label: 'All Shipments', route: '/distributor/operations/shipments' }
+        { label: 'All Shipments', route: '/distributor/operations/shipments' },
+        { label: 'Warehouse Requests', route: '/distributor/operations/warehouse-requests' }
       ]
     },
     {
@@ -67,7 +68,7 @@ export class DistributorDashboard {
       ]
     },
     {
-      label: 'Weight Disputes',
+      label: 'Disputes',
       icon: 'fa-balance-scale',
       expanded: false,
       children: [

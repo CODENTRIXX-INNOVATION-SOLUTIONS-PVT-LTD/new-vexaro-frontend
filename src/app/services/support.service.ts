@@ -33,6 +33,10 @@ export class SupportService {
     return this.http.post<any>(`${this.baseUrl}/support/${id}/reply`, { message });
   }
 
+  updateTicket(id: string, payload: { status?: string; priority?: string; assignedTo?: string }): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/support/${id}`, payload);
+  }
+
   uploadAttachment(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);

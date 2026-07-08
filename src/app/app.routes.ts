@@ -316,6 +316,13 @@ export const routes: Routes = [
             (m) => m.AllShipments,
           ),
       },
+      {
+        path: "operations/warehouse-requests",
+        loadComponent: () =>
+          import("./pages/distributor/warehouse-requests/warehouse-requests").then(
+            (m) => m.DistributorWarehouseRequests,
+          ),
+      },
       { path: "operations", redirectTo: "operations/shipments", pathMatch: "full" },
       {
         path: "merchant-finance/wallets",

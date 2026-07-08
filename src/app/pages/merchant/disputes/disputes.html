@@ -129,6 +129,11 @@
           <span class="status-badge" [class]="selectedDispute()?.status?.toLowerCase() || ''">
             {{ selectedDispute()?.status }}
           </span>
+          @if (selectedDispute()?.status === 'RESOLVED') {
+            <button class="primary-btn" [disabled]="isClosing()" (click)="closeResolvedDispute()">
+              {{ isClosing() ? 'Closing...' : 'Close Dispute' }}
+            </button>
+          }
         </div>
       </header>
 

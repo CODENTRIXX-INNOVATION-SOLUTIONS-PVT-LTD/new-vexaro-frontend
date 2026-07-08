@@ -767,6 +767,13 @@ textarea.form-control {
     gap: 20px;
 }
 
+.booking-brand-logo {
+    width: 170px;
+    max-width: 70%;
+    height: auto;
+    object-fit: contain;
+}
+
 .success-icon {
     width: 80px;
     height: 80px;

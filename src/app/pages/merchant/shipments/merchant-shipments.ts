@@ -136,6 +136,28 @@ export class MerchantShipments implements OnInit {
   ndrPhone = '';
   ndrComments = '';
 
+  // Reverse pickup properties
+  shipmentTypeFilter = signal<'all' | 'forward' | 'return'>('all');
+  showReverseModal = signal(false);
+  reversePickupName = '';
+  reversePickupPhone = '';
+  reversePickupEmail = '';
+  reversePickupAddress = '';
+  reversePickupCity = '';
+  reversePickupState = '';
+  reversePickupPincode = '';
+  reversePickupCountry = 'India';
+  reverseWarehouseMongoId = '';
+  reverseWarehouseAddress = '';
+  reverseOrderItems: any[] = [];
+  reverseLength = 10;
+  reverseBreadth = 10;
+  reverseHeight = 10;
+  reverseWeight = 0.5;
+  reverseSubTotal = 0;
+  reversePaymentMethod = 'PREPAID';
+  reverseOrderId = '';
+
   // Wizard active step
   currentStep = signal(1);
 
@@ -272,6 +294,11 @@ export class MerchantShipments implements OnInit {
     const search = this.shipmentSearch.trim();
     if (search) query.search = search;
 
+    const type = this.shipmentTypeFilter();
+    if (type !== 'all') {
+      query.shipmentType = type;
+    }
+
     this.shipmentService.listShipments(query).pipe(
       finalize(() => { this.isLoadingShipments = false; }),
     ).subscribe({
@@ -326,6 +353,15 @@ export class MerchantShipments implements OnInit {
             sku: s.orderItems?.[0]?.sku || '',
             itemType: s.itemType || 'Parcel',
             isFragile: s.isFragile || false,
+            // QC and return fields
+            rawDestination: s.destination,
+            rawOrigin: s.origin,
+            rawWarehouse: s.warehouseId,
+            isReturn: s.isReturn || false,
+            qcStatus: s.qcStatus || null,
+            qcFailureReason: s.qcFailureReason || null,
+            qcImages: s.qcImages || [],
+            qcCheckedAt: this.formatDateTime(s.qcCheckedAt),
             timeline: (s.statusHistory || []).map((h: any) => ({
               title: h.status,
               date: this.formatDateTime(h.timestamp || h.updatedAt),
@@ -705,7 +741,7 @@ export class MerchantShipments implements OnInit {
   }
 
   canInitiateRto(shipment: any): boolean {
-    return ['DELIVERY_FAILED', 'OUT_FOR_DELIVERY'].includes(shipment?.status) && Boolean(shipment?.carrierAWB || shipment?.awb);
+    return shipment?.status === 'DELIVERY_FAILED' && Boolean(shipment?.carrierAWB || shipment?.awb);
   }
 
   openNdrForm(): void {
@@ -774,6 +810,7 @@ export class MerchantShipments implements OnInit {
     });
   }
 
+
   viewShipmentDetails(shipment: any): void {
     this.selectedShipment.set(shipment);
     this.showDetailsModal.set(true);
@@ -785,5 +822,235 @@ export class MerchantShipments implements OnInit {
     this.showNdrForm.set(false);
     this.shipmentActionError = '';
     this.shipmentActionSuccess = '';
+  }
+
+  applyShipmentFilters(): void {
+    this.shipmentPage = 1;
+    this.loadShipments();
+  }
+
+  openReverseModal(shipment: any): void {
+    this.closeDetailsModal();
+    this.errorMessage = '';
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+
+    const dest = shipment.rawDestination || {};
+    this.reverseOrderId = `RET-VX-${shipment.awb}-${Date.now().toString().slice(-4)}`;
+    this.reversePickupName = dest.name || shipment.customerName || '';
+    this.reversePickupPhone = dest.phone || shipment.receiverPhone || '';
+    this.reversePickupEmail = dest.email || shipment.receiverEmail || '';
+    this.reversePickupAddress = dest.addressLine || '';
+    this.reversePickupCity = dest.city || '';
+    this.reversePickupState = dest.state || '';
+    this.reversePickupPincode = dest.pincode || '';
+    this.reversePickupCountry = dest.country || 'India';
+
+    const whId = shipment.rawWarehouse?._id || shipment.rawWarehouse || '';
+    const warehouse = this.warehouses.find(wh => this.getWarehouseOptionId(wh) === whId) || this.warehouses[0];
+    if (warehouse) {
+      this.reverseWarehouseMongoId = this.getWarehouseOptionId(warehouse);
+      this.reverseWarehouseAddress = this.formatWarehouseAddress(warehouse);
+    } else {
+      this.reverseWarehouseMongoId = '';
+      this.reverseWarehouseAddress = '';
+    }
+
+    this.reverseOrderItems = (shipment.orderItems || []).map((item: any) => ({
+      name: item.productName || item.name || '',
+      sku: item.sku || '',
+      units: item.quantity || item.units || 1,
+      selling_price: item.sellingPrice || item.selling_price || 0,
+      discount: item.discount || 0,
+      tax: item.tax || 0,
+      qc_enable: false,
+      qc_product_name: item.productName || item.name || '',
+      qc_brand: '',
+      qc_product_image: '',
+    }));
+
+    if (this.reverseOrderItems.length === 0) {
+      this.reverseOrderItems.push({
+        name: '',
+        sku: '',
+        units: 1,
+        selling_price: 0,
+        discount: 0,
+        tax: 0,
+        qc_enable: false,
+        qc_product_name: '',
+        qc_brand: '',
+        qc_product_image: '',
+      });
+    }
+
+    this.reverseLength = shipment.length || 10;
+    this.reverseBreadth = shipment.width || shipment.breadth || 10;
+    this.reverseHeight = shipment.height || 10;
+    this.reverseWeight = shipment.weight || 0.5;
+    this.reversePaymentMethod = 'PREPAID';
+
+    this.calculateReverseSubTotal();
+    this.showReverseModal.set(true);
+  }
+
+  closeReverseModal(): void {
+    this.showReverseModal.set(false);
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+  }
+
+  selectReverseWarehouse(warehouseMongoId: string): void {
+    const warehouse = this.warehouses.find(wh => this.getWarehouseOptionId(wh) === warehouseMongoId);
+    if (warehouse) {
+      this.reverseWarehouseMongoId = this.getWarehouseOptionId(warehouse);
+      this.reverseWarehouseAddress = this.formatWarehouseAddress(warehouse);
+    }
+  }
+
+  addReverseOrderItem(): void {
+    this.reverseOrderItems.push({
+      name: '',
+      sku: '',
+      units: 1,
+      selling_price: 0,
+      discount: 0,
+      tax: 0,
+      qc_enable: false,
+      qc_product_name: '',
+      qc_brand: '',
+      qc_product_image: '',
+    });
+    this.calculateReverseSubTotal();
+  }
+
+  calculateReverseSubTotal(): void {
+    const total = this.reverseOrderItems.reduce((sum, item) => {
+      const price = Number(item.selling_price || 0);
+      const qty = Number(item.units || 0);
+      const disc = Number(item.discount || 0);
+      const tx = Number(item.tax || 0);
+      return sum + (price * qty - disc + tx);
+    }, 0);
+    this.reverseSubTotal = Math.max(0, total);
+  }
+
+  submitReversePickup(): void {
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+
+    if (!this.reversePickupName.trim() || !this.reversePickupPhone.trim() || !this.reversePickupAddress.trim() || !this.reversePickupCity.trim() || !this.reversePickupState.trim() || !this.reversePickupPincode.trim()) {
+      this.shipmentActionError = 'All pickup customer fields are required.';
+      return;
+    }
+
+    if (!/^\d{6}$/.test(this.reversePickupPincode.trim())) {
+      this.shipmentActionError = 'Enter a valid 6-digit pincode.';
+      return;
+    }
+
+    if (!/^[6-9]\d{9}$/.test(this.reversePickupPhone.trim())) {
+      this.shipmentActionError = 'Enter a valid 10-digit phone number.';
+      return;
+    }
+
+    const warehouse = this.warehouses.find(wh => this.getWarehouseOptionId(wh) === this.reverseWarehouseMongoId);
+    if (!warehouse) {
+      this.shipmentActionError = 'Selected destination warehouse not found.';
+      return;
+    }
+
+    if (this.reverseOrderItems.length === 0) {
+      this.shipmentActionError = 'At least one order item is required.';
+      return;
+    }
+
+    for (const item of this.reverseOrderItems) {
+      if (!item.name.trim()) {
+        this.shipmentActionError = 'Item product name is required.';
+        return;
+      }
+      if (!item.sku.trim()) {
+        this.shipmentActionError = 'Item SKU is required.';
+        return;
+      }
+      if (item.units <= 0) {
+        this.shipmentActionError = 'Item quantity must be greater than zero.';
+        return;
+      }
+      if (item.qc_enable) {
+        if (!item.qc_product_image.trim()) {
+          this.shipmentActionError = `QC image URL is required for QC-enabled item: ${item.name}`;
+          return;
+        }
+      }
+    }
+
+    const qcCount = this.reverseOrderItems.filter(item => item.qc_enable).length;
+    if (qcCount > 0 && this.reverseOrderItems.length > 2) {
+      this.shipmentActionError = 'QC return shipments cannot have more than 2 items. Reduce item count or disable QC check.';
+      return;
+    }
+
+    const payload = {
+      warehouseId: this.reverseWarehouseMongoId,
+      orderId: this.reverseOrderId || undefined,
+      paymentMethod: 'PREPAID',
+      pickupFirstName: this.reversePickupName.split(' ')[0] || this.reversePickupName,
+      pickupLastName: this.reversePickupName.split(' ').slice(1).join(' ') || '',
+      pickupPhone: this.reversePickupPhone,
+      pickupEmail: this.reversePickupEmail || undefined,
+      pickupAddress: this.reversePickupAddress,
+      pickupCity: this.reversePickupCity,
+      pickupState: this.reversePickupState,
+      pickupPincode: this.reversePickupPincode,
+      pickupCountry: this.reversePickupCountry || 'India',
+
+      shippingFirstName: warehouse.contactPerson,
+      shippingLastName: '',
+      shippingPhone: warehouse.phone || '9999999999',
+      shippingEmail: warehouse.email || '',
+      shippingAddress: warehouse.address,
+      shippingCity: warehouse.city,
+      shippingState: warehouse.state,
+      shippingPincode: warehouse.pincode,
+
+      orderItems: this.reverseOrderItems.map(item => ({
+        name: item.name.trim(),
+        sku: item.sku.trim(),
+        units: Number(item.units),
+        selling_price: Number(item.selling_price),
+        discount: Number(item.discount || 0),
+        tax: Number(item.tax || 0),
+        qc_enable: Boolean(item.qc_enable),
+        qc_product_name: item.qc_product_name.trim() || item.name.trim(),
+        qc_brand: item.qc_brand.trim() || undefined,
+        qc_product_image: item.qc_product_image.trim() || undefined,
+      })),
+
+      subTotal: Number(this.reverseSubTotal),
+      totalDiscount: Number(this.reverseOrderItems.reduce((sum, item) => sum + Number(item.discount || 0), 0)),
+      length: Number(this.reverseLength),
+      breadth: Number(this.reverseBreadth),
+      height: Number(this.reverseHeight),
+      weight: Number(this.reverseWeight),
+    };
+
+    this.isShipmentActionLoading.set(true);
+    this.shipmentService.createReverseShipment(payload).pipe(
+      finalize(() => this.isShipmentActionLoading.set(false))
+    ).subscribe({
+      next: (res) => {
+        this.shipmentActionSuccess = 'Reverse pickup booked successfully!';
+        this.loadShipments();
+        this.loadStats();
+        setTimeout(() => {
+          this.closeReverseModal();
+        }, 1500);
+      },
+      error: (err) => {
+        this.shipmentActionError = err.error?.message || 'Failed to book reverse pickup.';
+      }
+    });
   }
 }

@@ -46,4 +46,12 @@ export class DisputeService {
   addComment(id: string, message: string): Observable<any> {
     return this.http.patch<any>(`${this.baseUrl}/disputes/${id}`, { comment: message });
   }
+
+  updateDispute(id: string, payload: { status?: string; resolution?: string; comment?: string; assignedTo?: string }): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/disputes/${id}`, payload);
+  }
+
+  closeDispute(id: string): Observable<any> {
+    return this.updateDispute(id, { status: 'CLOSED' });
+  }
 }

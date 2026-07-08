@@ -15,7 +15,7 @@ const REQUIRED_HEADERS = [
   'origin_name', 'origin_phone', 'origin_address', 'origin_city', 'origin_state', 'origin_pincode',
   'dest_name', 'dest_phone', 'dest_address', 'dest_city', 'dest_state', 'dest_pincode',
   'weight', 'length', 'breadth', 'height',
-  'product_name', 'sku', 'quantity', 'selling_price', 'discount', 'tax',
+  'product_name', 'sku', 'units', 'selling_price', 'discount', 'tax',
   'declared_value', 'payment_method', 'cod_amount',
 ];
 
@@ -192,11 +192,11 @@ export class BulkUpload implements OnDestroy {
         this.totalRows.set(total);
         this.validRows.set(created);
         this.errorCount.set(failed);
-        this.parsingErrors.set((data.errors || []).map((reason: string, index: number) => ({
-          row: index + 1,
+        this.parsingErrors.set((data.errors || []).map((error: any, index: number) => ({
+          row: Number(error?.row || index + 1),
           field: "row",
           value: "-",
-          reason,
+          reason: String(error?.reason || error),
         })));
         this.uploadProgress.set(total ? Math.min(100, Math.round((processed / total) * 100)) : 10);
 
