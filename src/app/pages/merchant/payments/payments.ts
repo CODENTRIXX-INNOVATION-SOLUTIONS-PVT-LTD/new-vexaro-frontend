@@ -89,6 +89,8 @@ export class Payments implements OnInit, OnDestroy {
 
   // ── Wallet ────────────────────────────────────────────────────────────────
   balance = 0;
+  reservedBalance = 0;
+  availableBalance = 0;
   codEscrowBalance = 0;
 
   // ── Razorpay Top-up ───────────────────────────────────────────────────────
@@ -162,6 +164,8 @@ export class Payments implements OnInit, OnDestroy {
           if (res?.data) {
             this.balance          = res.data.balance         ?? 0;
             this.codEscrowBalance = res.data.codEscrowBalance ?? 0;
+            this.reservedBalance  = res.data.reservedBalance  ?? 0;
+            this.availableBalance = res.data.availableBalance ?? 0;
           }
         },
         error: () => {},

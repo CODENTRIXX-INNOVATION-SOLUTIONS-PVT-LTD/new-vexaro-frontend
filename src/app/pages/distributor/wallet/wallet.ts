@@ -27,6 +27,8 @@ export class DistributorWallet implements OnInit {
   // ── State ─────────────────────────────────────────────────────────────────
   activeTab: 'topup' | 'history' | 'transactions' | 'request' = 'topup';
   balance: number = 0;
+  reservedBalance = 0;
+  availableBalance = 0;
 
   // Top-up form
   packages = [5000, 10000, 25000, 50000, 100000];
@@ -64,7 +66,11 @@ export class DistributorWallet implements OnInit {
   loadWallet(): void {
     this.financeService.getMyWallet().subscribe({
       next: (res) => {
-        if (res?.data) this.balance = res.data.balance ?? 0;
+        if (res?.data) {
+          this.balance = res.data.balance ?? 0;
+          this.reservedBalance = res.data.reservedBalance ?? 0;
+          this.availableBalance = res.data.availableBalance ?? 0;
+        }
       },
       error: (err) => console.error('Wallet load failed', err),
     });
