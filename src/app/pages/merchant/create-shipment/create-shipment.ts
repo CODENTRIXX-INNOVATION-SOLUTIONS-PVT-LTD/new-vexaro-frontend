@@ -254,7 +254,8 @@ export class CreateShipment implements OnInit {
               const charges = rateEntry?.charges || {};
               const totalRate = rateEntry
                 ? Number(
-                    charges.total_forward_charges
+                    rateEntry.merchantCost
+                    ?? charges.total_forward_charges
                     ?? charges.total_return_charges
                     ?? rateEntry.total_amount
                     ?? rateEntry.rate
@@ -271,6 +272,11 @@ export class CreateShipment implements OnInit {
                 etd:   rateEntry?.expected_delivery?.delivery || rateEntry?.etd || rateEntry?.estimated_delivery || null,
                 logo:  'fas fa-truck-fast',
                 color: '#1e293b',
+                carrierCost: rateEntry?.carrierCost || 0,
+                distributorCost: rateEntry?.distributorCost || 0,
+                merchantCost: rateEntry?.merchantCost || 0,
+                vexaroProfit: rateEntry?.vexaroProfit || 0,
+                distributorProfit: rateEntry?.distributorProfit || 0,
               };
             }).filter((courier: any) => courier.id && Number(courier.rate) > 0);
 
@@ -292,7 +298,7 @@ export class CreateShipment implements OnInit {
             console.error('Velocity rates fetch failed:', err);
             this.isLoadingRates.set(false);
             this.couriers = [];
-            this.errorMessage = 'Could not fetch live Velocity rates. Booking is blocked until a live priced courier is available.';
+            this.errorMessage = err.error?.message || err.message || 'Could not fetch live Velocity rates. Booking is blocked until a live priced courier is available.';
           },
         });
       },

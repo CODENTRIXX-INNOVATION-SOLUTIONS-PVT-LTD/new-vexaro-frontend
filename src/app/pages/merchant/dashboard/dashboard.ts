@@ -112,7 +112,7 @@ export class MarchandeDashboardPage implements OnInit {
       (by.OUT_FOR_DELIVERY || 0)
     ).toLocaleString('en-IN');
     this.cards[3].value = (by.ORDER_CREATED || 0).toLocaleString('en-IN');
-    this.cards[4].value = `INR ${(this.dashboardStats.totalCost || 0).toLocaleString('en-IN')}`;
+    this.cards[4].value = `₹${(this.dashboardStats.totalCost || 0).toLocaleString('en-IN')}`;
   }
 
   private applyShipmentResponse(response: any, selectionMode: ModalSelectionMode): void {
@@ -160,7 +160,7 @@ export class MarchandeDashboardPage implements OnInit {
       date: shipment.createdAt
         ? new Date(shipment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
         : '-',
-      amount: `INR ${Number(shipment.merchantCost || 0).toFixed(2)}`,
+      amount: `₹${Number(shipment.merchantCost || 0).toFixed(2)}`,
       weight: `${weightKg.toFixed(2)} kg`,
       weightKg,
       isCOD: Boolean(shipment.isCOD),
@@ -374,7 +374,7 @@ export class MarchandeDashboardPage implements OnInit {
         <div class="label-footer">
           <div>Date: ${this.escapeHtml(shipment.date)}</div>
           <div>Weight: ${this.escapeHtml(shipment.weight)}</div>
-          <div class="amount-badge">${shipment.isCOD ? 'COD: INR ' + shipment.codAmount : 'PREPAID'}</div>
+          <div class="amount-badge">${shipment.isCOD ? 'COD: ₹' + shipment.codAmount : 'PREPAID'}</div>
         </div>
       </div>`;
   }

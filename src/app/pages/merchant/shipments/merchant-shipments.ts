@@ -499,7 +499,8 @@ export class MerchantShipments implements OnInit {
               const charges = rateEntry?.charges || {};
               const rate = rateEntry
                 ? Number(
-                    charges.total_forward_charges
+                    rateEntry.merchantCost
+                    ?? charges.total_forward_charges
                     ?? charges.total_return_charges
                     ?? rateEntry.total_amount
                     ?? rateEntry.rate
@@ -526,7 +527,7 @@ export class MerchantShipments implements OnInit {
               return a.rate - b.rate;
             });
           },
-          error: () => {
+          error: (err) => {
             this.isLoadingRates.set(false);
             // Rates failed — still show carriers, price shown as 0
             this.couriers = carriers.map((c: any) => ({
@@ -538,7 +539,7 @@ export class MerchantShipments implements OnInit {
               logo:  'fas fa-truck-fast',
               color: '#1e293b',
             }));
-            this.errorMessage = 'Could not fetch live carrier rates. Charges will be calculated at booking.';
+            this.errorMessage = err.error?.message || err.message || 'Could not fetch live carrier rates. Charges will be calculated at booking.';
           },
         });
       },
