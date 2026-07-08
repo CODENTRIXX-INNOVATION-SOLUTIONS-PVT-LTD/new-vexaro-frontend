@@ -38,6 +38,8 @@ export class ShipmentService {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.merchant) httpParams = httpParams.set('merchant', params.merchant);
     if (params.distributor) httpParams = httpParams.set('distributor', params.distributor);
+    if (params.isReturn !== undefined) httpParams = httpParams.set('isReturn', String(params.isReturn));
+    if (params.shipmentType) httpParams = httpParams.set('shipmentType', params.shipmentType);
     return this.http.get<ShipmentListResponse>(`${this.baseUrl}/shipments`, { params: httpParams });
   }
 
@@ -47,6 +49,10 @@ export class ShipmentService {
 
   createShipment(payload: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/shipments`, payload);
+  }
+
+  createReverseShipment(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/reverse`, payload);
   }
 
   cancelShipment(id: string): Observable<any> {

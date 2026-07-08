@@ -54,6 +54,7 @@ export class MerchantDisputesComponent implements OnInit {
   newCommentText = '';
   isCommenting = signal(false);
   commentError = signal('');
+  isClosing = signal(false);
 
   readonly categoryLabels = CATEGORY_LABELS;
 
@@ -229,6 +230,23 @@ export class MerchantDisputesComponent implements OnInit {
         this.selectDispute(dispute);
       },
       error: (err) => this.commentError.set(err?.error?.message || 'Failed to post message.'),
+    });
+  }
+
+  closeResolvedDispute(): void {
+    const dispute = this.selectedDispute();
+    if (!dispute || dispute.status !== 'RESOLVED') return;
+
+    this.isClosing.set(true);
+    this.commentError.set('');
+    this.disputeService.closeDispute(dispute.id).pipe(
+      finalize(() => this.isClosing.set(false)),
+    ).subscribe({
+      next: (res) => {
+        this.selectedDispute.set(this.mapDispute(res?.data ?? res));
+        this.load();
+      },
+      error: (err) => this.commentError.set(err?.error?.message || 'Failed to close dispute.'),
     });
   }
 

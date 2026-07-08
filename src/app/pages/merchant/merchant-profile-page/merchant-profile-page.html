@@ -2,12 +2,12 @@
     <div class="page-header">
         <div class="header-left">
             <div class="avatar-wrap">
-                <div class="avatar profile-initials">{{ (owner.ownerName || shop.shopName || 'M').slice(0, 1).toUpperCase() }}</div>
+                <div class="avatar profile-initials">{{ (displayName || 'M').slice(0, 1).toUpperCase() }}</div>
             </div>
             <div>
-                <h2>{{ shop.shopName || 'Merchant Profile' }}</h2>
+                <h2>{{ displayName }}</h2>
                 <p class="header-sub">{{ owner.email }}</p>
-                <span class="verified-badge">Verified Merchant</span>
+                <span class="verified-badge">{{ shop.status || 'Merchant' }}</span>
             </div>
         </div>
         @if (saveSuccess) {
@@ -16,7 +16,7 @@
     </div>
 
     @if(error) {
-        <div class="form-card" style="border-left: 4px solid #dc2626; color: #b91c1c;">{{ error }}</div>
+        <div class="form-card error-card">{{ error }}</div>
     }
 
     <div class="profile-tabs">
@@ -25,47 +25,75 @@
         <button class="tab-btn" [class.active]="activeTab === 'address'" (click)="changeTab('address')">Address</button>
     </div>
 
-    @if (activeTab === 'shop') {
+    @if (isLoading) {
+        <div class="form-card">Loading merchant profile...</div>
+    }
+
+    @if (!isLoading && activeTab === 'shop') {
     <div class="form-card">
         <div class="section-header">
             <div>
                 <h3>Business Information</h3>
-                <p class="section-sub">These fields are saved to your Vexaro account profile.</p>
+                <p class="section-sub">Core account details used across Vexaro merchant operations.</p>
             </div>
         </div>
 
         <div class="form-grid">
             <div class="form-group">
                 <label>Company / Shop Name <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="shop.shopName" name="shopName" placeholder="Company or shop name" />
+                <input type="text" [(ngModel)]="shop.companyName" name="companyName" placeholder="Company or shop name" />
             </div>
             <div class="form-group">
                 <label>Registered Business Name</label>
                 <input type="text" [(ngModel)]="shop.businessName" name="businessName" placeholder="Registered business name" />
             </div>
+            <div class="form-group">
+                <label>Merchant Account ID</label>
+                <input type="text" [(ngModel)]="shop.merchantId" name="merchantId" readonly />
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <input type="text" [(ngModel)]="shop.role" name="role" readonly />
+            </div>
+            <div class="form-group">
+                <label>Account Status</label>
+                <input type="text" [(ngModel)]="shop.status" name="status" readonly />
+            </div>
+            <div class="form-group">
+                <label>Account Created</label>
+                <input type="text" [(ngModel)]="shop.createdAt" name="createdAt" readonly />
+            </div>
+            <div class="form-group">
+                <label>Last Login</label>
+                <input type="text" [(ngModel)]="shop.lastLoginAt" name="lastLoginAt" readonly />
+            </div>
         </div>
 
         <div class="form-actions">
             <button class="btn-save" (click)="saveChanges()" [disabled]="isSaving">
-                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+                {{ isSaving ? 'Saving...' : 'Save Business Details' }}
             </button>
         </div>
     </div>
     }
 
-    @if (activeTab === 'owner') {
+    @if (!isLoading && activeTab === 'owner') {
     <div class="form-card">
         <div class="section-header">
             <div>
                 <h3>Owner Information</h3>
-                <p class="section-sub">Primary account contact details.</p>
+                <p class="section-sub">Primary merchant contact used for account and shipment communication.</p>
             </div>
         </div>
 
         <div class="form-grid">
             <div class="form-group">
-                <label>Owner Name <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="owner.ownerName" name="ownerName" placeholder="Full name" />
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="owner.firstName" name="firstName" placeholder="First name" />
+            </div>
+            <div class="form-group">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" [(ngModel)]="owner.lastName" name="lastName" placeholder="Last name" />
             </div>
             <div class="form-group">
                 <label>Mobile Number <span class="req">*</span></label>
@@ -82,32 +110,117 @@
 
         <div class="form-actions">
             <button class="btn-save" (click)="saveChanges()" [disabled]="isSaving">
-                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+                {{ isSaving ? 'Saving...' : 'Save Owner Details' }}
             </button>
         </div>
     </div>
     }
 
-    @if (activeTab === 'address') {
+    @if (!isLoading && activeTab === 'address') {
     <div class="form-card">
         <div class="section-header">
             <div>
-                <h3>Business Address</h3>
-                <p class="section-sub">For pickup warehouse changes, use the Warehouse page approval flow.</p>
+                <h3>Address & Pickup Warehouse</h3>
+                <p class="section-sub">Business address plus the Velocity pickup warehouse used for shipments.</p>
             </div>
         </div>
 
         <div class="form-grid">
             <div class="form-group full-width">
-                <label>Business Address</label>
+                <label>Registered Business Address</label>
                 <input type="text" [(ngModel)]="address.streetAddress" name="street" placeholder="Registered account address" />
             </div>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions compact-actions">
             <button class="btn-save" (click)="saveChanges()" [disabled]="isSaving">
-                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+                {{ isSaving ? 'Saving...' : 'Save Business Address' }}
             </button>
+        </div>
+
+        <div class="warehouse-section">
+            <div class="readonly-notice">
+                Pickup address changes require distributor approval. Use the <a routerLink="/merchant/warehouse">Warehouse page</a> for address change requests.
+            </div>
+
+            @if (warehouseError) {
+                <div class="error-card inline-error">{{ warehouseError }}</div>
+            }
+
+            <div class="warehouse-grid">
+                <div class="info-card">
+                    <div class="info-card-body">
+                        <span class="info-label">Warehouse ID</span>
+                        <span class="info-val warehouse-id">{{ warehouse.warehouseId || '-' }}</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-body">
+                        <span class="info-label">Velocity Warehouse ID</span>
+                        <span class="info-val warehouse-id">{{ warehouse.velocityWarehouseId || 'Not synced yet' }}</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-body">
+                        <span class="info-label">Warehouse Status</span>
+                        <span class="info-val">{{ warehouse.isActive ? 'Active' : 'Inactive' }}</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-body">
+                        <span class="info-label">GST Number</span>
+                        <span class="info-val">{{ warehouse.gstNo || '-' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Warehouse Name</label>
+                    <input type="text" [(ngModel)]="warehouse.name" name="warehouseName" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Contact Person <span class="req">*</span></label>
+                    <input type="text" [(ngModel)]="warehouse.contactPerson" name="warehouseContactPerson" />
+                </div>
+                <div class="form-group">
+                    <label>Contact Phone <span class="req">*</span></label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">+91</span>
+                        <input type="tel" [(ngModel)]="warehouse.phone" name="warehousePhone" maxlength="10" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Warehouse Email</label>
+                    <input type="email" [(ngModel)]="warehouse.email" name="warehouseEmail" />
+                </div>
+                <div class="form-group full-width">
+                    <label>Pickup Address</label>
+                    <input type="text" [(ngModel)]="warehouse.address" name="warehouseAddress" readonly />
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" [(ngModel)]="warehouse.city" name="warehouseCity" readonly />
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input type="text" [(ngModel)]="warehouse.state" name="warehouseState" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Pincode</label>
+                    <input type="text" [(ngModel)]="warehouse.pincode" name="warehousePincode" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Country</label>
+                    <input type="text" [(ngModel)]="warehouse.country" name="warehouseCountry" readonly />
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn-save" (click)="saveWarehouseContact()" [disabled]="isSaving || !warehouse.mongoId">
+                    {{ isSaving ? 'Saving...' : 'Save Warehouse Contact' }}
+                </button>
+            </div>
         </div>
     </div>
     }

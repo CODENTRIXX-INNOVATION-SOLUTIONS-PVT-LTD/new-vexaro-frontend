@@ -73,6 +73,12 @@ export interface MerchantListQuery {
   limit?: number;
 }
 
+export interface WarehouseChangeRequestQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MerchantService {
   private readonly baseUrl = (window as any).__env?.apiUrl ?? 'http://localhost:5000/api/v1';
@@ -119,7 +125,7 @@ export class MerchantService {
     return this.http.post<any>(`${this.baseUrl}/users/warehouses/${id}/address-change-request`, payload);
   }
 
-  listWarehouseAddressChangeRequests(params: { page?: number; limit?: number; status?: string } = {}): Observable<any> {
+  listWarehouseAddressChangeRequests(params: WarehouseChangeRequestQuery = {}): Observable<any> {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
@@ -129,6 +135,22 @@ export class MerchantService {
 
   cancelWarehouseAddressChangeRequest(requestId: string): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/users/warehouses/address-change-requests/${requestId}/cancel`, {});
+  }
+
+  listDistributorWarehouseChangeRequests(params: WarehouseChangeRequestQuery = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    return this.http.get<any>(`${this.baseUrl}/users/distributor/warehouse-change-requests`, { params: httpParams });
+  }
+
+  approveWarehouseAddressChangeRequest(requestId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/users/distributor/warehouse-change-requests/${requestId}/approve`, {});
+  }
+
+  rejectWarehouseAddressChangeRequest(requestId: string, reason: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/users/distributor/warehouse-change-requests/${requestId}/reject`, { reason });
   }
 
   /**

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { SupportService } from '../../../../services/support.service';
 
 @Component({
@@ -26,6 +27,12 @@ export class Tickets implements OnInit {
   readonly limit = 20;
   get totalPages() { return Math.ceil(this.total / this.limit) || 1; }
 
+  selectedTicket: any = null;
+  isDetailLoading = false;
+  isUpdating = false;
+  detailError = '';
+  replyText = '';
+
   ngOnInit(): void { this.load(); }
 
   load(): void {
@@ -40,7 +47,7 @@ export class Tickets implements OnInit {
         const raw: any[] = res?.data?.tickets ?? res?.data?.items ?? res?.data ?? [];
         this.tickets = raw.map((t: any) => ({
           id:          t._id,
-          displayId:   t.ticketId ?? (t._id as string)?.slice(-6).toUpperCase(),
+          displayId:   t.ticketNumber ?? t.ticketId ?? (t._id as string)?.slice(-6).toUpperCase(),
           subject:     t.subject ?? t.title ?? '—',
           category:    t.category ?? '—',
           priority:    t.priority ?? 'Medium',
@@ -71,4 +78,93 @@ export class Tickets implements OnInit {
 
   prevPage(): void { if (this.page > 1) { this.page--; this.load(); } }
   nextPage(): void { if (this.page < this.totalPages) { this.page++; this.load(); } }
+
+  openTicket(ticket: any): void {
+    if (!ticket?.id) return;
+    this.isDetailLoading = true;
+    this.detailError = '';
+    this.replyText = '';
+    this.supportService.getTicketById(ticket.id)
+      .pipe(finalize(() => { this.isDetailLoading = false; }))
+      .subscribe({
+        next: (res) => {
+          this.selectedTicket = this.mapTicketDetail(res?.data ?? res);
+        },
+        error: (err) => {
+          this.detailError = err?.error?.message || 'Failed to load ticket.';
+        },
+      });
+  }
+
+  closeDetail(): void {
+    this.selectedTicket = null;
+    this.detailError = '';
+    this.replyText = '';
+  }
+
+  updateStatus(status: string): void {
+    if (!this.selectedTicket?.id) return;
+    this.isUpdating = true;
+    this.detailError = '';
+    this.supportService.updateTicket(this.selectedTicket.id, { status })
+      .pipe(finalize(() => { this.isUpdating = false; }))
+      .subscribe({
+        next: (res) => {
+          this.selectedTicket = this.mapTicketDetail(res?.data ?? res);
+          this.load();
+        },
+        error: (err) => {
+          this.detailError = err?.error?.message || 'Failed to update ticket.';
+        },
+      });
+  }
+
+  submitReply(): void {
+    const message = this.replyText.trim();
+    if (!this.selectedTicket?.id || !message) return;
+
+    this.isUpdating = true;
+    this.detailError = '';
+    this.supportService.addReply(this.selectedTicket.id, message)
+      .pipe(finalize(() => { this.isUpdating = false; }))
+      .subscribe({
+        next: (res) => {
+          this.replyText = '';
+          this.selectedTicket = this.mapTicketDetail(res?.data ?? res);
+          this.load();
+        },
+        error: (err) => {
+          this.detailError = err?.error?.message || 'Failed to post reply.';
+        },
+      });
+  }
+
+  canReply(): boolean {
+    const status = String(this.selectedTicket?.status || '').toUpperCase();
+    return Boolean(this.selectedTicket?.id && !['RESOLVED', 'CLOSED'].includes(status));
+  }
+
+  private mapTicketDetail(ticket: any): any {
+    return {
+      id: ticket._id,
+      displayId: ticket.ticketNumber ?? (ticket._id as string)?.slice(-6).toUpperCase(),
+      subject: ticket.subject ?? '-',
+      description: ticket.description ?? '-',
+      category: ticket.category ?? '-',
+      priority: ticket.priority ?? 'MEDIUM',
+      status: ticket.status ?? 'OPEN',
+      raisedBy: ticket.raisedBy ? `${ticket.raisedBy.firstName || ''} ${ticket.raisedBy.lastName || ''}`.trim() || ticket.raisedBy.email : '-',
+      assignedTo: ticket.assignedTo ? `${ticket.assignedTo.firstName || ''} ${ticket.assignedTo.lastName || ''}`.trim() || ticket.assignedTo.email : '-',
+      createdAt: ticket.createdAt,
+      updatedAt: ticket.updatedAt,
+      replies: (ticket.replies || []).map((reply: any) => ({
+        author: reply.author?.role === 'MERCHANT' ? 'Merchant'
+          : reply.author?.role === 'DISTRIBUTOR' ? 'Distributor'
+          : reply.author?.role === 'SUPER_ADMIN' ? 'Super Admin'
+          : 'User',
+        message: reply.message || '',
+        createdAt: reply.createdAt,
+      })),
+    };
+  }
 }

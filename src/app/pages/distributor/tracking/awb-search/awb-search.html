@@ -78,6 +78,10 @@
             <strong>{{ shipment.carrier }}</strong>
           </div>
           <div class="detail-item">
+            <span>Carrier AWB</span>
+            <strong>{{ shipment.carrierAWB || 'Pending' }}</strong>
+          </div>
+          <div class="detail-item">
             <span>Weight</span>
             <strong>{{ shipment.weight }} kg</strong>
           </div>
@@ -91,6 +95,11 @@
         </div>
 
         <div class="quick-links mt-4">
+          @if (shipment.trackingUrl) {
+            <a class="action-btn-outline w-100" [href]="shipment.trackingUrl" target="_blank" rel="noopener noreferrer">
+              Open Carrier Tracking
+            </a>
+          }
           <button class="action-btn-outline w-100" (click)="viewHistory()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
               stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;">
@@ -139,6 +148,7 @@
                     @if (event.note && event.note !== '—') {
                       <p style="margin:4px 0 0;font-size:12px;color:#64748b;">{{ event.note }}</p>
                     }
+                    <p style="margin:4px 0 0;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;">{{ event.source }}</p>
                   </div>
                 </div>
               </div>

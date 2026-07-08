@@ -120,7 +120,9 @@ export class MarchandeDashboardPage implements OnInit {
     this.shipments = raw.map((shipment: any) => this.mapShipment(shipment));
 
     this.shipments.forEach((shipment) => {
-      if (!(shipment.id in this.manifestSelection)) this.manifestSelection[shipment.id] = selectionMode === 'manifest';
+      if (selectionMode === 'manifest' && !(shipment.id in this.manifestSelection)) {
+        this.manifestSelection[shipment.id] = true;
+      }
     });
   }
 
@@ -244,89 +246,9 @@ export class MarchandeDashboardPage implements OnInit {
     const withManifest = selected.filter(shipment => shipment.manifestUrl);
     const skipped = selected.length - withManifest.length;
 
-<<<<<<< HEAD
-    const merchantName = this.getMerchantName();
-    const rowsHtml = selected.map((shipment, index) => `
-      <tr>
-        <td>${index + 1}</td>
-        <td><strong>${this.escapeHtml(shipment.awb)}</strong>${shipment.carrierAWB ? '<br><small>' + this.escapeHtml(shipment.carrierAWB) + '</small>' : ''}</td>
-        <td>${this.escapeHtml(shipment.customerName)}</td>
-        <td>${this.escapeHtml(shipment.receiverAddress)}</td>
-        <td>${this.escapeHtml(shipment.courier)}</td>
-        <td>${this.escapeHtml(shipment.weight)}</td>
-        <td>${this.escapeHtml(shipment.amount)}</td>
-        <td>${this.escapeHtml(shipment.status)}</td>
-      </tr>`).join('');
-
-    printWindow.document.write(`<html><head><title>Manifest</title><style>
-      body{font-family:Arial,sans-serif;padding:30px;color:#333;}
-      .title{font-size:24px;font-weight:800;text-transform:uppercase;color:#0f172a;}
-      .meta{text-align:right;font-size:13px;color:#475569;line-height:1.5;}
-      table{width:100%;border-collapse:collapse;margin-bottom:40px;}
-      th,td{border:1px solid #cbd5e1;padding:10px 12px;font-size:12px;text-align:left;}
-      th{background:#f1f5f9;font-weight:700;}
-      tr:nth-child(even){background:#f8fafc;}
-      .sig{border-top:1px dashed #475569;text-align:center;padding-top:10px;font-size:13px;color:#475569;margin-top:50px;}
-      @media print{body{padding:0;}}
-    </style></head><body>
-    <table style="width:100%;margin-bottom:30px;border:none;"><tr>
-      <td style="border:none;"><div class="title">VEXARO SHIPPING MANIFEST</div></td>
-      <td style="border:none;" class="meta">
-        <strong>Manifest ID:</strong> MN-${Date.now().toString().slice(-6)}<br>
-        <strong>Date:</strong> ${new Date().toLocaleDateString('en-GB')}<br>
-        <strong>Merchant:</strong> ${this.escapeHtml(merchantName)}
-      </td></tr></table>
-    <table><thead><tr><th>S.No</th><th>AWB</th><th>Recipient</th><th>Address</th><th>Courier</th><th>Weight</th><th>Value</th><th>Status</th></tr></thead>
-    <tbody>${rowsHtml}</tbody></table>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;">
-      <div class="sig">Merchant Signature</div>
-      <div class="sig">Courier Agent Signature</div>
-    </div>
-    <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);};<\/script>
-    </body></html>`);
-    printWindow.document.close();
-  }
-
-  private buildLabelHtml(shipment: DashboardShipment): string {
-    const awb = shipment.carrierAWB || shipment.awb;
-    const labelLink = shipment.labelUrl
-      ? `<div class="label-link"><strong>Velocity Label:</strong> <a href="${this.escapeAttr(shipment.labelUrl)}" target="_blank">${this.escapeHtml(shipment.labelUrl)}</a></div>`
-      : '';
-
-    return `
-      <div class="label-container">
-        ${labelLink}
-        <div class="label-header">
-          <div class="courier-title">${this.escapeHtml(shipment.courier)}</div>
-          <div class="awb-text">AWB: ${this.escapeHtml(awb)}</div>
-        </div>
-        <div class="barcode-area">
-          <div class="barcode-placeholder"></div>
-          <div class="barcode-digits">${this.escapeHtml(awb)}</div>
-        </div>
-        <div class="address-grid">
-          <div class="address-box sender"><strong>SENDER:</strong><div>${this.escapeHtml(shipment.senderName)}</div><div>${this.escapeHtml(shipment.senderAddress)}</div></div>
-          <div class="address-box receiver"><strong>RECEIVER:</strong><div>${this.escapeHtml(shipment.customerName)}</div><div>${this.escapeHtml(shipment.receiverAddress)}</div></div>
-        </div>
-        <div class="label-footer">
-          <div>Date: ${this.escapeHtml(shipment.date)}</div>
-          <div>Weight: ${this.escapeHtml(shipment.weight)}</div>
-          <div class="amount-badge">${shipment.isCOD ? 'COD: ₹' + shipment.codAmount : 'PREPAID'}</div>
-        </div>
-      </div>`;
-  }
-
-  private getMerchantName(): string {
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      if (user) return user.companyName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Merchant';
-    } catch {
-      return 'Merchant';
-=======
     if (!withManifest.length) {
       this.modalMessage.set('Velocity manifest URLs are not available for the selected shipments. Use CSV export for a real-data handover sheet.');
       return;
->>>>>>> aashutosh-shrivastava
     }
 
     withManifest.forEach((shipment) => {
@@ -339,4 +261,5 @@ export class MarchandeDashboardPage implements OnInit {
         : `Opened ${withManifest.length} Velocity manifest(s).`,
     );
   }
+
 }

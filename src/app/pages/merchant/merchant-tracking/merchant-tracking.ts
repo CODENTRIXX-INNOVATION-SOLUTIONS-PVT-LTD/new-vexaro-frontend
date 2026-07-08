@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+﻿import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShipmentService } from '../../../services/shipment.service';
@@ -18,18 +18,20 @@ export class MerchantTracking {
   hasSearched = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
-  // ── Normalised shipment data for display ─────────────────────────────────
+  // â”€â”€ Normalised shipment data for display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   activeDetails = signal<{
     awb:               string;
     carrierAWB:        string | null;
     courierName:       string | null;
     status:            string;
+    statusLabel:       string;
     origin:            string;
     destination:       string;
     recipientName:     string;
     recipientPhone:    string;
     estimatedDelivery: string | null;
-    checkpoints:       { time: string; location: string; status: string; description: string }[];
+    trackingUrl:       string | null;
+    checkpoints:       { time: string; location: string; status: string; description: string; source: string }[];
   } | null>(null);
 
   trackShipment(): void {
@@ -47,43 +49,38 @@ export class MerchantTracking {
       next: (res) => {
         const d = res.data || res;
 
-        // ── Build status history / checkpoints ────────────────────────────
-        // Prefer live Velocity tracking events; fall back to internal statusHistory.
-        const velocityEvents: any[] = d.velocityTracking?.tracking_data || [];
+        const velocityEvents: any[] = this.extractVelocityEvents(d.velocityTracking);
+        const localEvents: any[] = Array.isArray(d.statusHistory) ? d.statusHistory : (Array.isArray(d.history) ? d.history : []);
+        const checkpoints = [
+          ...velocityEvents.map((e: any) => ({
+            time:        this.eventTime(e),
+            location:    e.location || e.city || e.scan_location || e.scanLocation || '',
+            status:      this.formatStatus(e.status || e.current_status || e.activity || e.remark || ''),
+            description: e.remark || e.activity || e.description || e.status || '',
+            source:      'Velocity',
+          })),
+          ...localEvents.map((h: any) => ({
+            time:        h.timestamp || h.updatedAt || h.createdAt || '',
+            location:    h.location || '',
+            status:      this.formatStatus(h.status || ''),
+            description: h.note || h.description || h.status || '',
+            source:      'Vexaro',
+          })),
+        ].sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
 
-        let checkpoints: { time: string; location: string; status: string; description: string }[] = [];
-
-        if (velocityEvents.length > 0) {
-          checkpoints = velocityEvents.map((e: any) => ({
-            time:        e.date    || e.timestamp || '',
-            location:    e.location               || '',
-            status:      e.status  || e.remark    || '',
-            description: e.remark  || e.activity  || e.status || '',
-          }));
-        } else if (Array.isArray(d.history) && d.history.length > 0) {
-          // Internal status history
-          checkpoints = d.history.map((h: any) => ({
-            time:        h.timestamp ? new Date(h.timestamp).toLocaleString('en-IN') : '',
-            location:    '',
-            status:      h.status || '',
-            description: h.note   || h.status || '',
-          }));
-        }
-
+        const status = d.status || 'UNKNOWN';
         this.activeDetails.set({
           awb:               d.awb              || awb,
           carrierAWB:        d.carrierAWB        || null,
           courierName:       d.carrier           || null,
-          status:            d.status            || 'UNKNOWN',
-          origin:            d.origin?.city
-                               ? `${d.origin.city}, ${d.origin.state || ''}`
-                               : (d.origin?.addressLine || '—'),
-          destination:       d.destination?.city
-                               ? `${d.destination.city}, ${d.destination.state || ''}`
-                               : (d.destination?.addressLine || '—'),
-          recipientName:     d.destination?.name  || '—',
-          recipientPhone:    d.destination?.phone  || '—',
-          estimatedDelivery: d.estimatedDelivery   || null,
+          status,
+          statusLabel:       this.formatStatus(status),
+          origin:            this.formatAddress(d.origin),
+          destination:       this.formatAddress(d.destination),
+          recipientName:     d.destination?.name  || '-',
+          recipientPhone:    this.formatPhone(d.destination?.phone),
+          estimatedDelivery: this.normalizeDate(d.estimatedDelivery || d.originalEstimatedDelivery),
+          trackingUrl:       this.extractTrackingUrl(d),
           checkpoints,
         });
       },
@@ -97,6 +94,73 @@ export class MerchantTracking {
   quickTrack(awb: string): void {
     this.searchQuery.set(awb);
     this.trackShipment();
+  }
+
+  formatStatus(status: string): string {
+    return String(status || 'Unknown')
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .replace(/\b\w/g, char => char.toUpperCase());
+  }
+
+  private formatPhone(phone: string | null | undefined): string {
+    const digits = String(phone || '').replace(/\D/g, '');
+    if (!digits) return '-';
+    return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
+  }
+
+  private formatAddress(address: any): string {
+    if (!address) return '-';
+    return [
+      address.addressLine,
+      address.city,
+      address.state,
+      address.pincode,
+      address.country,
+    ].filter(Boolean).join(', ') || '-';
+  }
+
+  private normalizeDate(value: any): string | null {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'object') {
+      return value.date || value.delivery_date || value.edd || value.estimated_delivery_date || null;
+    }
+    return null;
+  }
+
+  private eventTime(event: any): string {
+    return event?.date
+      || event?.timestamp
+      || event?.time
+      || event?.event_timestamp
+      || event?.event_date_time
+      || event?.scan_date_time
+      || event?.created_at
+      || '';
+  }
+
+  private extractVelocityEvents(raw: any): any[] {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    return raw.tracking_data
+      || raw.shipment_track_activities
+      || raw.shipment_track
+      || raw.track_activities
+      || raw.activities
+      || raw.events
+      || raw.scans
+      || [];
+  }
+
+  private extractTrackingUrl(data: any): string | null {
+    return data?.trackingUrl
+      || data?.velocityTracking?.tracking_url
+      || data?.velocityTracking?.trackingUrl
+      || data?.velocityTracking?.track_url
+      || data?.velocityTracking?.tracking_data?.track_url
+      || null;
   }
 
   /** Map internal status codes to a human-readable stepper stage 0-3 */
