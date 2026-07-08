@@ -30,4 +30,9 @@ export class NotificationService {
   deleteNotification(id: string): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/notifications/${id}`);
   }
+
+  /** POST /notifications/queries — raise a query alert */
+  raiseQuery(data: { subject: string; message: string; orderId?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/notifications/queries`, data);
+  }
 }
