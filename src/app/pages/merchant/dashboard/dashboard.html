@@ -20,10 +20,6 @@
                 <span class="material-icons">upload_file</span>
                 Bulk Upload
             </button>
-            <button class="action-btn" (click)="openPrintModal()">
-                <span class="material-icons">print</span>
-                Print Labels
-            </button>
             <button class="action-btn" (click)="openManifestModal()">
                 <span class="material-icons">download</span>
                 Download Manifest
@@ -35,6 +31,7 @@
         <app-top-destinations [destinations]="dashboardStats?.topDestinations || []"></app-top-destinations>
     </div>
 
+<<<<<<< HEAD
     <!-- Print Labels Modal -->
     @if (showPrintModal()) {
         <div class="modal-overlay" (click)="closePrintModal()">
@@ -152,6 +149,8 @@
         </div>
     }
 
+=======
+>>>>>>> aashutosh-shrivastava
     <!-- Download Manifest Modal -->
     @if (showManifestModal()) {
         <div class="modal-overlay" (click)="closeManifestModal()">
@@ -231,21 +230,24 @@
 
                         <div class="alert-info-box">
                             <span class="material-icons">help_outline</span>
-                            <p>Generate PDF manifest for signature handover, or CSV manifest for digital uploads.</p>
+                            <p>CSV export uses real shipment data. Velocity manifest links are opened only when Velocity returns a manifest URL.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer-bar">
+                    @if (modalMessage()) {
+                        <div class="inline-status">{{ modalMessage() }}</div>
+                    }
                     <button class="btn-secondary" (click)="closeManifestModal()">Cancel</button>
                     <div class="footer-action-buttons">
                         <button class="btn-outline" (click)="downloadCSVManifest()" [disabled]="getSelectedManifestCount() === 0">
                             <span class="material-icons">download</span>
                             Download CSV
                         </button>
-                        <button class="btn-primary" (click)="printPDFManifest()" [disabled]="getSelectedManifestCount() === 0">
-                            <span class="material-icons">picture_as_pdf</span>
-                            Print PDF Manifest ({{ getSelectedManifestCount() }})
+                        <button class="btn-primary" (click)="openVelocityManifests()" [disabled]="getSelectedManifestCount() === 0">
+                            <span class="material-icons">open_in_new</span>
+                            Open Velocity Manifest
                         </button>
                     </div>
                 </div>

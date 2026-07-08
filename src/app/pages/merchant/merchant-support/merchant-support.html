@@ -1,47 +1,38 @@
 <div class="support-container">
-
-    <!-- Header -->
     <div class="header">
         <div class="header-left">
             <div class="header-icon-row">
-                <div class="header-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon" style="color: white; font-size: 20px;"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
-                </div>
+                <div class="header-icon"></div>
                 <h1>Merchant Support</h1>
             </div>
-            <p>Get help with orders, shipments, payments, returns and more.</p>
+            <p>Get help with shipments, returns, disputes, account access, and technical issues.</p>
         </div>
         <div class="header-stats">
             <div class="header-stat">
-                <span class="header-stat-num">24/7</span>
-                <span class="header-stat-label">Support</span>
+                <span class="header-stat-num">{{ stats[0].value }}</span>
+                <span class="header-stat-label">Open tickets</span>
             </div>
             <div class="header-stat">
-                <span class="header-stat-num">4 min</span>
-                <span class="header-stat-label">Avg. response</span>
+                <span class="header-stat-num">{{ stats[3].value }}</span>
+                <span class="header-stat-label">Total tickets</span>
             </div>
         </div>
     </div>
 
     <app-stats-cards [cards]="stats"></app-stats-cards>
 
-    <!-- Sections -->
     <div class="sections">
-
-        <!-- Create Ticket -->
         <div class="section" id="create-ticket-section">
             <div class="sec-header" (click)="toggleSection('create-ticket')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Create ticket
-                </div>
-                <span class="chevron" [class.open]="isOpen('create-ticket')">▾</span>
+                <div class="sec-title">Create Ticket</div>
+                <span class="chevron" [class.open]="isOpen('create-ticket')">v</span>
             </div>
             <div class="sec-body" [class.open]="isOpen('create-ticket')">
                 <div class="ticket-form">
                     <div class="form-group">
                         <label>Issue category</label>
                         <select [(ngModel)]="selectedCategory" name="category">
-                            <option *ngFor="let cat of ticketCategories" [value]="cat">{{ cat }}</option>
+                            <option *ngFor="let cat of ticketCategories" [value]="cat.value">{{ cat.label }}</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -58,171 +49,168 @@
                             <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
                         </select>
                     </div>
-                    <button type="button" class="submit-btn" (click)="submitTicket()">Submit ticket</button>
-                    <div class="success-msg" *ngIf="ticketSubmitted">✔ Ticket submitted successfully!</div>
+                    <button type="button" class="submit-btn" (click)="submitTicket()" [disabled]="isSubmitting">
+                        {{ isSubmitting ? 'Submitting...' : 'Submit Ticket' }}
+                    </button>
+                    <div class="error-msg" *ngIf="createError">{{ createError }}</div>
+                    <div class="success-msg" *ngIf="ticketSubmitted">Ticket submitted successfully.</div>
                 </div>
             </div>
         </div>
 
-        <!-- My Tickets -->
         <div class="section">
             <div class="sec-header" (click)="toggleSection('my-tickets')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> My tickets
-                </div>
-                <span class="chevron" [class.open]="isOpen('my-tickets')">▾</span>
+                <div class="sec-title">My Tickets</div>
+                <span class="chevron" [class.open]="isOpen('my-tickets')">v</span>
             </div>
             <div class="sec-body" [class.open]="isOpen('my-tickets')">
-                <div class="table-wrapper">
-                    <table class="tickets-table">
-                        <thead>
-                            <tr>
-                                <th>Ticket ID</th>
-                                <th>Category</th>
-                                <th>Subject</th>
-                                <th>Priority</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let ticket of tickets">
-                                <td>{{ ticket.ticketId }}</td>
-                                <td>{{ ticket.category }}</td>
-                                <td>{{ ticket.subject }}</td>
-                                <td>{{ ticket.priority }}</td>
-                                <td><span [class]="getStatusClass(ticket.status)">{{ ticket.status }}</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Order Support -->
-        <div class="section">
-            <div class="sec-header" (click)="toggleSection('order')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> Order support
-                </div>
-                <span class="chevron" [class.open]="isOpen('order')">▾</span>
-            </div>
-            <div class="sec-body" [class.open]="isOpen('order')">
-                <div class="support-note">Need help with an order issue? Our support team is available 24/7.</div>
-                <div class="cards-grid">
-                    <div class="issue-card" *ngFor="let issue of orderIssues">
-                        <h3>{{ issue.title }}</h3>
-                        <p>{{ issue.description }}</p>
-                        <button type="button" class="raise-btn" (click)="raiseTicket('Order Issue', issue.title)">Raise
-                            ticket ↗</button>
+                @if(listError) {
+                    <div class="error-msg">{{ listError }}</div>
+                }
+                @if(isLoading) {
+                    <div class="support-note">Loading tickets...</div>
+                } @else if(!tickets.length) {
+                    <div class="support-note">No support tickets found.</div>
+                } @else {
+                    <div class="table-wrapper">
+                        <table class="tickets-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Category</th>
+                                    <th>Subject</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let ticket of tickets">
+                                    <td>{{ ticket.ticketId }}</td>
+                                    <td>{{ ticket.category }}</td>
+                                    <td>{{ ticket.subject }}</td>
+                                    <td>{{ ticket.priority }}</td>
+                                    <td><span [class]="getStatusClass(ticket.status)">{{ ticket.status }}</span></td>
+                                    <td>
+                                        <button type="button" class="table-action-btn" (click)="openTicket(ticket)">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                }
+
+                @if(isTicketLoading) {
+                    <div class="support-note">Loading ticket conversation...</div>
+                }
+                @if(detailError) {
+                    <div class="error-msg">{{ detailError }}</div>
+                }
+                @if(selectedTicket) {
+                    <div class="ticket-detail-panel">
+                        <div class="ticket-detail-header">
+                            <div>
+                                <div class="detail-ticket-number">{{ selectedTicket.ticketNumber }}</div>
+                                <h3>{{ selectedTicket.subject }}</h3>
+                                <p>{{ selectedTicket.category }} | {{ selectedTicket.priority }} | {{ formatDate(selectedTicket.createdAt) }}</p>
+                            </div>
+                            <div class="ticket-header-actions">
+                                <span [class]="getStatusClass(selectedTicket.status)">{{ selectedTicket.status }}</span>
+                                <button type="button" class="close-detail-btn" (click)="closeTicketDetail()">Close</button>
+                            </div>
+                        </div>
+
+                        <div class="ticket-description">
+                            {{ selectedTicket.description }}
+                        </div>
+
+                        <div class="assigned-row">
+                            Assigned to: <strong>{{ selectedTicket.assignedTo }}</strong>
+                        </div>
+
+                        <div class="conversation">
+                            @if(!selectedTicket.replies?.length) {
+                                <div class="support-note">No replies yet. Support will respond here.</div>
+                            }
+                            @for(reply of selectedTicket.replies; track reply.id || reply.createdAt) {
+                                <div class="reply-card" [class.staff]="reply.isStaff">
+                                    <div class="reply-meta">
+                                        <strong>{{ reply.isStaff ? 'Support' : 'You' }}</strong>
+                                        <span>{{ formatDate(reply.createdAt) }}</span>
+                                    </div>
+                                    <p>{{ reply.message }}</p>
+                                </div>
+                            }
+                        </div>
+
+                        @if(canReply()) {
+                            <div class="reply-box">
+                                <textarea rows="3" [(ngModel)]="replyText" placeholder="Type your reply..."></textarea>
+                                <div class="reply-actions">
+                                    <div class="error-msg compact" *ngIf="replyError">{{ replyError }}</div>
+                                    <button type="button" class="submit-btn" (click)="submitReply()" [disabled]="isReplying || !replyText.trim()">
+                                        {{ isReplying ? 'Sending...' : 'Send Reply' }}
+                                    </button>
+                                </div>
+                            </div>
+                        } @else {
+                            <div class="support-note">This ticket is closed for replies.</div>
+                        }
+                    </div>
+                }
             </div>
         </div>
 
-        <!-- Shipment Support -->
         <div class="section">
             <div class="sec-header" (click)="toggleSection('shipment')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Shipment support
-                </div>
-                <span class="chevron" [class.open]="isOpen('shipment')">▾</span>
+                <div class="sec-title">Shipment Support</div>
+                <span class="chevron" [class.open]="isOpen('shipment')">v</span>
             </div>
             <div class="sec-body" [class.open]="isOpen('shipment')">
-                <div class="support-note">Our dedicated support team assists with tracking, carrier delays, and delivery
-                    issues.</div>
                 <div class="cards-grid">
                     <div class="issue-card" *ngFor="let issue of shipmentIssues">
                         <h3>{{ issue.title }}</h3>
                         <p>{{ issue.description }}</p>
-                        <button type="button" class="raise-btn"
-                            (click)="raiseTicket('Shipment Issue', issue.title)">Raise ticket ↗</button>
+                        <button type="button" class="raise-btn" (click)="raiseTicket('SHIPMENT', issue.title)">Raise Ticket</button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Support -->
-        <div class="section">
-            <div class="sec-header" (click)="toggleSection('payment')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> Payment support
-                </div>
-                <span class="chevron" [class.open]="isOpen('payment')">▾</span>
-            </div>
-            <div class="sec-body" [class.open]="isOpen('payment')">
-                <div class="support-note">Payment support team will help resolve your issue quickly.</div>
-                <div class="cards-grid">
-                    <div class="issue-card" *ngFor="let issue of paymentIssues">
-                        <h3>{{ issue.title }}</h3>
-                        <p>{{ issue.description }}</p>
-                        <button type="button" class="raise-btn"
-                            (click)="raiseTicket('Payment Issue', issue.title)">Raise ticket ↗</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Return Support -->
-        <div class="section">
-            <div class="sec-header" (click)="toggleSection('return')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Return support
-                </div>
-                <span class="chevron" [class.open]="isOpen('return')">▾</span>
-            </div>
-            <div class="sec-body" [class.open]="isOpen('return')">
-                <div class="support-note">Available 24/7 to assist with return requests, refunds, reverse logistics, and
-                    damaged items.</div>
-                <div class="cards-grid">
                     <div class="issue-card" *ngFor="let reason of returnReasons">
                         <h3>{{ reason.title }}</h3>
                         <p>{{ reason.description }}</p>
-                        <button type="button" class="raise-btn"
-                            (click)="raiseTicket('Return Issue', reason.title)">Raise ticket ↗</button>
+                        <button type="button" class="raise-btn" (click)="raiseTicket('SHIPMENT', reason.title)">Raise Ticket</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Product Support -->
         <div class="section">
-            <div class="sec-header" (click)="toggleSection('product')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12h12l1-12"></path></svg> Product support
-                </div>
-                <span class="chevron" [class.open]="isOpen('product')">▾</span>
+            <div class="sec-header" (click)="toggleSection('technical')">
+                <div class="sec-title">Technical Support</div>
+                <span class="chevron" [class.open]="isOpen('technical')">v</span>
             </div>
-            <div class="sec-body" [class.open]="isOpen('product')">
-                <div class="support-note">Product experts will help you resolve listing and inventory issues quickly.
-                </div>
+            <div class="sec-body" [class.open]="isOpen('technical')">
                 <div class="cards-grid">
                     <div class="issue-card" *ngFor="let issue of productIssues">
                         <h3>{{ issue.title }}</h3>
                         <p>{{ issue.description }}</p>
-                        <button type="button" class="raise-btn"
-                            (click)="raiseTicket('Product Issue', issue.title)">Raise ticket ↗</button>
+                        <button type="button" class="raise-btn" (click)="raiseTicket('TECHNICAL', issue.title)">Raise Ticket</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- FAQ -->
         <div class="section">
             <div class="sec-header" (click)="toggleSection('faq')">
-                <div class="sec-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="icon svg-icon"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"></path></svg> FAQ
-                </div>
-                <span class="chevron" [class.open]="isOpen('faq')">▾</span>
+                <div class="sec-title">FAQ</div>
+                <span class="chevron" [class.open]="isOpen('faq')">v</span>
             </div>
             <div class="sec-body" [class.open]="isOpen('faq')">
                 <div class="faq-list">
                     <div class="faq-item" *ngFor="let faq of faqs">
-                        <span class="faq-dot">●</span>
+                        <span class="faq-dot">o</span>
                         {{ faq }}
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 </div>

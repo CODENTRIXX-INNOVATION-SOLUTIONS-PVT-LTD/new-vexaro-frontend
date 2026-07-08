@@ -36,6 +36,16 @@
     box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
 }
 
+.profile-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(11, 74, 111);
+    color: #ffffff;
+    font-size: 30px;
+    font-weight: 800;
+}
+
 .avatar-edit-btn {
     position: absolute;
     bottom: 0;

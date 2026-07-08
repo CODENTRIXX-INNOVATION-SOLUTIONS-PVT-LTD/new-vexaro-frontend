@@ -11,6 +11,14 @@ interface ParsingError {
   reason: string;
 }
 
+const REQUIRED_HEADERS = [
+  'origin_name', 'origin_phone', 'origin_address', 'origin_city', 'origin_state', 'origin_pincode',
+  'dest_name', 'dest_phone', 'dest_address', 'dest_city', 'dest_state', 'dest_pincode',
+  'weight', 'length', 'breadth', 'height',
+  'product_name', 'sku', 'quantity', 'selling_price', 'discount', 'tax',
+  'declared_value', 'payment_method', 'cod_amount',
+];
+
 @Component({
   selector: "app-bulk-upload",
   imports: [CommonModule, FormsModule],
@@ -72,17 +80,29 @@ export class BulkUpload implements OnDestroy {
     this.uploadProgress.set(0);
     this.parsingErrors.set([]);
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result) => {
+    if (/\.csv$/i.test(file.name)) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (result) => {
+          const headers = (result.meta.fields ?? []).map(h => h.trim());
+          this.csvHeaders.set(headers);
+          this.csvPreview.set(result.data.slice(0, 5));
 
-        this.csvHeaders.set(result.meta.fields ?? []);
-        this.csvPreview.set(result.data.slice(0, 5));
+          const normalized = headers.map(h => h.toLowerCase());
+          const missing = REQUIRED_HEADERS.filter(header => !normalized.includes(header));
+          if (missing.length) {
+            this.errorMessage.set(`Missing required columns: ${missing.join(", ")}`);
+          }
 
-        this.showNotification(`Selected file: ${file.name}`);
-      }
-    });
+          this.showNotification(`Selected file: ${file.name}`);
+        }
+      });
+    } else {
+      this.csvHeaders.set([]);
+      this.csvPreview.set([]);
+      this.showNotification(`Selected Excel file: ${file.name}`);
+    }
 
     input.value = "";
   }
@@ -124,6 +144,9 @@ export class BulkUpload implements OnDestroy {
     const file = this.selectedFile();
     if (!file) {
       this.errorMessage.set("Please select a CSV or Excel file first.");
+      return;
+    }
+    if (/\.csv$/i.test(file.name) && this.errorMessage()?.startsWith("Missing required columns")) {
       return;
     }
 

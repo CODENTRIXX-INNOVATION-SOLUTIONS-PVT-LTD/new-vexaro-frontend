@@ -24,7 +24,16 @@ export class MerchantWarehouse implements OnInit {
   errorMessage = '';
   formError = '';
   requestError = '';
+  requestListError = '';
   showAddressRequestConfirmation = false;
+  addressRequests: any[] = [];
+  requestPage = 1;
+  requestLimit = 5;
+  requestTotalPages = 1;
+  requestHasPrevPage = false;
+  requestHasNextPage = false;
+  isLoadingRequests = false;
+  cancellingRequestId = '';
 
   warehouseName = '';
   contactPerson = '';
@@ -40,6 +49,7 @@ export class MerchantWarehouse implements OnInit {
 
   ngOnInit(): void {
     this.loadWarehouses();
+    this.loadAddressRequests();
   }
 
   get warehouseId(): string {
@@ -66,6 +76,14 @@ export class MerchantWarehouse implements OnInit {
     return this.selectedWarehouse?.velocityWarehouseId || 'Not synced yet';
   }
 
+  private get activeWarehouseId(): string {
+    return this.selectedWarehouse?._id || this.selectedWarehouse?.id || '';
+  }
+
+  private normalizeIndianPhone(value: string | null | undefined): string {
+    return String(value || '').replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+  }
+
   loadWarehouses(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -76,6 +94,7 @@ export class MerchantWarehouse implements OnInit {
       next: (res) => {
         this.warehouses = res?.data?.warehouses || [];
         this.selectWarehouse(this.warehouses[0] || null);
+        this.loadAddressRequests();
       },
       error: (err) => {
         this.errorMessage = err?.error?.message || 'Failed to load warehouse details.';
@@ -90,7 +109,7 @@ export class MerchantWarehouse implements OnInit {
 
     this.warehouseName = warehouse?.name || '';
     this.contactPerson = warehouse?.contactPerson || '';
-    this.contactPhone = warehouse?.phone || '';
+    this.contactPhone = this.normalizeIndianPhone(warehouse?.phone);
     this.contactEmail = warehouse?.email || '';
     this.gstNumber = warehouse?.gstNo || '';
 
@@ -102,11 +121,13 @@ export class MerchantWarehouse implements OnInit {
   }
 
   saveDetails(): void {
-    if (!this.selectedWarehouse?._id) {
+    const warehouseId = this.activeWarehouseId;
+    if (!warehouseId) {
       this.formError = 'No active warehouse is available to update.';
       return;
     }
-    if (!this.contactPerson.trim() || !/^[6-9]\d{9}$/.test(this.contactPhone.trim())) {
+    const phone = this.normalizeIndianPhone(this.contactPhone);
+    if (!this.contactPerson.trim() || !/^[6-9]\d{9}$/.test(phone)) {
       this.formError = 'Contact person and a valid 10-digit phone number are required.';
       return;
     }
@@ -119,9 +140,9 @@ export class MerchantWarehouse implements OnInit {
     this.formError = '';
     this.saveSuccess = false;
 
-    this.merchantService.updateWarehouseContact(this.selectedWarehouse._id, {
+    this.merchantService.updateWarehouseContact(warehouseId, {
       contactPerson: this.contactPerson.trim(),
-      phone: this.contactPhone.trim(),
+      phone,
       ...(this.contactEmail.trim() ? { email: this.contactEmail.trim() } : {}),
     }).pipe(finalize(() => { this.isSaving = false; })).subscribe({
       next: (res) => {
@@ -137,7 +158,7 @@ export class MerchantWarehouse implements OnInit {
   }
 
   requestAddressChange(): void {
-    if (!this.selectedWarehouse?._id) {
+    if (!this.activeWarehouseId) {
       this.requestError = 'No active warehouse is available for address change.';
       return;
     }
@@ -145,7 +166,8 @@ export class MerchantWarehouse implements OnInit {
   }
 
   submitAddressChangeRequest(): void {
-    if (!this.selectedWarehouse?._id) return;
+    const warehouseId = this.activeWarehouseId;
+    if (!warehouseId) return;
     if (!this.requestedAddressLine.trim() || !this.requestedCity.trim() || !this.requestedState.trim() || !/^\d{6}$/.test(this.requestedPincode.trim())) {
       this.requestError = 'Address line, city, state, and a valid 6-digit pincode are required.';
       return;
@@ -154,7 +176,7 @@ export class MerchantWarehouse implements OnInit {
     this.isRequestingAddressChange = true;
     this.requestError = '';
 
-    this.merchantService.requestWarehouseAddressChange(this.selectedWarehouse._id, {
+    this.merchantService.requestWarehouseAddressChange(warehouseId, {
       addressLine: this.requestedAddressLine.trim(),
       city: this.requestedCity.trim(),
       state: this.requestedState.trim(),
@@ -164,6 +186,7 @@ export class MerchantWarehouse implements OnInit {
       next: () => {
         this.closeAddressRequest();
         this.saveSuccess = true;
+        this.loadAddressRequests();
         setTimeout(() => { this.saveSuccess = false; }, 3000);
       },
       error: (err) => {
@@ -175,5 +198,93 @@ export class MerchantWarehouse implements OnInit {
   closeAddressRequest(): void {
     this.showAddressRequestConfirmation = false;
     this.requestError = '';
+  }
+
+  loadAddressRequests(page = this.requestPage): void {
+    this.isLoadingRequests = true;
+    this.requestListError = '';
+    this.requestPage = page;
+
+    this.merchantService.listWarehouseAddressChangeRequests({
+      page: this.requestPage,
+      limit: this.requestLimit,
+    }).pipe(finalize(() => { this.isLoadingRequests = false; })).subscribe({
+      next: (res) => {
+        this.addressRequests = (res?.data?.requests || []).map((request: any) => this.mapAddressRequest(request));
+        const meta = res?.meta || {};
+        this.requestTotalPages = meta.pages || 1;
+        this.requestHasPrevPage = Boolean(meta.hasPrevPage);
+        this.requestHasNextPage = Boolean(meta.hasNextPage);
+      },
+      error: (err) => {
+        this.requestListError = err?.error?.message || 'Failed to load address change requests.';
+      },
+    });
+  }
+
+  cancelAddressRequest(request: any): void {
+    if (!request?.id || request.status !== 'PENDING') return;
+    this.cancellingRequestId = request.id;
+    this.requestListError = '';
+
+    this.merchantService.cancelWarehouseAddressChangeRequest(request.id).pipe(
+      finalize(() => { this.cancellingRequestId = ''; }),
+    ).subscribe({
+      next: () => {
+        this.saveSuccess = true;
+        this.loadAddressRequests();
+        setTimeout(() => { this.saveSuccess = false; }, 3000);
+      },
+      error: (err) => {
+        this.requestListError = err?.error?.message || 'Failed to cancel request.';
+      },
+    });
+  }
+
+  formatDate(value: string): string {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  getRequestStatusClass(status: string): string {
+    switch ((status || '').toUpperCase()) {
+      case 'APPROVED': return 'status-pill approved';
+      case 'REJECTED': return 'status-pill rejected';
+      case 'CANCELLED': return 'status-pill cancelled';
+      default: return 'status-pill pending';
+    }
+  }
+
+  private mapAddressRequest(request: any): any {
+    const requested = request.requestedAddress || {};
+    const current = request.currentAddress || {};
+    return {
+      id: request._id,
+      warehouseId: request.warehouseId?.warehouseId || request.warehouseId?._id || request.warehouseId || '-',
+      status: request.status || 'PENDING',
+      createdAt: request.createdAt,
+      processedAt: request.processedAt,
+      rejectionReason: request.rejectionReason || '',
+      currentAddress: this.formatRequestAddress(current),
+      requestedAddress: this.formatRequestAddress(requested),
+    };
+  }
+
+  private formatRequestAddress(address: any): string {
+    return [
+      address.addressLine,
+      address.city,
+      address.state,
+      address.pincode,
+      address.country,
+    ].filter(Boolean).join(', ') || '-';
   }
 }

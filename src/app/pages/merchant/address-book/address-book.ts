@@ -50,7 +50,11 @@ export class AddressBook implements OnInit {
     ).subscribe({
       next: (res) => {
         this.total       = res?.meta?.total ?? 0;
-        this._addresses  = res?.data?.addresses ?? [];
+        this._addresses  = (res?.data?.addresses ?? []).map((addr: any) => ({
+          ...addr,
+          id: addr._id || addr.id,
+          street: addr.addressLine || addr.street || '',
+        }));
       },
       error: (err) => this.error.set(err?.error?.message || 'Failed to load addresses.'),
     });

@@ -20,7 +20,8 @@ export class DisputeService {
   }
 
   createDispute(payload: {
-    shipmentId: string;
+    shipmentId?: string;
+    shipmentAwb?: string;
     category: string;
     description: string;
     attachments?: { url: string; name: string }[];

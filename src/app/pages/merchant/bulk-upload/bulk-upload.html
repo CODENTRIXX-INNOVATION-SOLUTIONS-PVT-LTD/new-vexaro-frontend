@@ -21,17 +21,17 @@
     </button>
   </header>
 
-  <input #fileInput type="file" accept=".csv" hidden (change)="onFileSelected($event)" />
+  <input #fileInput type="file" accept=".csv,.xlsx,.xls" hidden (change)="onFileSelected($event)" />
 
   <div class="card dropzone-card animated-fade" (click)="fileInput.click()">
     <span class="material-icons cloud-icon">cloud_upload</span>
 
-    <h3>Click here to select CSV file</h3>
+    <h3>Click here to select CSV or Excel file</h3>
 
     <p>or drag and drop your shipment spreadsheet document here</p>
 
     <span class="upload-hint">
-      Supported format: CSV (UTF-8). Max size 5 MB.
+      Supported formats: CSV (UTF-8), XLSX, XLS. Max size 10 MB.
     </span>
 
     @if (selectedFile()) {
@@ -54,7 +54,7 @@
 
   </div>
 
-  @if (csvPreview().length > 0) {
+  @if (selectedFile()) {
 
   <div class="card actions-panel">
     <div class="left-desc">
@@ -122,6 +122,7 @@
   }
 
   @if (parsingErrors().length > 0) {
+  @if (csvPreview().length > 0) {
   <div class="card table-card">
     <div class="card-header">
       <h3>Processing Errors</h3>
@@ -207,6 +208,7 @@
     </div>
 
   </div>
+  }
 
   }
 

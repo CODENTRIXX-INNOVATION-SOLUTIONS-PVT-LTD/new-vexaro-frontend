@@ -145,6 +145,81 @@
             </div>
         </div>
     </div>
+
+    <div class="profile-container request-history-container">
+        <div class="profile-card glass-panel">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="header-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </div>
+                    <div>
+                        <h3>Address Change Requests</h3>
+                        <p class="subtitle">Track distributor approval status for pickup address changes</p>
+                    </div>
+                </div>
+            </div>
+
+            @if(requestListError) {
+                <div class="form-error">{{ requestListError }}</div>
+            }
+
+            @if(isLoadingRequests) {
+                <div class="history-empty">Loading request history...</div>
+            } @else if(!addressRequests.length) {
+                <div class="history-empty">No address change requests submitted yet.</div>
+            } @else {
+                <div class="request-table-wrap">
+                    <table class="request-table">
+                        <thead>
+                            <tr>
+                                <th>Requested On</th>
+                                <th>Warehouse</th>
+                                <th>Requested Address</th>
+                                <th>Status</th>
+                                <th>Decision</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(request of addressRequests; track request.id) {
+                                <tr>
+                                    <td>{{ formatDate(request.createdAt) }}</td>
+                                    <td>{{ request.warehouseId }}</td>
+                                    <td>{{ request.requestedAddress }}</td>
+                                    <td><span [class]="getRequestStatusClass(request.status)">{{ request.status }}</span></td>
+                                    <td>
+                                        @if(request.status === 'REJECTED') {
+                                            {{ request.rejectionReason || 'No reason provided' }}
+                                        } @else if(request.processedAt) {
+                                            {{ formatDate(request.processedAt) }}
+                                        } @else {
+                                            Awaiting review
+                                        }
+                                    </td>
+                                    <td>
+                                        @if(request.status === 'PENDING') {
+                                            <button class="btn-small-danger" [disabled]="cancellingRequestId === request.id" (click)="cancelAddressRequest(request)">
+                                                {{ cancellingRequestId === request.id ? 'Cancelling...' : 'Cancel' }}
+                                            </button>
+                                        } @else {
+                                            -
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="request-pagination">
+                    <button type="button" [disabled]="!requestHasPrevPage || isLoadingRequests" (click)="loadAddressRequests(requestPage - 1)">Previous</button>
+                    <span>Page {{ requestPage }} of {{ requestTotalPages }}</span>
+                    <button type="button" [disabled]="!requestHasNextPage || isLoadingRequests" (click)="loadAddressRequests(requestPage + 1)">Next</button>
+                </div>
+            }
+        </div>
+    </div>
     }
 </div>
 

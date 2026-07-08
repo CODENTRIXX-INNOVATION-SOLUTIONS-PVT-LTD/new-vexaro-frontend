@@ -15,75 +15,69 @@ import { finalize } from 'rxjs';
 export class MerchantSupport implements OnInit {
   private supportService = inject(SupportService);
 
-  // ── Stats cards (template binds [cards]="stats") ──────────────────────────
   stats = [
-    { title: 'Open Tickets',  value: 0, icon: 'fas fa-ticket-alt',  bgColor: '#E3F2FD', iconColor: '#1976D2' },
-    { title: 'Resolved',      value: 0, icon: 'fas fa-check-circle', bgColor: '#E8F5E9', iconColor: '#2E7D32' },
-    { title: 'In Progress',   value: 0, icon: 'fas fa-clock',        bgColor: '#FFF3E0', iconColor: '#F57C00' },
-    { title: 'Total',         value: 0, icon: 'fas fa-list',          bgColor: '#F3E5F5', iconColor: '#7B1FA2' },
+    { title: 'Open Tickets', value: 0, icon: 'fas fa-ticket-alt', bgColor: '#E3F2FD', iconColor: '#1976D2' },
+    { title: 'Resolved', value: 0, icon: 'fas fa-check-circle', bgColor: '#E8F5E9', iconColor: '#2E7D32' },
+    { title: 'In Progress', value: 0, icon: 'fas fa-clock', bgColor: '#FFF3E0', iconColor: '#F57C00' },
+    { title: 'Total', value: 0, icon: 'fas fa-list', bgColor: '#F3E5F5', iconColor: '#7B1FA2' },
   ];
 
-  // ── Ticket list ───────────────────────────────────────────────────────────
   tickets: any[] = [];
-  isLoading      = false;
-  listError      = '';
+  isLoading = false;
+  listError = '';
 
-  // ── Accordion ─────────────────────────────────────────────────────────────
-  openSections: Set<string> = new Set();
+  selectedTicket: any = null;
+  isTicketLoading = false;
+  detailError = '';
+  replyText = '';
+  isReplying = false;
+  replyError = '';
 
-  // ── Create ticket ─────────────────────────────────────────────────────────
-  ticketCategories = ['Order Issue', 'Shipment Issue', 'Payment Issue', 'Return Issue', 'Other'];
-  priorities       = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
-  selectedCategory = 'Order Issue';
-  ticketSubject    = '';
-  ticketDescription = '';
-  selectedPriority  = 'MEDIUM';
-  isSubmitting      = false;
-  ticketSubmitted   = false;
-  createError       = '';
+  openSections: Set<string> = new Set(['my-tickets']);
 
-  // ── FAQ ───────────────────────────────────────────────────────────────────
-  faqs = [
-    'How do I track my shipment?', 'What is the return policy window?',
-    'How long does a refund take?', 'What should I do if a payment fails?',
-    'Can I cancel an order after dispatch?',
+  ticketCategories = [
+    { label: 'Shipment', value: 'SHIPMENT' },
+    { label: 'Account', value: 'ACCOUNT' },
+    { label: 'Technical', value: 'TECHNICAL' },
+    { label: 'Other', value: 'OTHER' },
   ];
+  priorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+  selectedCategory = 'SHIPMENT';
+  ticketSubject = '';
+  ticketDescription = '';
+  selectedPriority = 'MEDIUM';
+  isSubmitting = false;
+  ticketSubmitted = false;
+  createError = '';
 
-  // ── Issue card groups (template iterates these) ──────────────────────────
-  orderIssues = [
-    { title: 'Order Not Received',    description: 'Customer reported order has not arrived.' },
-    { title: 'Wrong Item Delivered',  description: 'Incorrect product was delivered.' },
-    { title: 'Order Damaged',         description: 'Item received in damaged condition.' },
-    { title: 'Order Cancelled',       description: 'Help with order cancellation refund.' },
+  faqs = [
+    'How do I track my shipment?',
+    'What should I do if pickup is delayed?',
+    'How do I download a shipping label?',
+    'Can I cancel a shipment after booking?',
   ];
 
   shipmentIssues = [
-    { title: 'Shipment Delayed',      description: 'Delivery is taking longer than expected.' },
-    { title: 'Lost in Transit',       description: 'No tracking update for over 3 days.' },
+    { title: 'Shipment Delayed', description: 'Delivery is taking longer than expected.' },
+    { title: 'Lost in Transit', description: 'No tracking update for over 3 days.' },
     { title: 'Delivered to Wrong Address', description: 'Package delivered to incorrect location.' },
     { title: 'RTO Initiated Wrongly', description: 'Return triggered without delivery attempt.' },
   ];
 
-  paymentIssues = [
-    { title: 'COD Amount Not Remitted', description: 'Cash collected but not credited to wallet.' },
-    { title: 'Wallet Deduction Error',  description: 'Incorrect amount deducted from wallet.' },
-    { title: 'Refund Not Received',     description: 'Refund for cancelled shipment pending.' },
-    { title: 'Weight Dispute Charge',   description: 'Incorrect weight-based extra charge.' },
-  ];
-
   returnReasons = [
-    { title: 'Return Not Picked Up',   description: 'Reverse pickup not attempted.' },
-    { title: 'Refund for Return',      description: 'Refund not processed for returned item.' },
-    { title: 'Wrong Return Address',   description: 'Return shipment going to wrong warehouse.' },
+    { title: 'Return Not Picked Up', description: 'Reverse pickup not attempted.' },
+    { title: 'Wrong Return Address', description: 'Return shipment going to wrong warehouse.' },
   ];
 
   productIssues = [
-    { title: 'Listing Issue',          description: 'Product catalogue or listing problem.' },
-    { title: 'Inventory Mismatch',     description: 'Stock count does not match records.' },
-    { title: 'Product Damaged',        description: 'Product damaged in warehouse or transit.' },
+    { title: 'Listing Issue', description: 'Product catalogue or listing problem.' },
+    { title: 'Inventory Mismatch', description: 'Stock count does not match records.' },
+    { title: 'Product Damaged', description: 'Product damaged in warehouse or transit.' },
   ];
 
-  ngOnInit(): void { this.loadTickets(); }
+  ngOnInit(): void {
+    this.loadTickets();
+  }
 
   loadTickets(): void {
     this.isLoading = true;
@@ -93,74 +87,190 @@ export class MerchantSupport implements OnInit {
     ).subscribe({
       next: (res) => {
         const raw: any[] = res?.data?.tickets ?? res?.data?.items ?? [];
-        this.tickets = raw.map(t => ({
-          ticketId: t.ticketId ?? `#${(t._id as string)?.slice(-6).toUpperCase()}`,
-          id:       t._id,
-          category: t.category,
-          subject:  t.subject ?? t.title ?? '—',
-          priority: t.priority ?? 'MEDIUM',
-          status:   t.status   ?? 'OPEN',
+        this.tickets = raw.map((ticket) => ({
+          ticketId: ticket.ticketNumber ?? `#${String(ticket._id || '').slice(-6).toUpperCase()}`,
+          id: ticket._id,
+          category: ticket.category,
+          subject: ticket.subject ?? ticket.title ?? '-',
+          priority: ticket.priority ?? 'MEDIUM',
+          status: ticket.status ?? 'OPEN',
+          createdAt: ticket.createdAt,
         }));
         this.updateStats(res?.meta?.total ?? this.tickets.length);
       },
-      error: (err) => { this.listError = err?.error?.message || 'Failed to load tickets.'; },
+      error: (err) => {
+        this.listError = err?.error?.message || 'Failed to load tickets.';
+      },
     });
   }
 
   private updateStats(total: number): void {
-    this.stats[0].value = this.tickets.filter(t => t.status === 'OPEN').length;
-    this.stats[1].value = this.tickets.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED').length;
-    this.stats[2].value = this.tickets.filter(t => t.status === 'IN_PROGRESS').length;
+    this.stats[0].value = this.tickets.filter((ticket) => ticket.status === 'OPEN').length;
+    this.stats[1].value = this.tickets.filter((ticket) => ticket.status === 'RESOLVED' || ticket.status === 'CLOSED').length;
+    this.stats[2].value = this.tickets.filter((ticket) => ticket.status === 'IN_PROGRESS').length;
     this.stats[3].value = total;
   }
 
-  toggleSection(s: string): void {
-    this.openSections.has(s) ? this.openSections.delete(s) : this.openSections.add(s);
+  toggleSection(section: string): void {
+    this.openSections.has(section) ? this.openSections.delete(section) : this.openSections.add(section);
   }
-  isOpen(s: string): boolean { return this.openSections.has(s); }
+
+  isOpen(section: string): boolean {
+    return this.openSections.has(section);
+  }
 
   raiseTicket(category: string, subject: string): void {
-    this.selectedCategory  = category;
-    this.ticketSubject     = subject;
+    this.selectedCategory = category;
+    this.ticketSubject = subject;
     this.ticketDescription = '';
     this.openSections.add('create-ticket');
     setTimeout(() => {
-      document.getElementById('create-ticket-section')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('create-ticket-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   }
 
   submitTicket(): void {
-    if (!this.ticketSubject.trim() || !this.ticketDescription.trim()) {
-      this.createError = 'Subject and description are required.';
+    const subject = this.ticketSubject.trim();
+    const description = this.ticketDescription.trim();
+    if (subject.length < 5) {
+      this.createError = 'Subject must be at least 5 characters.';
       return;
     }
+    if (description.length < 20) {
+      this.createError = 'Description must be at least 20 characters.';
+      return;
+    }
+
     this.isSubmitting = true;
-    this.createError  = '';
+    this.createError = '';
+    this.ticketSubmitted = false;
 
     this.supportService.createTicket({
-      subject:     this.ticketSubject.trim(),
-      category:    this.selectedCategory,
-      priority:    this.selectedPriority,
-      description: this.ticketDescription.trim(),
+      subject,
+      category: this.selectedCategory,
+      priority: this.selectedPriority,
+      description,
     }).pipe(finalize(() => { this.isSubmitting = false; })).subscribe({
       next: () => {
-        this.ticketSubmitted   = true;
-        this.ticketSubject     = '';
+        this.ticketSubmitted = true;
+        this.ticketSubject = '';
         this.ticketDescription = '';
+        this.openSections.add('my-tickets');
         this.loadTickets();
         setTimeout(() => { this.ticketSubmitted = false; }, 3000);
       },
-      error: (err) => { this.createError = err?.error?.message || 'Failed to create ticket.'; },
+      error: (err) => {
+        this.createError = err?.error?.message || 'Failed to create ticket.';
+      },
     });
+  }
+
+  openTicket(ticket: any): void {
+    if (!ticket?.id) return;
+    this.isTicketLoading = true;
+    this.detailError = '';
+    this.replyError = '';
+    this.replyText = '';
+
+    this.supportService.getTicketById(ticket.id).pipe(
+      finalize(() => { this.isTicketLoading = false; }),
+    ).subscribe({
+      next: (res) => {
+        this.selectedTicket = this.mapTicketDetail(res?.data ?? res);
+      },
+      error: (err) => {
+        this.detailError = err?.error?.message || 'Failed to load ticket details.';
+      },
+    });
+  }
+
+  closeTicketDetail(): void {
+    this.selectedTicket = null;
+    this.detailError = '';
+    this.replyError = '';
+    this.replyText = '';
+  }
+
+  submitReply(): void {
+    const message = this.replyText.trim();
+    if (!this.selectedTicket?.id || !message) return;
+    if (message.length < 2) {
+      this.replyError = 'Reply must contain at least 2 characters.';
+      return;
+    }
+
+    this.isReplying = true;
+    this.replyError = '';
+
+    this.supportService.addReply(this.selectedTicket.id, message).pipe(
+      finalize(() => { this.isReplying = false; }),
+    ).subscribe({
+      next: () => {
+        const id = this.selectedTicket.id;
+        this.replyText = '';
+        this.openTicket({ id });
+        this.loadTickets();
+      },
+      error: (err) => {
+        this.replyError = err?.error?.message || 'Failed to post reply.';
+      },
+    });
+  }
+
+  canReply(ticket = this.selectedTicket): boolean {
+    const status = String(ticket?.status || '').toUpperCase();
+    return Boolean(ticket?.id && !['RESOLVED', 'CLOSED'].includes(status));
   }
 
   getStatusClass(status: string): string {
     switch ((status || '').toUpperCase()) {
-      case 'RESOLVED': case 'CLOSED':  return 'badge badge-resolved';
-      case 'IN_PROGRESS':              return 'badge badge-pending';
-      case 'OPEN':                     return 'badge badge-open';
-      default:                         return 'badge';
+      case 'RESOLVED':
+      case 'CLOSED':
+        return 'badge badge-resolved';
+      case 'IN_PROGRESS':
+        return 'badge badge-pending';
+      case 'OPEN':
+        return 'badge badge-open';
+      default:
+        return 'badge';
     }
+  }
+
+  formatDate(value: string): string {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  private mapTicketDetail(ticket: any): any {
+    return {
+      id: ticket._id,
+      ticketNumber: ticket.ticketNumber ?? `#${String(ticket._id || '').slice(-6).toUpperCase()}`,
+      category: ticket.category,
+      priority: ticket.priority,
+      status: ticket.status,
+      subject: ticket.subject,
+      description: ticket.description,
+      createdAt: ticket.createdAt,
+      assignedTo: ticket.assignedTo
+        ? `${ticket.assignedTo.firstName || ''} ${ticket.assignedTo.lastName || ''}`.trim() || ticket.assignedTo.email
+        : 'Awaiting assignment',
+      replies: (ticket.replies || []).map((reply: any) => ({
+        id: reply._id,
+        message: reply.message,
+        createdAt: reply.createdAt,
+        isStaff: Boolean(reply.isStaff),
+        author: reply.author
+          ? `${reply.author.firstName || ''} ${reply.author.lastName || ''}`.trim() || reply.author.role || 'Support'
+          : 'Support',
+      })),
+    };
   }
 }
