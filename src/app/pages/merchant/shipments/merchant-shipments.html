@@ -724,9 +724,50 @@
                 </div>
 
                 <!-- Details Modal Footer -->
+                @if (shipmentActionError) {
+                    <div class="form-error" style="margin: 0 1.5rem 1rem;">{{ shipmentActionError }}</div>
+                }
+                @if (shipmentActionSuccess) {
+                    <div class="form-success" style="margin: 0 1.5rem 1rem;">{{ shipmentActionSuccess }}</div>
+                }
+                @if (showNdrForm()) {
+                    <div class="info-group-card" style="margin: 0 1.5rem 1rem;">
+                        <h4>NDR Reattempt Details</h4>
+                        <div class="form-group">
+                            <label>Updated Address</label>
+                            <textarea class="form-control" rows="2" [(ngModel)]="ndrAddressLine"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>Landmark</label>
+                                <input class="form-control" type="text" [(ngModel)]="ndrLandmark">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label>Phone</label>
+                                <input class="form-control" type="text" maxlength="10" [(ngModel)]="ndrPhone">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Comments</label>
+                            <input class="form-control" type="text" [(ngModel)]="ndrComments">
+                        </div>
+                        <div class="form-actions justify-end">
+                            <button class="secondary-btn" type="button" (click)="showNdrForm.set(false)" [disabled]="isShipmentActionLoading()">Cancel</button>
+                            <button class="primary-btn" type="button" (click)="submitNdrReattempt()" [disabled]="isShipmentActionLoading()">
+                                {{ isShipmentActionLoading() ? 'Submitting...' : 'Submit Reattempt' }}
+                            </button>
+                        </div>
+                    </div>
+                }
                 <div class="modal-footer-bar">
                     @if (canCancelShipment(selectedShipment())) {
-                        <button class="danger-btn" style="background-color: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500; margin-right: auto;" (click)="cancelShipment(selectedShipment().id)">Cancel Shipment</button>
+                        <button class="danger-btn" style="background-color: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500; margin-right: auto;" [disabled]="isShipmentActionLoading()" (click)="cancelShipment(selectedShipment().id)">Cancel Shipment</button>
+                    }
+                    @if (canReattemptShipment(selectedShipment())) {
+                        <button class="primary-btn" type="button" [disabled]="isShipmentActionLoading()" (click)="openNdrForm()">Reattempt Delivery</button>
+                    }
+                    @if (canInitiateRto(selectedShipment())) {
+                        <button class="secondary-btn" type="button" [disabled]="isShipmentActionLoading()" (click)="initiateRto(selectedShipment())">Initiate RTO</button>
                     }
                     <button class="secondary-btn" (click)="closeDetailsModal()">Close Details</button>
                 </div>

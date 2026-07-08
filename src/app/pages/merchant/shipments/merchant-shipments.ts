@@ -127,6 +127,14 @@ export class MerchantShipments implements OnInit {
 
   // Selected shipment details
   selectedShipment = signal<any>(null);
+  shipmentActionError = '';
+  shipmentActionSuccess = '';
+  isShipmentActionLoading = signal(false);
+  showNdrForm = signal(false);
+  ndrAddressLine = '';
+  ndrLandmark = '';
+  ndrPhone = '';
+  ndrComments = '';
 
   // Wizard active step
   currentStep = signal(1);
@@ -669,7 +677,12 @@ export class MerchantShipments implements OnInit {
 
   cancelShipment(id: string): void {
     if (!confirm('Cancel this shipment? This is only allowed before the shipment moves beyond order creation.')) return;
-    this.shipmentService.cancelShipment(id).subscribe({
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+    this.isShipmentActionLoading.set(true);
+    this.shipmentService.cancelShipment(id).pipe(
+      finalize(() => this.isShipmentActionLoading.set(false)),
+    ).subscribe({
       next: () => {
         this.closeDetailsModal();
         this.loadShipments();
@@ -677,12 +690,87 @@ export class MerchantShipments implements OnInit {
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Failed to cancel shipment.';
+        this.shipmentActionError = this.errorMessage;
       },
     });
   }
 
   canCancelShipment(shipment: any): boolean {
     return shipment?.status === 'ORDER_CREATED';
+  }
+
+  canReattemptShipment(shipment: any): boolean {
+    return shipment?.status === 'DELIVERY_FAILED' && Boolean(shipment?.carrierAWB || shipment?.awb);
+  }
+
+  canInitiateRto(shipment: any): boolean {
+    return ['DELIVERY_FAILED', 'OUT_FOR_DELIVERY'].includes(shipment?.status) && Boolean(shipment?.carrierAWB || shipment?.awb);
+  }
+
+  openNdrForm(): void {
+    const shipment = this.selectedShipment();
+    this.ndrAddressLine = shipment?.receiverAddress || '';
+    this.ndrPhone = shipment?.receiverPhone || '';
+    this.ndrLandmark = '';
+    this.ndrComments = '';
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+    this.showNdrForm.set(true);
+  }
+
+  submitNdrReattempt(): void {
+    const shipment = this.selectedShipment();
+    if (!shipment || this.isShipmentActionLoading()) return;
+    if (!this.ndrAddressLine.trim() && !this.ndrLandmark.trim() && !this.ndrPhone.trim() && !this.ndrComments.trim()) {
+      this.shipmentActionError = 'Add updated address, phone, landmark, or comments for the reattempt.';
+      return;
+    }
+    if (this.ndrPhone.trim() && !/^[6-9]\d{9}$/.test(this.ndrPhone.trim())) {
+      this.shipmentActionError = 'Enter a valid 10-digit phone number.';
+      return;
+    }
+
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+    this.isShipmentActionLoading.set(true);
+    this.shipmentService.requestNdrReattempt({
+      awb: shipment.carrierAWB || shipment.awb,
+      updated_address: {
+        ...(this.ndrAddressLine.trim() ? { address_line: this.ndrAddressLine.trim() } : {}),
+        ...(this.ndrLandmark.trim() ? { landmark: this.ndrLandmark.trim() } : {}),
+      },
+      ...(this.ndrPhone.trim() ? { updated_phone_number: this.ndrPhone.trim() } : {}),
+      ...(this.ndrComments.trim() ? { comments: this.ndrComments.trim() } : {}),
+    }).pipe(finalize(() => this.isShipmentActionLoading.set(false))).subscribe({
+      next: () => {
+        this.shipmentActionSuccess = 'Delivery reattempt requested successfully.';
+        this.showNdrForm.set(false);
+        this.loadShipments();
+        this.loadStats();
+      },
+      error: (err) => {
+        this.shipmentActionError = err.error?.message || 'Failed to request delivery reattempt.';
+      },
+    });
+  }
+
+  initiateRto(shipment: any): void {
+    if (!confirm('Initiate RTO for this shipment?')) return;
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
+    this.isShipmentActionLoading.set(true);
+    this.shipmentService.initiateRto(shipment.carrierAWB || shipment.awb).pipe(
+      finalize(() => this.isShipmentActionLoading.set(false)),
+    ).subscribe({
+      next: () => {
+        this.shipmentActionSuccess = 'RTO initiated successfully.';
+        this.loadShipments();
+        this.loadStats();
+      },
+      error: (err) => {
+        this.shipmentActionError = err.error?.message || 'Failed to initiate RTO.';
+      },
+    });
   }
 
   viewShipmentDetails(shipment: any): void {
@@ -693,5 +781,8 @@ export class MerchantShipments implements OnInit {
   closeDetailsModal(): void {
     this.showDetailsModal.set(false);
     this.selectedShipment.set(null);
+    this.showNdrForm.set(false);
+    this.shipmentActionError = '';
+    this.shipmentActionSuccess = '';
   }
 }

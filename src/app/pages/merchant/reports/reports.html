@@ -1,35 +1,45 @@
 <div class="header-section">
-    <h2>Performance Reports</h2>
+    <h2>Shipment Reports</h2>
     <div class="actions">
-        <button class="view-btn" (click)="exportCSV()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15H8v1h1v1H8"></path></svg> Export CSV</button>
-        <button class="view-btn" style="background: #e8743a;" (click)="exportPDF()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 15h2a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2H8v5zM15 15h1M15 11h2"></path></svg> Export PDF</button>
+        <button class="view-btn" (click)="exportCSV()">Export CSV</button>
+        <button class="view-btn" style="background: #e8743a;" (click)="exportPDF()">Export PDF</button>
     </div>
 </div>
 
 <div class="filter-bar">
     <div class="form-row">
-        <select [(ngModel)]="dateRange" (change)="loadReport()" class="status-select">
+        <select [(ngModel)]="dateRange" (change)="loadReport(true)" class="status-select">
             <option>Today</option>
             <option>This Week</option>
             <option>This Month</option>
             <option>Last Month</option>
         </select>
-        
-        <select [(ngModel)]="statusFilter" (change)="loadReport()" class="status-select">
+
+        <select [(ngModel)]="statusFilter" (change)="loadReport(true)" class="status-select">
             <option>All Statuses</option>
+            <option>Order Created</option>
+            <option>In Transit</option>
             <option>Delivered</option>
             <option>Failed</option>
             <option>RTO</option>
         </select>
-        
-        <select [(ngModel)]="carrierFilter" (change)="loadReport()" class="status-select">
+
+        <select [(ngModel)]="carrierFilter" (change)="loadReport(true)" class="status-select">
             <option>All Carriers</option>
             <option>Delhivery</option>
-            <option>Bluedart</option>
+            <option>Blue Dart</option>
+            <option>DTDC</option>
+            <option>Ekart</option>
             <option>Ecom Express</option>
         </select>
     </div>
 </div>
+
+@if(error) {
+    <div class="shipment-card mt-4" style="border-left: 4px solid #dc2626; color: #b91c1c;">
+        {{ error }}
+    </div>
+}
 
 <div class="stats-container">
     <div class="card" style="border-left: 4px solid rgb(11, 74, 111);">
@@ -56,18 +66,21 @@
         <h2>{{summary.weightDisputes | number}}</h2>
     </div>
     <div class="card" style="border-left: 4px solid rgb(11, 74, 111);">
-        <h4>COD Performance</h4>
-        <h2>{{summary.codPerformance}}%</h2>
+        <h4>Delivery Rate</h4>
+        <h2>{{deliveryRate}}</h2>
     </div>
-    <div class="card" style="border-left: 4px solid #4f46e5;">
-        <h4>Wallet Spend</h4>
-        <h2>₹{{summary.walletSpend | number}}</h2>
+    <div class="card" style="border-left: 4px solid #0f766e;">
+        <h4>In Transit</h4>
+        <h2>{{summary.inTransit | number}}</h2>
     </div>
 </div>
 
 <div class="shipment-card mt-4">
     <div class="header">
-        <h2 style="font-size: 18px;">Daily Breakdown</h2>
+        <h2 style="font-size: 18px;">Shipment Report</h2>
+        <div class="report-meta">
+            Showing {{ dataList.length }} of {{ total | number }} shipment(s)
+        </div>
     </div>
 
     <div class="table-wrapper mt-4">
@@ -75,37 +88,45 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Total Shipments</th>
-                    <th>Delivered</th>
-                    <th>Failed</th>
-                    <th>RTO</th>
-                    <th>Success Rate</th>
+                    <th>Carrier AWB</th>
+                    <th>Vexaro AWB</th>
+                    <th>Status</th>
+                    <th>Destination</th>
+                    <th>Carrier</th>
+                    <th>Weight</th>
+                    <th>Charge</th>
                 </tr>
             </thead>
             <tbody>
                 @if (isLoading) {
                     <tr>
-                        <td colspan="6" class="text-center py-4" style="color: #6b7280;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Loading report data...</td>
+                        <td colspan="8" class="text-center py-4" style="color: #6b7280;">Loading report data...</td>
                     </tr>
                 } @else if (dataList.length === 0) {
                     <tr>
-                        <td colspan="6" class="text-center py-4" style="color: #6b7280;">No data found matching criteria.</td>
+                        <td colspan="8" class="text-center py-4" style="color: #6b7280;">No shipments found for these filters.</td>
                     </tr>
                 } @else {
-                    @for(row of dataList; track row.date) {
+                    @for(row of dataList; track row.awb) {
                     <tr>
                         <td><strong>{{row.date}}</strong></td>
-                        <td class="fw-bold">{{row.total}}</td>
-                        <td style="color: #16a34a;">{{row.delivered}}</td>
-                        <td style="color: rgb(239, 68, 68);">{{row.failed}}</td>
-                        <td style="color: #374151;">{{row.rto}}</td>
-                        <td>
-                            <span class="status delivered">{{ (row.delivered / row.total * 100) | number:'1.1-1' }}%</span>
-                        </td>
+                        <td class="fw-bold">{{row.awb}}</td>
+                        <td>{{row.vexaroAwb}}</td>
+                        <td><span [class]="getStatusClass(row.status)">{{row.status}}</span></td>
+                        <td>{{row.dest}}</td>
+                        <td>{{row.carrier}}</td>
+                        <td>{{row.weight}} kg</td>
+                        <td>INR {{row.total | number:'1.2-2'}}</td>
                     </tr>
                     }
                 }
             </tbody>
         </table>
+    </div>
+
+    <div class="pagination-controls">
+        <button type="button" class="pager-btn" [disabled]="!hasPrevPage || isLoading" (click)="goToPage(page - 1)">Previous</button>
+        <span>Page {{ page }} of {{ totalPages }}</span>
+        <button type="button" class="pager-btn" [disabled]="!hasNextPage || isLoading" (click)="goToPage(page + 1)">Next</button>
     </div>
 </div>

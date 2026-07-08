@@ -19,17 +19,17 @@
       <div class="filters-left">
         <!-- Status Tabs -->
         <div class="status-tabs">
-          <button [class.active]="statusFilter() === 'ALL'" (click)="statusFilter.set('ALL')">All</button>
-          <button [class.active]="statusFilter() === 'OPEN'" (click)="statusFilter.set('OPEN')">
+          <button [class.active]="statusFilter() === 'ALL'" (click)="setStatusFilter('ALL')">All</button>
+          <button [class.active]="statusFilter() === 'OPEN'" (click)="setStatusFilter('OPEN')">
             Open <span class="count-badge open"></span>
           </button>
-          <button [class.active]="statusFilter() === 'IN_REVIEW'" (click)="statusFilter.set('IN_REVIEW')">
+          <button [class.active]="statusFilter() === 'IN_REVIEW'" (click)="setStatusFilter('IN_REVIEW')">
             In Review <span class="count-badge review"></span>
           </button>
-          <button [class.active]="statusFilter() === 'RESOLVED'" (click)="statusFilter.set('RESOLVED')">
+          <button [class.active]="statusFilter() === 'RESOLVED'" (click)="setStatusFilter('RESOLVED')">
             Resolved <span class="count-badge resolved"></span>
           </button>
-          <button [class.active]="statusFilter() === 'CLOSED'" (click)="statusFilter.set('CLOSED')">
+          <button [class.active]="statusFilter() === 'CLOSED'" (click)="setStatusFilter('CLOSED')">
             Closed
           </button>
         </div>
@@ -38,14 +38,12 @@
       <div class="filters-right">
         <!-- Category Filter -->
         <div class="filter-group select-group">
-          <select [(ngModel)]="categoryFilter">
+          <select [ngModel]="categoryFilter()" (ngModelChange)="categoryFilter.set($event)">
             <option value="ALL">All Categories</option>
-            <option value="WEIGHT_DISPUTE">Weight Mismatch</option>
             <option value="LOST">Package Lost</option>
             <option value="DAMAGED">Damaged Package</option>
             <option value="DELAY">Delivery Delay</option>
             <option value="WRONG_DELIVERY">Incorrect Delivery</option>
-            <option value="COD_MISMATCH">COD Cash Mismatch</option>
             <option value="OTHER">Other Issues</option>
           </select>
         </div>
@@ -186,60 +184,21 @@
             <p class="description-text">{{ selectedDispute()?.description }}</p>
           </div>
 
-          <!-- Uploaded Proofs Panel -->
           <div class="card-section">
-            <h3 class="section-title">Image Proofs</h3>
+            <h3 class="section-title">Attachments</h3>
             
-            @if (selectedDispute()?.proofImages?.length || 0 > 0) {
+            @if (selectedDispute()?.attachments?.length || 0 > 0) {
               <div class="image-gallery">
-                @for (img of selectedDispute()?.proofImages; track img) {
+                @for (attachment of selectedDispute()?.attachments; track attachment.url) {
                   <div class="gallery-thumb">
-                    <img [src]="resolveProofUrl(img)" alt="Uploaded Proof" />
+                    <a [href]="resolveProofUrl(attachment.url)" target="_blank" rel="noopener">
+                      {{ attachment.name || 'View attachment' }}
+                    </a>
                   </div>
                 }
               </div>
             } @else {
-              <p class="no-proof-text">No image proof uploaded yet.</p>
-            }
-
-            <!-- Upload Area for Open Weight Disputes -->
-            @if (selectedDispute()?.category === 'WEIGHT_DISPUTE' && selectedDispute()?.status === 'OPEN') {
-              <div class="upload-area-box">
-                <h4>Upload Weight Verification Image</h4>
-                <p>Provide package photos showing the weight on scales alongside the AWB barcode label.</p>
-                
-                <label class="upload-dropzone">
-                  <span class="material-icons upload-icon">cloud_upload</span>
-                  <span>Click to select image proof</span>
-                  <input type="file" multiple accept="image/*,.pdf" (change)="onProofFilesSelected($event)" hidden />
-                  @if (isUploadingProof()) {
-                    <span class="spinner-small"></span>
-                  }
-                </label>
-
-                @if (proofUploadError()) {
-                  <p class="no-proof-text">{{ proofUploadError() }}</p>
-                }
-
-                @if (proofFiles().length > 0) {
-                  <div class="preview-thumbnails">
-                    @for (file of proofFiles(); track file.name; let idx = $index) {
-                      <div class="thumb-wrap">
-                        <span class="material-icons">description</span>
-                        <small>{{ file.name }}</small>
-                        <button class="remove-thumb-btn" (click)="removeProofFile(idx)">
-                          <span class="material-icons">close</span>
-                        </button>
-                      </div>
-                    }
-                  </div>
-                  
-                  <button class="primary-btn submit-proof-btn" (click)="submitProof()" [disabled]="isUploadingProof()">
-                    <span class="material-icons">send</span>
-                    {{ isUploadingProof() ? 'Uploading...' : 'Submit Proof to Admin' }}
-                  </button>
-                }
-              </div>
+              <p class="no-proof-text">No attachments submitted with this dispute.</p>
             }
           </div>
         </section>
@@ -272,9 +231,12 @@
               rows="3"
             ></textarea>
             <div class="post-actions">
-              <button class="primary-btn comment-btn" [disabled]="!newCommentText.trim()" (click)="addComment()">
+              @if (commentError()) {
+                <p class="no-proof-text">{{ commentError() }}</p>
+              }
+              <button class="primary-btn comment-btn" [disabled]="!newCommentText.trim() || isCommenting()" (click)="addComment()">
                 <span class="material-icons">send</span>
-                Post Message
+                {{ isCommenting() ? 'Posting...' : 'Post Message' }}
               </button>
             </div>
           </div>
@@ -325,8 +287,7 @@
                 <option value="DAMAGED">Damaged Package (Broken / leaked cargo)</option>
                 <option value="DELAY">Delivery Delay (Overdue delivery date)</option>
                 <option value="WRONG_DELIVERY">Incorrect Delivery (Delivered to wrong person)</option>
-                <option value="COD_MISMATCH">COD Cash Mismatch (Incorrect cash collection)</option>
-                <option value="OTHER">Other Issue (General billing/support)</option>
+                <option value="OTHER">Other Issue (General shipment support)</option>
               </select>
             </div>
           </div>
@@ -344,11 +305,42 @@
             ></textarea>
           </div>
 
+          <div class="form-field">
+            <label>Proof Attachments</label>
+            <label class="upload-dropzone">
+              <span class="material-icons upload-icon">cloud_upload</span>
+              <span>Select photos or PDFs</span>
+              <input type="file" multiple accept="image/*,.pdf" (change)="onCreateFilesSelected($event)" hidden />
+            </label>
+            <p class="field-hint">Optional, but useful for damaged, lost, delayed, or wrong delivery claims.</p>
+
+            @if (createAttachmentError()) {
+              <p class="no-proof-text">{{ createAttachmentError() }}</p>
+            }
+
+            @if (createFiles().length > 0) {
+              <div class="preview-thumbnails">
+                @for (file of createFiles(); track file.name; let idx = $index) {
+                  <div class="thumb-wrap">
+                    <span class="material-icons">description</span>
+                    <small>{{ file.name }}</small>
+                    <button type="button" class="remove-thumb-btn" (click)="removeCreateFile(idx)">
+                      <span class="material-icons">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
           <!-- Form Buttons -->
           <div class="form-buttons">
             <button type="button" class="secondary-btn" (click)="closeCreateForm()">Cancel</button>
-            <button type="submit" class="primary-btn submit-dispute-btn" [disabled]="!disputeForm.form.valid">
-              Submit Dispute Claim
+            @if (createError()) {
+              <p class="no-proof-text">{{ createError() }}</p>
+            }
+            <button type="submit" class="primary-btn submit-dispute-btn" [disabled]="!disputeForm.form.valid || isCreating()">
+              {{ isUploadingAttachments() ? 'Uploading proof...' : isCreating() ? 'Submitting...' : 'Submit Dispute Claim' }}
             </button>
           </div>
         </form>

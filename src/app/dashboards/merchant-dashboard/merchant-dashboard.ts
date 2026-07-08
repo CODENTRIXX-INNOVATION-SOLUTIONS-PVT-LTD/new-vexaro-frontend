@@ -16,7 +16,6 @@ export class MerchantDashboard {
     { label: 'Wallet', route: '/merchant/wallet', icon: 'fa-wallet' },
     { label: 'Reports', route: '/merchant/reports', icon: 'fa-chart-line' },
     { label: 'Disputes', route: '/merchant/disputes', icon: 'fa-gavel' },
-    { label: 'Address Book', route: '/merchant/address-book', icon: 'fa-address-book' },
     { label: 'Support', route: '/merchant/support', icon: 'fa-headset' },
     { label: 'Warehouse', route: '/merchant/warehouse', icon: 'fa-warehouse' },
     { label: 'My Profile', route: '/merchant/profile', icon: 'fa-user' }

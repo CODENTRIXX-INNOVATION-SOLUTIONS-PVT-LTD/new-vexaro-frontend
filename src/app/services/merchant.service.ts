@@ -119,6 +119,18 @@ export class MerchantService {
     return this.http.post<any>(`${this.baseUrl}/users/warehouses/${id}/address-change-request`, payload);
   }
 
+  listWarehouseAddressChangeRequests(params: { page?: number; limit?: number; status?: string } = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    return this.http.get<any>(`${this.baseUrl}/users/warehouses/address-change-requests`, { params: httpParams });
+  }
+
+  cancelWarehouseAddressChangeRequest(requestId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/users/warehouses/address-change-requests/${requestId}/cancel`, {});
+  }
+
   /**
    * GET /users?role=DISTRIBUTOR&search=...&page=...&limit=...
    */
