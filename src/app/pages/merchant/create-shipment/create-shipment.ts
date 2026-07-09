@@ -441,6 +441,7 @@ export class CreateShipment implements OnInit {
         country: this.receiverCountry || "India",
       },
       carrierId: selected.id || undefined,
+      carrierCost: selected.carrierCost || undefined,
       isCOD: this.isCOD,
       paymentMethod: this.isCOD ? "COD" : "PREPAID",
       codAmount: this.isCOD ? this.codAmount : 0,
