@@ -1,0 +1,92 @@
+<div class="warehouse-requests-page">
+  <div class="page-header">
+    <div>
+      <h2>Warehouse Address Requests</h2>
+      <p>Review merchant pickup address changes before they become active.</p>
+    </div>
+    <div class="filter-bar">
+      <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilter()">
+        <option value="">All statuses</option>
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </div>
+  </div>
+
+  @if (success) {
+    <div class="alert success">{{ success }}</div>
+  }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+
+  <div class="request-card">
+    @if (isLoading) {
+      <div class="empty-state">Loading warehouse requests...</div>
+    } @else if (!requests.length) {
+      <div class="empty-state">No warehouse address requests found.</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Merchant</th>
+              <th>Warehouse</th>
+              <th>Current Address</th>
+              <th>Requested Address</th>
+              <th>Status</th>
+              <th>Requested</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of requests; track request.id) {
+              <tr>
+                <td>
+                  <strong>{{ request.merchantName }}</strong>
+                  <span>{{ request.merchantEmail }}</span>
+                </td>
+                <td><code>{{ request.warehouseId }}</code></td>
+                <td>{{ request.currentAddress }}</td>
+                <td>{{ request.requestedAddress }}</td>
+                <td>
+                  <span [class]="statusClass(request.status)">{{ request.status }}</span>
+                  @if (request.rejectionReason) {
+                    <small>{{ request.rejectionReason }}</small>
+                  }
+                </td>
+                <td>
+                  {{ formatDate(request.createdAt) }}
+                  @if (request.processedAt) {
+                    <small>Processed {{ formatDate(request.processedAt) }}</small>
+                  }
+                </td>
+                <td>
+                  @if (request.status === 'PENDING') {
+                    <div class="action-stack">
+                      <button class="btn approve" [disabled]="actionRequestId === request.id" (click)="approve(request)">
+                        {{ actionRequestId === request.id ? 'Working...' : 'Approve' }}
+                      </button>
+                      <input type="text" [(ngModel)]="request.rejectInput" placeholder="Reason for rejection">
+                      <button class="btn reject" [disabled]="actionRequestId === request.id" (click)="reject(request)">Reject</button>
+                    </div>
+                  } @else {
+                    <span class="no-action">Completed</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="pagination">
+    <button [disabled]="!hasPrevPage || isLoading" (click)="prevPage()">Previous</button>
+    <span>Page {{ page }} of {{ pages }} · {{ total }} requests</span>
+    <button [disabled]="!hasNextPage || isLoading" (click)="nextPage()">Next</button>
+  </div>
+</div>

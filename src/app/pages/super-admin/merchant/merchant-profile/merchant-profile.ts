@@ -91,7 +91,6 @@ export class MerchantProfile implements OnInit {
     cancelledOrders: 0,
     inTransitOrders: 0,
     reversePickups: 0,
-    weightDisputes: 0,
   };
 
 

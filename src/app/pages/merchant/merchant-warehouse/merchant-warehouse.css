@@ -41,6 +41,20 @@
   padding: 24px;
 }
 
+.error-box,
+.form-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.form-error {
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -88,6 +102,28 @@
   border-radius: 20px;
   font-size: 13px;
   color: rgb(10, 10, 10);
+}
+
+.warehouse-selector {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 20px;
+  max-width: 420px;
+}
+
+.warehouse-selector label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(10, 10, 10, 0.55);
+  text-transform: uppercase;
+}
+
+.warehouse-selector select {
+  width: 100%;
+  border: 1.5px solid rgba(10, 10, 10, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
 }
 
 .card-body {
@@ -223,6 +259,11 @@
   box-shadow: 0 0 0 3px rgba(11, 74, 111, 0.1);
 }
 
+.form-group input[readonly] {
+  background: #f8fafc;
+  color: #64748b;
+}
+
 .form-actions {
   margin-top: 24px;
 }
@@ -245,6 +286,12 @@
 
 .btn-save:hover {
   background: rgb(8, 56, 84);
+}
+
+.btn-save:disabled,
+.btn-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* Toast Notifications */
@@ -428,4 +475,126 @@
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+.request-history-container {
+  margin-top: 24px;
+}
+
+.history-empty {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.request-table-wrap {
+  overflow-x: auto;
+}
+
+.request-table {
+  border-collapse: collapse;
+  min-width: 860px;
+  width: 100%;
+}
+
+.request-table thead {
+  background: #f8fafc;
+}
+
+.request-table th,
+.request-table td {
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 13px;
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.request-table th {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.status-pill {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-pill.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-pill.cancelled {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-small-danger {
+  background: #ffffff;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  color: #b91c1c;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
+.btn-small-danger:disabled {
+  background: #f8fafc;
+  border-color: #fecaca;
+  color: #fca5a5;
+  cursor: not-allowed;
+}
+
+.request-pagination {
+  align-items: center;
+  color: #64748b;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.request-pagination button {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: rgb(11, 74, 111);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.request-pagination button:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .request-pagination {
+    justify-content: space-between;
+  }
 }

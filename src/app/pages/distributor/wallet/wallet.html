@@ -17,32 +17,50 @@
   </div>
 
   <!-- Balance Banner -->
-  <div class="balance-hero">
-    <div class="balance-left">
-      <div class="balance-icon-wrap">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.3em;height:1.3em">
-          <path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6" />
-        </svg>
+  <div class="balance-hero" style="display:flex;gap:20px;align-items:stretch;flex-wrap:wrap;background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);padding:24px;border-radius:16px;">
+    <!-- Available Balance -->
+    <div class="balance-left" style="flex:1;min-width:200px;display:flex;align-items:center;gap:15px;">
+      <div class="balance-icon-wrap" style="background:#16a34a;color:white;width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
       </div>
       <div>
-        <div class="balance-label">Current Wallet Balance</div>
-        <div class="balance-amount">₹{{ balance.toLocaleString('en-IN') }}</div>
+        <span style="font-size:12px;opacity:0.9;color:white;font-weight:600;">Available Balance</span>
+        <div style="font-size:28px;font-weight:800;color:white;">₹{{ availableBalance.toLocaleString('en-IN') }}</div>
+      </div>
+    </div>
+    <!-- Reserved Balance -->
+    <div class="balance-left" style="flex:1;min-width:200px;display:flex;align-items:center;gap:15px;border-left:1px solid rgba(255,255,255,0.2);padding-left:15px;">
+      <div class="balance-icon-wrap" style="background:#475569;color:white;width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+      <div>
+        <span style="font-size:12px;opacity:0.9;color:white;font-weight:600;">Reserved Balance</span>
+        <div style="font-size:28px;font-weight:800;color:white;">₹{{ reservedBalance.toLocaleString('en-IN') }}</div>
+      </div>
+    </div>
+    <!-- Total Balance -->
+    <div class="balance-left" style="flex:1;min-width:200px;display:flex;align-items:center;gap:15px;border-left:1px solid rgba(255,255,255,0.2);padding-left:15px;">
+      <div class="balance-icon-wrap" style="background:rgb(11,74,111);color:white;width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
+      </div>
+      <div>
+        <span style="font-size:12px;opacity:0.9;color:white;font-weight:600;">Total Balance</span>
+        <div style="font-size:28px;font-weight:800;color:white;">₹{{ balance.toLocaleString('en-IN') }}</div>
       </div>
     </div>
 
-    <div class="balance-chips">
-      <div class="bchip">
-        <span class="bchip-val">{{ successPaymentsCount }}</span>
-        <span class="bchip-label">Successful Top-ups</span>
+    <div class="balance-chips" style="display:flex;flex-direction:column;justify-content:center;gap:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:15px;min-width:140px;">
+      <div class="bchip" style="display:flex;justify-content:space-between;color:white;font-size:12px;">
+        <span class="bchip-label" style="opacity:0.8;">Total Top-ups:</span>
+        <span class="bchip-val" style="font-weight:700;">{{ successPaymentsCount }}</span>
       </div>
-      <div class="bchip">
-        <span class="bchip-val">₹{{ totalTopupAmount.toLocaleString('en-IN') }}</span>
-        <span class="bchip-label">Total via Razorpay</span>
+      <div class="bchip" style="display:flex;justify-content:space-between;color:white;font-size:12px;">
+        <span class="bchip-label" style="opacity:0.8;">Total Paid:</span>
+        <span class="bchip-val" style="font-weight:700;">₹{{ totalTopupAmount.toLocaleString('en-IN') }}</span>
       </div>
     </div>
 
-    <button class="hero-topup-btn" (click)="changeTab('topup')">
+    <button class="hero-topup-btn" (click)="changeTab('topup')" style="align-self:center;">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
         <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -50,6 +68,13 @@
       Add Funds
     </button>
   </div>
+
+  @if (reservedBalance > 0) {
+  <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; margin-top: 15px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #1e3a8a;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    <span><strong>Note:</strong> ₹{{ reservedBalance.toLocaleString('en-IN') }} is a mandatory security reserve and cannot be used for transactions.</span>
+  </div>
+  }
 
   <!-- Tabs -->
   <div class="wallet-tabs">
@@ -118,7 +143,26 @@
         ₹{{ pkg.toLocaleString('en-IN') }}
       </button>
       }
+      <button class="pkg-chip custom-chip" [class.selected]="customAmount !== null" (click)="selectCustomAmount()">
+        Custom
+      </button>
     </div>
+
+    @if (customAmount !== null) {
+    <div class="custom-amount-input">
+      <label class="form-label">Select Custom Amount (₹)</label>
+      <select [(ngModel)]="customAmount" class="form-input" (change)="successMessage='';errorMessage=''" placeholder="Select amount">
+        <option [ngValue]="null" disabled selected>Select amount</option>
+        @for (amt of customAmounts; track amt) {
+        <option [ngValue]="amt">₹{{ amt.toLocaleString('en-IN') }}</option>
+        }
+        <option [ngValue]="'custom'">Other amount</option>
+      </select>
+      @if (customAmount === 'custom') {
+      <input type="number" [(ngModel)]="customAmountNumber" min="100" placeholder="Enter custom amount" class="form-input" style="margin-top:10px;" (input)="successMessage='';errorMessage=''" />
+      }
+    </div>
+    }
 
     @if (selectedPackage) {
     <div class="selected-preview">
@@ -130,8 +174,28 @@
     </div>
     }
 
+    @if (customAmount && typeof customAmount === 'number' && customAmount > 0) {
+    <div class="selected-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      Paying <strong>₹{{ customAmount.toLocaleString('en-IN') }}</strong> via <strong>Razorpay</strong>
+    </div>
+    }
+
+    @if (customAmountNumber && customAmountNumber > 0) {
+    <div class="selected-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      Paying <strong>₹{{ customAmountNumber.toLocaleString('en-IN') }}</strong> via <strong>Razorpay</strong>
+    </div>
+    }
+
     <div class="form-actions">
-      <button class="btn-submit" (click)="startTopup()" [disabled]="!selectedPackage || isProcessing">
+      <button class="btn-submit" (click)="startTopup()" [disabled]="(!selectedPackage && !customAmount && !customAmountNumber) || isProcessing">
         @if (isProcessing) {
         <span class="spinner"></span> Opening Razorpay…
         } @else {

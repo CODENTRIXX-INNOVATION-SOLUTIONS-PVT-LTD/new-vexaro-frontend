@@ -33,12 +33,36 @@ export class LiveTracking implements OnInit {
   }
 
   get latestEvent(): any {
-    const history = this.shipment?.history || this.shipment?.statusHistory || [];
-    return history.length ? history[history.length - 1] : null;
+    const events = this.trackingEvents;
+    return events.length ? events[0] : null;
+  }
+
+  get trackingEvents(): any[] {
+    if (!this.shipment) return [];
+    const velocityEvents = this.extractVelocityEvents(this.shipment.velocityTracking).map((event: any) => ({
+      timestamp: this.eventTime(event),
+      status: event.status || event.current_status || event.activity || event.remark || 'Tracking Update',
+      note: event.remark || event.activity || event.description || event.status || '',
+      location: event.location || event.city || event.scan_location || event.scanLocation || '',
+      source: 'Velocity',
+    }));
+    const localEvents = (this.shipment.history || this.shipment.statusHistory || []).map((event: any) => ({
+      timestamp: event.timestamp || event.updatedAt || event.createdAt,
+      status: event.status || 'Tracking Update',
+      note: event.note || event.description || '',
+      location: event.location || this.shipment.destination?.city || '',
+      source: 'Vexaro',
+    }));
+    return [...velocityEvents, ...localEvents]
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }
 
   get trackingUrl(): string | null {
-    return this.shipment?.velocityTracking?.tracking_data?.track_url
+    return this.shipment?.trackingUrl
+      || this.shipment?.velocityTracking?.tracking_url
+      || this.shipment?.velocityTracking?.trackingUrl
+      || this.shipment?.velocityTracking?.track_url
+      || this.shipment?.velocityTracking?.tracking_data?.track_url
       || this.shipment?.velocityTracking?.trackingUrl
       || null;
   }
@@ -67,5 +91,29 @@ export class LiveTracking implements OnInit {
 
   goBack() {
     this.router.navigate(['/distributor/tracking/search']);
+  }
+
+  private eventTime(event: any): string {
+    return event?.date
+      || event?.timestamp
+      || event?.time
+      || event?.event_timestamp
+      || event?.event_date_time
+      || event?.scan_date_time
+      || event?.created_at
+      || '';
+  }
+
+  private extractVelocityEvents(raw: any): any[] {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    return raw.tracking_data
+      || raw.shipment_track_activities
+      || raw.shipment_track
+      || raw.track_activities
+      || raw.activities
+      || raw.events
+      || raw.scans
+      || [];
   }
 }

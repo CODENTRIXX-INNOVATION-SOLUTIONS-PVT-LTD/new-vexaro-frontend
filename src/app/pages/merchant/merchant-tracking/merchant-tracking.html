@@ -14,8 +14,9 @@
         <span class="material-icons search-icon">search</span>
         <input
           type="text"
-          placeholder="Enter AWB Tracking ID (e.g. VX-982341205)"
-          [(ngModel)]="searchQuery"
+          placeholder="Enter Vexaro AWB or carrier AWB"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
           name="query"
           required
         />
@@ -25,12 +26,6 @@
         Track Package
       </button>
     </form>
-    
-    <div class="quick-suggest">
-      <span>Quick examples:</span>
-      <button class="tag-btn" (click)="quickTrack('VX-982341205')">VX-982341205 (Delivered)</button>
-      <button class="tag-btn" (click)="quickTrack('VX-982341289')">VX-982341289 (In Transit)</button>
-    </div>
   </div>
 
   <!-- SEARCH RESULTS ERROR -->
@@ -49,13 +44,19 @@
       <div class="status-banner card" [class]="activeDetails()?.status?.toLowerCase()?.replace(' ', '-')">
         <div class="banner-left">
           <span class="label">Current Transit Status</span>
-          <h2>{{ activeDetails()?.status }}</h2>
+          <h2>{{ activeDetails()?.statusLabel }}</h2>
           <span class="carrier-tag">Carrier: <strong>{{ activeDetails()?.courierName }}</strong></span>
         </div>
         <div class="banner-right">
           <span class="label">Estimated Delivery</span>
           <h3>{{ activeDetails()?.estimatedDelivery | date: 'dd MMM yyyy' }}</h3>
           <span class="awb-display">AWB: {{ activeDetails()?.awb }}</span>
+          @if (activeDetails()?.carrierAWB) {
+            <span class="awb-display">Carrier AWB: {{ activeDetails()?.carrierAWB }}</span>
+          }
+          @if (activeDetails()?.trackingUrl) {
+            <a class="awb-display" [href]="activeDetails()?.trackingUrl" target="_blank" rel="noopener noreferrer">Open carrier tracking</a>
+          }
         </div>
       </div>
 
@@ -63,31 +64,31 @@
       <div class="card stepper-card">
         <div class="stepper-wrapper">
           <!-- Step 1: Created -->
-          <div class="stepper-item" [class.completed]="true" [class.active]="activeDetails()?.status === 'Created'">
+          <div class="stepper-item" [class.completed]="true" [class.active]="getStepperIndex(activeDetails()?.status || '') === 0">
             <div class="step-counter"><span class="material-icons">receipt</span></div>
             <div class="step-name">Created</div>
           </div>
           
           <!-- Step 2: Picked Up / In Transit -->
           <div class="stepper-item" 
-               [class.completed]="['In Transit', 'Out for Delivery', 'Delivered'].includes(activeDetails()?.status || '')" 
-               [class.active]="activeDetails()?.status === 'In Transit'">
+               [class.completed]="getStepperIndex(activeDetails()?.status || '') >= 1" 
+               [class.active]="getStepperIndex(activeDetails()?.status || '') === 1">
             <div class="step-counter"><span class="material-icons">local_shipping</span></div>
             <div class="step-name">In Transit</div>
           </div>
           
           <!-- Step 3: Out for Delivery -->
           <div class="stepper-item" 
-               [class.completed]="['Out for Delivery', 'Delivered'].includes(activeDetails()?.status || '')"
-               [class.active]="activeDetails()?.status === 'Out for Delivery'">
+               [class.completed]="getStepperIndex(activeDetails()?.status || '') >= 2"
+               [class.active]="getStepperIndex(activeDetails()?.status || '') === 2">
             <div class="step-counter"><span class="material-icons">directions_bike</span></div>
             <div class="step-name">Out for Delivery</div>
           </div>
           
           <!-- Step 4: Delivered -->
           <div class="stepper-item" 
-               [class.completed]="activeDetails()?.status === 'Delivered'"
-               [class.active]="activeDetails()?.status === 'Delivered'">
+               [class.completed]="getStepperIndex(activeDetails()?.status || '') >= 3"
+               [class.active]="getStepperIndex(activeDetails()?.status || '') === 3">
             <div class="step-counter"><span class="material-icons">check_circle</span></div>
             <div class="step-name">Delivered</div>
           </div>
@@ -134,7 +135,7 @@
               </div>
               <div class="info-row">
                 <span class="lbl">Mobile Number</span>
-                <span>+91 {{ activeDetails()?.recipientPhone }}</span>
+                <span>{{ activeDetails()?.recipientPhone }}</span>
               </div>
             </div>
           </div>
@@ -168,9 +169,9 @@
                     </div>
                     <span class="location-tag">
                       <span class="material-icons">place</span>
-                      {{ node.location }}
+                      {{ node.location || node.source }}
                     </span>
-                    <p class="desc">{{ node.description }}</p>
+                    <p class="desc">{{ node.description }} <span class="label">({{ node.source }})</span></p>
                   </div>
                 </div>
               }

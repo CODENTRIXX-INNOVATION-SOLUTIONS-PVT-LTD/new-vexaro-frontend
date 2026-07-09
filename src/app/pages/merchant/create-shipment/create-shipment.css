@@ -445,6 +445,32 @@ textarea.form-control {
     margin: 0;
 }
 
+/* Price Breakdown Grid */
+.price-breakdown-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.price-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.price-breakdown-item .price-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.price-breakdown-item .price-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(10, 10, 10);
+}
+
 /* Courier Selection Section */
 .couriers-section h4 {
     margin: 0 0 16px 0;
@@ -739,6 +765,13 @@ textarea.form-control {
     flex-direction: column;
     align-items: center;
     gap: 20px;
+}
+
+.booking-brand-logo {
+    width: 170px;
+    max-width: 70%;
+    height: auto;
+    object-fit: contain;
 }
 
 .success-icon {

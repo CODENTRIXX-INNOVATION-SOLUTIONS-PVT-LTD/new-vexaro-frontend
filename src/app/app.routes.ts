@@ -151,20 +151,6 @@ export const routes: Routes = [
             (m) => m.AdminSetting,
           ),
       },
-      {
-        path: "disputes",
-        loadComponent: () =>
-          import("./pages/super-admin/disputes/dispute-list/dispute-list").then(
-            (m) => m.AdminDisputeList,
-          ),
-      },
-      {
-        path: "disputes/:id",
-        loadComponent: () =>
-          import("./pages/distributor/disputes/dispute-detail/dispute-detail").then(
-            (m) => m.DisputeDetail,
-          ),
-      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -220,11 +206,6 @@ export const routes: Routes = [
         path: "reports",
         loadComponent: () =>
           import("./pages/merchant/reports/reports").then((m) => m.Reports),
-      },
-      {
-        path: "address-book",
-        loadComponent: () =>
-          import("./pages/merchant/address-book/address-book").then((m) => m.AddressBook),
       },
       {
         path: "support",
@@ -333,6 +314,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./pages/distributor/all-shipments/all-shipments").then(
             (m) => m.AllShipments,
+          ),
+      },
+      {
+        path: "operations/warehouse-requests",
+        loadComponent: () =>
+          import("./pages/distributor/warehouse-requests/warehouse-requests").then(
+            (m) => m.DistributorWarehouseRequests,
           ),
       },
       { path: "operations", redirectTo: "operations/shipments", pathMatch: "full" },

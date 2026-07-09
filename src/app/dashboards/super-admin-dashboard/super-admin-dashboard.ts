@@ -21,7 +21,6 @@ menuItems = [
   { label: 'Payments', route: '/super-admin/payments', icon: 'fa-wallet' },
   { label: 'Reports', route: '/super-admin/reports', icon: 'fa-chart-line' },
   { label: 'User Management', route: '/super-admin/user-management', icon: 'fa-users-cog' },
-  { label: 'Disputes', route: '/super-admin/disputes', icon: 'fa-gavel' },
   { label: 'Settings', route: '/super-admin/settings', icon: 'fa-cog' }
 ];
 

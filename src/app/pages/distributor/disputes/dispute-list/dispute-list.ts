@@ -5,13 +5,13 @@ import { Router } from '@angular/router';
 import { DisputeService } from '../../../../services/dispute.service';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  WEIGHT_DISPUTE:   'Weight Mismatch',
-  LOST:             'Lost Package',
-  DAMAGED:          'Damaged',
-  DELAY:            'Delivery Delay',
-  WRONG_DELIVERY:   'Wrong Delivery',
-  COD_MISMATCH:     'COD Mismatch',
-  OTHER:            'Other',
+  WEIGHT_DISPUTE: 'Weight Mismatch',
+  LOST: 'Lost Package',
+  DAMAGED: 'Damaged',
+  DELAY: 'Delivery Delay',
+  WRONG_DELIVERY: 'Wrong Delivery',
+  COD_MISMATCH: 'COD Mismatch',
+  OTHER: 'Other',
 };
 
 @Component({
@@ -22,27 +22,32 @@ const CATEGORY_LABELS: Record<string, string> = {
   styleUrl: './dispute-list.css',
 })
 export class DisputeList implements OnInit {
-  private router         = inject(Router);
+  private router = inject(Router);
   private disputeService = inject(DisputeService);
 
-  disputes: any[]         = [];
+  disputes: any[] = [];
   filteredDisputes: any[] = [];
   isLoading = false;
-  error     = '';
+  error = '';
 
   statusFilter = '';
-  searchTerm   = '';
+  searchTerm = '';
 
-  page  = 1;
+  page = 1;
   total = 0;
   readonly limit = 20;
-  get totalPages() { return Math.ceil(this.total / this.limit) || 1; }
 
-  ngOnInit(): void { this.loadDisputes(); }
+  get totalPages(): number {
+    return Math.ceil(this.total / this.limit) || 1;
+  }
+
+  ngOnInit(): void {
+    this.loadDisputes();
+  }
 
   loadDisputes(): void {
     this.isLoading = true;
-    this.error     = '';
+    this.error = '';
 
     const params: any = { page: this.page, limit: this.limit };
     if (this.statusFilter) params.status = this.statusFilter;
@@ -51,26 +56,24 @@ export class DisputeList implements OnInit {
       next: (res) => {
         this.total = res?.meta?.total ?? 0;
         const raw: any[] = res?.data?.disputes ?? res?.data?.items ?? [];
-        this.disputes = raw.map(d => ({
-          id:                d._id,
-          awb:               d.shipmentId?.awb ?? '—',
-          merchantName:      d.raisedBy ? `${d.raisedBy.firstName ?? ''} ${d.raisedBy.lastName ?? ''}`.trim() : '—',
-          category:          CATEGORY_LABELS[d.category] ?? d.category ?? '—',
-          status:            d.status,
-          appliedWeight:     d.billedWeight ?? 0,
-          chargedWeight:     d.actualWeight ?? 0,
-          weightDifference:  Math.max(0, (d.actualWeight ?? 0) - (d.billedWeight ?? 0)),
-          extraChargeAmount: d.extraCharge ?? 0,
-          deadlineDate:      d.disputeExpiresAt
-            ? new Date(d.disputeExpiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-            : '—',
-          createdAt: new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        this.disputes = raw.map((d) => ({
+          id: d._id,
+          awb: d.shipmentId?.awb ?? '-',
+          merchantName: d.raisedBy
+            ? `${d.raisedBy.firstName ?? ''} ${d.raisedBy.lastName ?? ''}`.trim() || d.raisedBy.email || '-'
+            : '-',
+          category: CATEGORY_LABELS[d.category] ?? d.category ?? '-',
+          status: d.status,
+          description: d.description ?? '',
+          resolution: d.resolution ?? '',
+          createdAt: this.formatDate(d.createdAt),
+          resolvedAt: this.formatDate(d.resolvedAt),
         }));
         this.applyFilters();
         this.isLoading = false;
       },
       error: (err) => {
-        this.error     = err?.error?.message || 'Failed to load disputes.';
+        this.error = err?.error?.message || 'Failed to load disputes.';
         this.isLoading = false;
       },
     });
@@ -78,9 +81,12 @@ export class DisputeList implements OnInit {
 
   applyFilters(): void {
     const q = this.searchTerm.trim().toLowerCase();
-    this.filteredDisputes = this.disputes.filter(d =>
-      (!q || d.awb.toLowerCase().includes(q) || d.merchantName.toLowerCase().includes(q)) &&
-      (!this.statusFilter || d.status === this.statusFilter)
+    this.filteredDisputes = this.disputes.filter((d) =>
+      (!q ||
+        d.awb.toLowerCase().includes(q) ||
+        d.merchantName.toLowerCase().includes(q) ||
+        d.category.toLowerCase().includes(q)) &&
+      (!this.statusFilter || d.status === this.statusFilter),
     );
   }
 
@@ -93,6 +99,28 @@ export class DisputeList implements OnInit {
     this.router.navigate(['/distributor/disputes', id]);
   }
 
-  prevPage(): void { if (this.page > 1) { this.page--; this.loadDisputes(); } }
-  nextPage(): void { if (this.page < this.totalPages) { this.page++; this.loadDisputes(); } }
+  prevPage(): void {
+    if (this.page > 1) {
+      this.page--;
+      this.loadDisputes();
+    }
+  }
+
+  nextPage(): void {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.loadDisputes();
+    }
+  }
+
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
 }

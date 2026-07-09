@@ -55,6 +55,7 @@
           <th>Priority</th>
           <th>Status</th>
           <th>Last Updated</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -80,11 +81,16 @@
               </span>
             </td>
             <td style="color:#6b7280;font-size:13px;">{{ ticket.lastUpdated }}</td>
+            <td>
+              <button class="action-btn" (click)="openTicket(ticket)" title="View ticket">
+                <span class="material-icons">visibility</span>
+              </button>
+            </td>
           </tr>
         }
         @if (!isLoading && filteredTickets.length === 0) {
           <tr>
-            <td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">
+            <td colspan="7" style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">
               No tickets found.
             </td>
           </tr>
@@ -107,3 +113,74 @@
   }
 
 </div>
+
+@if (selectedTicket || isDetailLoading || detailError) {
+  <div class="ticket-detail-card">
+    <div class="detail-header">
+      <div>
+        <h3>{{ selectedTicket?.displayId || 'Ticket Detail' }}</h3>
+        <p>{{ selectedTicket?.subject }}</p>
+      </div>
+      <button class="action-btn" (click)="closeDetail()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    @if (isDetailLoading) {
+      <div class="detail-muted">Loading ticket...</div>
+    }
+
+    @if (!isDetailLoading && detailError) {
+      <div class="detail-error">{{ detailError }}</div>
+    }
+
+    @if (!isDetailLoading && selectedTicket) {
+      <div class="detail-grid">
+        <div><span>Status</span><strong>{{ selectedTicket.status }}</strong></div>
+        <div><span>Priority</span><strong>{{ selectedTicket.priority }}</strong></div>
+        <div><span>Category</span><strong>{{ selectedTicket.category }}</strong></div>
+        <div><span>Merchant</span><strong>{{ selectedTicket.raisedBy }}</strong></div>
+        <div><span>Assigned To</span><strong>{{ selectedTicket.assignedTo }}</strong></div>
+      </div>
+
+      <div class="detail-section">
+        <h4>Description</h4>
+        <p>{{ selectedTicket.description }}</p>
+      </div>
+
+      <div class="detail-actions">
+        @if (selectedTicket.status === 'OPEN') {
+          <button class="view-btn" [disabled]="isUpdating" (click)="updateStatus('IN_PROGRESS')">Mark In Progress</button>
+        }
+        @if (selectedTicket.status === 'OPEN' || selectedTicket.status === 'IN_PROGRESS') {
+          <button class="view-btn" [disabled]="isUpdating" (click)="updateStatus('RESOLVED')">Mark Resolved</button>
+        }
+        @if (selectedTicket.status === 'RESOLVED') {
+          <button class="view-btn" [disabled]="isUpdating" (click)="updateStatus('CLOSED')">Close Ticket</button>
+        }
+      </div>
+
+      <div class="detail-section">
+        <h4>Conversation</h4>
+        <div class="reply-list">
+          @for (reply of selectedTicket.replies; track reply.createdAt) {
+            <div class="reply-item">
+              <div><strong>{{ reply.author }}</strong> <span>{{ reply.createdAt | date: 'dd MMM, h:mm a' }}</span></div>
+              <p>{{ reply.message }}</p>
+            </div>
+          }
+          @if (!selectedTicket.replies.length) {
+            <p class="detail-muted">No replies yet.</p>
+          }
+        </div>
+      </div>
+
+      @if (canReply()) {
+        <div class="reply-box">
+          <textarea [(ngModel)]="replyText" rows="3" placeholder="Write a reply to the merchant"></textarea>
+          <button class="view-btn" [disabled]="isUpdating || !replyText.trim()" (click)="submitReply()">Post Reply</button>
+        </div>
+      }
+    }
+  </div>
+}

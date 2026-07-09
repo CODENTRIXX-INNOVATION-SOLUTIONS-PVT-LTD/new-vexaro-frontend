@@ -16,7 +16,7 @@
 
     <div class="tracking-layout mt-4">
         <div class="map-container">
-            <div class="mock-map">
+            <div class="tracking-summary-panel">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="map-icon svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
                 @if (isLoading) {
                     <h3>Loading tracking details</h3>
@@ -25,8 +25,12 @@
                     <h3>Tracking unavailable</h3>
                     <p>{{error}}</p>
                 } @else {
-                    <h3>{{shipment?.destination?.city || 'Destination'}}{{shipment?.destination?.state ? ', ' + shipment.destination.state : ''}}</h3>
-                    <p>{{latestEvent?.note || latestEvent?.status || 'No tracking event has been received yet.'}}</p>
+                    <h3>{{latestEvent?.status || shipment?.status || 'Tracking Update'}}</h3>
+                    <p>{{latestEvent?.note || 'No live carrier scan has been received yet. Local shipment history is shown below when available.'}}</p>
+                    <span class="summary-meta">
+                        {{latestEvent?.location || shipment?.destination?.city || 'Location pending'}}
+                        @if (latestEvent?.source) { / {{ latestEvent.source }} }
+                    </span>
                 }
             </div>
             

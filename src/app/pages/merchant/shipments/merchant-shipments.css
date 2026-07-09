@@ -80,6 +80,9 @@
 .search-box {
     position: relative;
     margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .search-box i {
@@ -103,6 +106,17 @@
 .search-box input:focus {
     border-color: rgb(11, 74, 111);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.search-clear-btn {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 /* ================= TABLE ================= */
@@ -153,6 +167,27 @@ tbody tr:hover {
     color: rgb(10, 10, 10);
 }
 
+.date-time-cell {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 116px;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+.date-time-cell .date-line {
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.date-time-cell .time-line {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
 .courier-badge {
     display: inline-flex;
     align-items: center;
@@ -185,7 +220,7 @@ td:nth-child(3){
 
 th:nth-child(4),
 td:nth-child(4){
-    width:140px;
+    width:155px;
 }
 
 th:nth-child(5),
@@ -261,6 +296,43 @@ tbody tr:hover{
     margin-bottom: 16px;
     color: #64748b;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-controls button {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.table-message {
+    text-align: center;
+    padding: 28px 16px;
+    color: #64748b;
+}
+
+.error-text {
+    color: #b91c1c;
 }
 
 /* ================= CREATE SHIPMENT MODAL OVERLAY ================= */
@@ -1021,7 +1093,11 @@ textarea.form-control {
 
 /* ================= DETAILS MODAL SPECIFIC STYLING ================= */
 .modal-content-wrapper.details-modal {
-    max-width: 950px;
+    width: min(1280px, calc(100vw - 48px));
+    max-width: none;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
 }
 
 .header-title-status {
@@ -1034,13 +1110,21 @@ textarea.form-control {
     margin: 0;
 }
 
+.details-subtitle {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .details-modal-grid {
     display: grid;
-    grid-template-columns: 1.8fr 1.2fr;
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 0.9fr);
     gap: 24px;
     padding: 32px;
     background: #f8fafc;
     border-bottom: 1px solid #f1f5f9;
+    overflow: auto;
 }
 
 .details-left {
@@ -1075,7 +1159,7 @@ textarea.form-control {
 
 .info-grid-2col {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
 }
 
@@ -1109,6 +1193,7 @@ textarea.form-control {
     font-weight: 500;
     color: rgb(10, 10, 10);
     margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .detail-value.highlight {
@@ -1166,6 +1251,8 @@ textarea.form-control {
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     height: 100%;
+    max-height: 100%;
+    overflow: auto;
 }
 
 .timeline-card h4 {
@@ -1271,13 +1358,54 @@ textarea.form-control {
 .modal-footer-bar {
     display: flex;
     justify-content: flex-end;
+    gap: 12px;
     padding: 16px 32px;
     background: white;
     border-top: 1px solid #f1f5f9;
 }
 
+.items-table {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.items-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) minmax(90px, 0.6fr) 64px 90px;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.items-row:last-child {
+    border-bottom: 0;
+}
+
+.items-head {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
 /* Details modal responsive */
+@media (max-width: 1100px) {
+    .info-grid-2col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
+    .modal-content-wrapper.details-modal {
+        width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
     .details-modal-grid {
         grid-template-columns: 1fr;
         padding: 20px;
@@ -1286,5 +1414,11 @@ textarea.form-control {
     .address-split {
         flex-direction: column;
         gap: 16px;
+    }
+
+    .info-grid-2col,
+    .info-grid-3col,
+    .items-row {
+        grid-template-columns: 1fr;
     }
 }

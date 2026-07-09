@@ -27,10 +27,15 @@ export class DistributorWallet implements OnInit {
   // ── State ─────────────────────────────────────────────────────────────────
   activeTab: 'topup' | 'history' | 'transactions' | 'request' = 'topup';
   balance: number = 0;
+  reservedBalance = 0;
+  availableBalance = 0;
 
   // Top-up form
-  packages = [5000, 10000, 25000, 50000, 100000];
+  packages = [2500, 5000, 10000, 25000, 50000, 100000];
+  customAmounts = [100, 200, 500, 1000];
   selectedPackage: number | null = null;
+  customAmount: number | string | null = null;
+  customAmountNumber: number | null = null;
   topUpMode: 'checkout' | 'upi_qr' = 'checkout';
   isProcessing = false;
   successMessage = '';
@@ -64,7 +69,11 @@ export class DistributorWallet implements OnInit {
   loadWallet(): void {
     this.financeService.getMyWallet().subscribe({
       next: (res) => {
-        if (res?.data) this.balance = res.data.balance ?? 0;
+        if (res?.data) {
+          this.balance = res.data.balance ?? 0;
+          this.reservedBalance = res.data.reservedBalance ?? 0;
+          this.availableBalance = res.data.availableBalance ?? 0;
+        }
       },
       error: (err) => console.error('Wallet load failed', err),
     });
@@ -134,24 +143,51 @@ export class DistributorWallet implements OnInit {
 
   selectPackage(amount: number): void {
     this.selectedPackage = amount;
+    this.customAmount = null;
+    this.successMessage = '';
+    this.errorMessage = '';
+  }
+
+  selectCustomAmount(): void {
+    this.selectedPackage = null;
+    this.customAmount = '';
+    this.customAmountNumber = null;
     this.successMessage = '';
     this.errorMessage = '';
   }
 
   async startTopup(): Promise<void> {
-    if (!this.selectedPackage) {
-      this.errorMessage = 'Please select an amount.';
+    let amount: number | null = null;
+    
+    if (this.selectedPackage) {
+      amount = this.selectedPackage;
+    } else if (typeof this.customAmount === 'number' && this.customAmount > 0) {
+      amount = this.customAmount;
+    } else if (this.customAmount === 'custom' && this.customAmountNumber && this.customAmountNumber > 0) {
+      amount = this.customAmountNumber;
+    }
+    
+    if (!amount || amount <= 0) {
+      this.errorMessage = 'Please select or enter a valid amount.';
       return;
     }
+    
+    if (amount < 100) {
+      this.errorMessage = 'Minimum top-up amount is ₹100.';
+      return;
+    }
+    
     this.isProcessing = true;
     this.successMessage = '';
     this.errorMessage = '';
 
     try {
-      const result = await this.financeService.startRazorpayWalletTopup(this.selectedPackage, this.topUpMode);
+      const result = await this.financeService.startRazorpayWalletTopup(amount, this.topUpMode);
       this.balance = result.balance;
-      this.successMessage = `₹${this.selectedPackage.toLocaleString('en-IN')} successfully added to your wallet!`;
+      this.successMessage = `₹${amount.toLocaleString('en-IN')} successfully added to your wallet!`;
       this.selectedPackage = null;
+      this.customAmount = null;
+      this.customAmountNumber = null;
       // Reset guards so refresh works
       this.payments = [];
       this.paymentsLoading = false;

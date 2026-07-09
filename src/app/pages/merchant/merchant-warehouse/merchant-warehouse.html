@@ -2,7 +2,7 @@
     <!-- Top Toast Notification -->
     <div class="toast-notification" [class.show]="saveSuccess">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 8px;" class="svg-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <span>Warehouse profile saved successfully!</span>
+        <span>Warehouse request completed successfully.</span>
     </div>
 
     <!-- Page Header -->
@@ -17,7 +17,19 @@
         </div>
     </div>
 
-    <!-- Single Profile Card -->
+    @if(isLoading) {
+        <div class="profile-container">
+            <div class="profile-card glass-panel">Loading warehouse details...</div>
+        </div>
+    } @else if(errorMessage) {
+        <div class="profile-container">
+            <div class="profile-card glass-panel error-box">{{ errorMessage }}</div>
+        </div>
+    } @else if(!selectedWarehouse) {
+        <div class="profile-container">
+            <div class="profile-card glass-panel error-box">No active pickup warehouse is assigned to this merchant.</div>
+        </div>
+    } @else {
     <div class="profile-container">
         <div class="profile-card glass-panel">
             <div class="card-header">
@@ -34,6 +46,17 @@
                     <span>ID: <strong>{{ warehouseId }}</strong></span>
                 </div>
             </div>
+
+            @if(warehouses.length > 1) {
+                <div class="warehouse-selector">
+                    <label>Active Warehouse</label>
+                    <select [ngModel]="selectedWarehouse" (ngModelChange)="selectWarehouse($event)">
+                        @for(warehouse of warehouses; track warehouse._id || warehouse.warehouseId) {
+                            <option [ngValue]="warehouse">{{ warehouse.name || warehouse.warehouseId }} - {{ warehouse.pincode }}</option>
+                        }
+                    </select>
+                </div>
+            }
 
             <div class="card-body">
                 <!-- Left Section: Read-Only Address -->
@@ -55,6 +78,10 @@
                         <div class="detail-row">
                             <span class="label">Pincode</span>
                             <span class="value highlight-pincode">{{ pincode }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Velocity Warehouse ID</span>
+                            <span class="value">{{ velocityWarehouseId }}</span>
                         </div>
                     </div>
 
@@ -80,7 +107,7 @@
                     <form (submit)="saveDetails(); $event.preventDefault()">
                         <div class="form-group">
                             <label for="whName">Warehouse Name</label>
-                            <input type="text" id="whName" [(ngModel)]="warehouseName" name="warehouseName" required>
+                            <input type="text" id="whName" [(ngModel)]="warehouseName" name="warehouseName" readonly>
                         </div>
 
                         <div class="form-group">
@@ -94,14 +121,23 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="gstNumber">GST Number</label>
-                            <input type="text" id="gstNumber" [(ngModel)]="gstNumber" name="gstNumber" required>
+                            <label for="contactEmail">Email</label>
+                            <input type="email" id="contactEmail" [(ngModel)]="contactEmail" name="contactEmail">
                         </div>
 
+                        <div class="form-group">
+                            <label for="gstNumber">GST Number</label>
+                            <input type="text" id="gstNumber" [(ngModel)]="gstNumber" name="gstNumber" readonly>
+                        </div>
+
+                        @if(formError) {
+                            <div class="form-error">{{ formError }}</div>
+                        }
+
                         <div class="form-actions">
-                            <button type="submit" class="btn-save">
+                            <button type="submit" class="btn-save" [disabled]="isSaving">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 6px;" class="svg-icon"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                                Save Changes
+                                {{ isSaving ? 'Saving...' : 'Save Contact' }}
                             </button>
                         </div>
                     </form>
@@ -109,6 +145,82 @@
             </div>
         </div>
     </div>
+
+    <div class="profile-container request-history-container">
+        <div class="profile-card glass-panel">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="header-icon-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </div>
+                    <div>
+                        <h3>Address Change Requests</h3>
+                        <p class="subtitle">Track distributor approval status for pickup address changes</p>
+                    </div>
+                </div>
+            </div>
+
+            @if(requestListError) {
+                <div class="form-error">{{ requestListError }}</div>
+            }
+
+            @if(isLoadingRequests) {
+                <div class="history-empty">Loading request history...</div>
+            } @else if(!addressRequests.length) {
+                <div class="history-empty">No address change requests submitted yet.</div>
+            } @else {
+                <div class="request-table-wrap">
+                    <table class="request-table">
+                        <thead>
+                            <tr>
+                                <th>Requested On</th>
+                                <th>Warehouse</th>
+                                <th>Requested Address</th>
+                                <th>Status</th>
+                                <th>Decision</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(request of addressRequests; track request.id) {
+                                <tr>
+                                    <td>{{ formatDate(request.createdAt) }}</td>
+                                    <td>{{ request.warehouseId }}</td>
+                                    <td>{{ request.requestedAddress }}</td>
+                                    <td><span [class]="getRequestStatusClass(request.status)">{{ request.status }}</span></td>
+                                    <td>
+                                        @if(request.status === 'REJECTED') {
+                                            {{ request.rejectionReason || 'No reason provided' }}
+                                        } @else if(request.processedAt) {
+                                            {{ formatDate(request.processedAt) }}
+                                        } @else {
+                                            Awaiting review
+                                        }
+                                    </td>
+                                    <td>
+                                        @if(request.status === 'PENDING') {
+                                            <button class="btn-small-danger" [disabled]="cancellingRequestId === request.id" (click)="cancelAddressRequest(request)">
+                                                {{ cancellingRequestId === request.id ? 'Cancelling...' : 'Cancel' }}
+                                            </button>
+                                        } @else {
+                                            -
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="request-pagination">
+                    <button type="button" [disabled]="!requestHasPrevPage || isLoadingRequests" (click)="loadAddressRequests(requestPage - 1)">Previous</button>
+                    <span>Page {{ requestPage }} of {{ requestTotalPages }}</span>
+                    <button type="button" [disabled]="!requestHasNextPage || isLoadingRequests" (click)="loadAddressRequests(requestPage + 1)">Next</button>
+                </div>
+            }
+        </div>
+    </div>
+    }
 </div>
 
 <!-- Address Change Request Dialog Modal -->
@@ -128,15 +240,38 @@
                 <button class="modal-close-btn" (click)="closeAddressRequest()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
             <div class="modal-body">
-                <p>To change your pickup address, a formal request must be verified by the operations desk to update delivery hubs and dispatch pincodes.</p>
+                <p>To change your pickup address, submit the new address for distributor verification before it is used for Velocity shipment pickup.</p>
+                <div class="form-group">
+                    <label>Address Line</label>
+                    <input type="text" [(ngModel)]="requestedAddressLine" name="requestedAddressLine">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" [(ngModel)]="requestedCity" name="requestedCity">
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input type="text" [(ngModel)]="requestedState" name="requestedState">
+                </div>
+                <div class="form-group">
+                    <label>Pincode</label>
+                    <input type="text" [(ngModel)]="requestedPincode" name="requestedPincode">
+                </div>
+                <div class="form-group">
+                    <label>Country</label>
+                    <input type="text" [(ngModel)]="requestedCountry" name="requestedCountry">
+                </div>
+                @if(requestError) {
+                    <div class="form-error">{{ requestError }}</div>
+                }
                 <div class="alert-info-box">
-                    <p>A support ticket will be generated automatically for your distributor to review this request.</p>
+                    <p>The existing warehouse address remains active until the request is approved.</p>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" (click)="closeAddressRequest()">Cancel</button>
-                <button class="btn-confirm" (click)="closeAddressRequest(); saveDetails()">
-                    Confirm & Submit Request
+                <button class="btn-confirm" [disabled]="isRequestingAddressChange" (click)="submitAddressChangeRequest()">
+                    {{ isRequestingAddressChange ? 'Submitting...' : 'Submit Request' }}
                 </button>
             </div>
         </div>
