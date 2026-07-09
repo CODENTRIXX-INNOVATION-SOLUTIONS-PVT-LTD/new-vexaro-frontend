@@ -143,7 +143,26 @@
         ₹{{ pkg.toLocaleString('en-IN') }}
       </button>
       }
+      <button class="pkg-chip custom-chip" [class.selected]="customAmount !== null" (click)="selectCustomAmount()">
+        Custom
+      </button>
     </div>
+
+    @if (customAmount !== null) {
+    <div class="custom-amount-input">
+      <label class="form-label">Select Custom Amount (₹)</label>
+      <select [(ngModel)]="customAmount" class="form-input" (change)="successMessage='';errorMessage=''" placeholder="Select amount">
+        <option [ngValue]="null" disabled selected>Select amount</option>
+        @for (amt of customAmounts; track amt) {
+        <option [ngValue]="amt">₹{{ amt.toLocaleString('en-IN') }}</option>
+        }
+        <option [ngValue]="'custom'">Other amount</option>
+      </select>
+      @if (customAmount === 'custom') {
+      <input type="number" [(ngModel)]="customAmountNumber" min="100" placeholder="Enter custom amount" class="form-input" style="margin-top:10px;" (input)="successMessage='';errorMessage=''" />
+      }
+    </div>
+    }
 
     @if (selectedPackage) {
     <div class="selected-preview">
@@ -155,8 +174,28 @@
     </div>
     }
 
+    @if (customAmount && typeof customAmount === 'number' && customAmount > 0) {
+    <div class="selected-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      Paying <strong>₹{{ customAmount.toLocaleString('en-IN') }}</strong> via <strong>Razorpay</strong>
+    </div>
+    }
+
+    @if (customAmountNumber && customAmountNumber > 0) {
+    <div class="selected-preview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+      Paying <strong>₹{{ customAmountNumber.toLocaleString('en-IN') }}</strong> via <strong>Razorpay</strong>
+    </div>
+    }
+
     <div class="form-actions">
-      <button class="btn-submit" (click)="startTopup()" [disabled]="!selectedPackage || isProcessing">
+      <button class="btn-submit" (click)="startTopup()" [disabled]="(!selectedPackage && !customAmount && !customAmountNumber) || isProcessing">
         @if (isProcessing) {
         <span class="spinner"></span> Opening Razorpay…
         } @else {

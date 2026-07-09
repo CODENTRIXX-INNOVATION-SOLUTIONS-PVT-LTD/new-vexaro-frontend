@@ -94,8 +94,11 @@ export class Payments implements OnInit, OnDestroy {
   codEscrowBalance = 0;
 
   // ── Razorpay Top-up ───────────────────────────────────────────────────────
-  packages = [1000, 2500, 5000, 10000, 25000];
+  packages = [2500, 5000, 10000, 25000];
+  customAmounts = [100, 200, 500, 1000];
   selectedPackage: number | null = null;
+  customAmount: number | string | null = null;
+  customAmountNumber: number | null = null;
   isPaymentProcessing = false;
   topupSuccess = '';
   topupError = '';
@@ -298,24 +301,52 @@ export class Payments implements OnInit, OnDestroy {
 
   selectPackage(amount: number): void {
     this.selectedPackage  = amount;
+    this.customAmount     = null;
     this.topupSuccess     = '';
     this.topupError       = '';
     this.distRequestError = '';
   }
 
+  selectCustomAmount(): void {
+    this.selectedPackage = null;
+    this.customAmount = '';
+    this.customAmountNumber = null;
+    this.topupSuccess    = '';
+    this.topupError      = '';
+    this.distRequestError = '';
+  }
+
   async submitTopUp(): Promise<void> {
-    if (!this.selectedPackage) {
-      this.topupError = 'Please select an amount to add.';
+    let amount: number | null = null;
+    
+    if (this.selectedPackage) {
+      amount = this.selectedPackage;
+    } else if (typeof this.customAmount === 'number' && this.customAmount > 0) {
+      amount = this.customAmount;
+    } else if (this.customAmount === 'custom' && this.customAmountNumber && this.customAmountNumber > 0) {
+      amount = this.customAmountNumber;
+    }
+    
+    if (!amount || amount <= 0) {
+      this.topupError = 'Please select or enter a valid amount to add.';
       return;
     }
+    
+    if (amount < 100) {
+      this.topupError = 'Minimum top-up amount is ₹100.';
+      return;
+    }
+    
     this.isPaymentProcessing = true;
     this.topupSuccess = '';
     this.topupError   = '';
     try {
-      const result = await this.financeService.startRazorpayWalletTopup(this.selectedPackage);
+      const result = await this.financeService.startRazorpayWalletTopup(amount);
       this.balance      = result.balance;
-      this.topupSuccess = `₹${this.selectedPackage.toLocaleString('en-IN')} added to your wallet successfully!`;
+      this.topupSuccess = `₹${amount.toLocaleString('en-IN')} added to your wallet successfully!`;
       this.selectedPackage  = null;
+      this.customAmount     = null;
+      this.customAmountNumber = null;
       this.transactions     = [];
       this.txLoading        = false;
       this.loadTransactions();

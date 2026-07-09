@@ -327,6 +327,50 @@
     transform: translateY(-2px);
 }
 
+.pkg-chip.custom-chip {
+    border-style: dashed;
+    font-weight: 600;
+}
+
+.custom-amount-input {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.custom-amount-input .form-input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #0a0a0a;
+    outline: none;
+    transition: border-color 0.2s;
+    background: white;
+}
+
+.custom-amount-input .form-input:focus {
+    border-color: rgb(11, 74, 111);
+    box-shadow: 0 0 0 3px rgba(11, 74, 111, 0.1);
+}
+
+.first-time-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #c2410c;
+    font-weight: 500;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
