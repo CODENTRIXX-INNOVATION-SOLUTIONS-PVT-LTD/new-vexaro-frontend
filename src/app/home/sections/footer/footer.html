@@ -186,11 +186,15 @@
           <li>{{ contact.address }}</li>
           <li>
             <span class="text-white/40">Email:</span>
-            <a
-              href="mailto:{{ contact.email }}"
-              class="hover:text-accent transition-colors ml-1"
-              >{{ contact.email }}</a
-            >
+            <span class="inline-flex flex-col gap-1 ml-1 align-top">
+              @for (email of contact.emails; track email) {
+                <a
+                  href="mailto:{{ email }}"
+                  class="hover:text-accent transition-colors"
+                  >{{ email }}</a
+                >
+              }
+            </span>
           </li>
           <li>
             <span class="text-white/40">Phone:</span>

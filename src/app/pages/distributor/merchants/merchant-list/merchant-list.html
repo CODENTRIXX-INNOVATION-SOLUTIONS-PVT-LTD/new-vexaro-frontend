@@ -26,7 +26,7 @@
   <div class="filter-bar glass-panel">
     <div class="search-box">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="search-icon svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" placeholder="Search by business name, code, contact..." [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()" />
+      <input type="text" placeholder="Search by business name, code, contact..." [(ngModel)]="searchTerm" (ngModelChange)="applySearch()" />
     </div>
     <div class="filter-controls">
       <div class="filter-group">
@@ -101,6 +101,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="text-muted svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
                 <span>{{ m.city }}</span>
               </div>
+              <div class="detail-row">
+                <span class="text-muted">Onboarded</span>
+                <span>{{ m.createdAt || 'N/A' }}</span>
+              </div>
             </div>
 
             <div class="card-footer">
@@ -129,6 +133,7 @@
               <th>Merchant</th>
               <th>Contact Details</th>
               <th>Location</th>
+              <th>Onboarded</th>
               <th>Wallet Balance</th>
               <th>Shipments</th>
               <th>Status</th>
@@ -152,6 +157,7 @@
                   <div class="contact-sub">{{ m.phone }} | {{ m.email }}</div>
                 </td>
                 <td>{{ m.city }}</td>
+                <td>{{ m.createdAt || 'N/A' }}</td>
                 <td class="amount" [class.text-danger]="m.walletBalance < 0">₹{{ m.walletBalance | number }}</td>
                 <td class="fw-bold">{{ m.totalShipments | number }}</td>
                 <td>
@@ -168,6 +174,15 @@
         </table>
       </div>
     }
+
+    <app-pagination
+      [page]="page"
+      [limit]="limit"
+      [total]="total"
+      [disabled]="isLoading"
+      itemLabel="merchants"
+      (pageChange)="goToPage($event)"
+    />
 
   }
 </div>

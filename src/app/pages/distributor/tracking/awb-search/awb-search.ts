@@ -154,7 +154,7 @@ export class AwbSearch implements OnInit {
       const dt = new Date(event.rawDate);
       const validDate = !Number.isNaN(dt.getTime());
       return {
-        date: validDate ? dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-',
+        date: validDate ? dt.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-',
         time: validDate ? dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
         status: STATUS_LABELS[event.rawStatus] ?? this.formatStatus(event.rawStatus),
         rawStatus: event.rawStatus,

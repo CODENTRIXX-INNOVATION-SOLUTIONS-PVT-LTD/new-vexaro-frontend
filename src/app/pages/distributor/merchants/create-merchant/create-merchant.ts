@@ -47,6 +47,12 @@ export class CreateMerchant {
 
   constructor(private router: Router, private userService: UserService) {}
 
+  private get merchantListRoute(): string[] {
+    return this.router.url.startsWith('/super-admin')
+      ? ['/super-admin/merchants']
+      : ['/distributor/merchants'];
+  }
+
   isStep1Valid(): boolean {
     return !!(
       this.firstName.trim() &&
@@ -114,7 +120,7 @@ export class CreateMerchant {
     ).subscribe({
       next: () => {
         this.successMessage = 'Merchant invited successfully! An email has been sent to set their password.';
-        setTimeout(() => this.router.navigate(['/distributor/merchants']), 2000);
+        setTimeout(() => this.router.navigate(this.merchantListRoute), 2000);
       },
       error: (err) => {
         let msg = err.error?.message || 'Failed to invite merchant. Please try again.';
@@ -131,6 +137,6 @@ export class CreateMerchant {
   }
 
   cancel() {
-    this.router.navigate(['/distributor/merchants']);
+    this.router.navigate(this.merchantListRoute);
   }
 }

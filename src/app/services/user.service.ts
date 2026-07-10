@@ -19,6 +19,7 @@ export class UserService {
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.role) httpParams = httpParams.set('role', params.role);
+    if (params.search) httpParams = httpParams.set('search', params.search);
     return this.http.get(`${this.baseUrl}/users`, { params: httpParams });
   }
 

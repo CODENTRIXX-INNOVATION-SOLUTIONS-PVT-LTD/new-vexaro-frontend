@@ -13,8 +13,12 @@
       <div class="balance-banner">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
         <div>
-          <span class="balance-label">Your Available Balance</span>
-          <span class="balance-value">₹{{ distributorBalance | number }}</span>
+          <span class="balance-label">{{ isSuperAdminPortal ? 'Funding Mode' : 'Your Available Balance' }}</span>
+          @if (isSuperAdminPortal) {
+            <span class="balance-value">Direct Credit</span>
+          } @else {
+            <span class="balance-value">₹{{ distributorBalance | number }}</span>
+          }
         </div>
       </div>
 
@@ -76,7 +80,7 @@
         <div class="transfer-preview">
           <div class="preview-row">
             <span>From</span>
-            <strong>Your Wallet (₹{{ distributorBalance | number }})</strong>
+            <strong>{{ fundingSourceLabel }}</strong>
           </div>
           <div class="preview-arrow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></div>
           <div class="preview-row">
@@ -87,10 +91,12 @@
             <span>Transfer Amount</span>
             <strong class="amount">₹{{ amount | number }}</strong>
           </div>
-          <div class="preview-row">
-            <span>Your Balance After</span>
-            <strong>₹{{ (distributorBalance - (amount || 0)) | number }}</strong>
-          </div>
+          @if (!isSuperAdminPortal) {
+            <div class="preview-row">
+              <span>Your Balance After</span>
+              <strong>₹{{ (distributorBalance - (amount || 0)) | number }}</strong>
+            </div>
+          }
         </div>
       }
 
@@ -98,7 +104,7 @@
         <button class="btn-secondary" (click)="cancel()">Cancel</button>
         <button class="btn-primary" [disabled]="!selectedMerchantId || !amount || amount <= 0 || isInsufficient || isSubmitting" (click)="submitTopup()">
           @if (isSubmitting) { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon animate-spin"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Processing... }
-          @else { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Transfer Funds }
+          @else { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> {{ submitLabel }} }
         </button>
       </div>
     </div>
@@ -109,7 +115,7 @@
       <ol class="info-list">
         <li>Select the merchant you want to fund</li>
         <li>Enter the amount to transfer</li>
-        <li>The amount is deducted from <strong>your wallet</strong></li>
+        <li>{{ isSuperAdminPortal ? 'The amount is credited by admin top-up' : 'The amount is deducted from your wallet' }}</li>
         <li>The merchant's wallet is credited <strong>instantly</strong></li>
         <li>Both ledgers are updated with full audit trail</li>
       </ol>

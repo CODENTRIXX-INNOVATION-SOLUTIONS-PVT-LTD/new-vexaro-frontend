@@ -2,11 +2,12 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShipmentService, ShipmentListItem } from '../../../services/shipment.service';
+import { PaginationComponent } from '../../../shared/pagination/pagination';
 
 @Component({
   selector: 'app-shipments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './shipments.html',
   styleUrl: './shipments.css',
 })
@@ -19,6 +20,11 @@ export class Shipments implements OnInit {
   error: string = '';
   searchTerm: string = '';
   filterStatus: string = 'All';
+  page = 1;
+  readonly limit = 20;
+  total = 0;
+
+  get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   ngOnInit() {
     this.loadShipments();
@@ -32,10 +38,11 @@ export class Shipments implements OnInit {
     console.log('Token exists:', !!token);
     console.log('Token:', token?.substring(0, 20) + '...');
     
-    this.shipmentService.listShipments().subscribe({
+    this.shipmentService.listShipments({ page: this.page, limit: this.limit }).subscribe({
       next: (response) => {
         console.log('API Response:', response);
         if (response.success && response.data?.shipments) {
+          this.total = response.meta?.total ?? response.data.shipments.length;
           this.shipments = response.data.shipments.map((s: any) => ({
             awb: s.awb,
             merchant: s.merchantId?.companyName || s.merchantId?.firstName || 'Unknown',
@@ -43,7 +50,13 @@ export class Shipments implements OnInit {
             carrier: s.carrier || 'N/A',
             weight: `${s.weight} kg`,
             status: this.mapStatus(s.status),
-            date: new Date(s.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            date: new Date(s.createdAt).toLocaleString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
           }));
           console.log('Mapped shipments:', this.shipments);
         } else {
@@ -81,6 +94,12 @@ export class Shipments implements OnInit {
       const matchesStatus = this.filterStatus === 'All' || s.status === this.filterStatus;
       return matchesSearch && matchesStatus;
     });
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
+    this.loadShipments();
   }
 
   cancelShipment(shipment: any) {

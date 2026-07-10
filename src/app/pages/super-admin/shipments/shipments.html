@@ -45,7 +45,7 @@
                     <th>Distributor</th>
                     <th>Carrier</th>
                     <th>Weight</th>
-                    <th>Date</th>
+                    <th>Date & Time</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -73,5 +73,15 @@
         <div *ngIf="!loading && !error && filteredShipments.length === 0" class="no-results">
             No shipments found matching your filters.
         </div>
+
+        <app-pagination
+            *ngIf="!error"
+            [page]="page"
+            [limit]="limit"
+            [total]="total"
+            [disabled]="loading"
+            itemLabel="shipments"
+            (pageChange)="goToPage($event)"
+        />
     </div>
 </div>

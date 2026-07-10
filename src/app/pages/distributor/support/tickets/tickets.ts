@@ -53,7 +53,7 @@ export class Tickets implements OnInit {
           priority:    t.priority ?? 'Medium',
           status:      t.status ?? 'OPEN',
           lastUpdated: t.updatedAt
-            ? new Date(t.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            ? new Date(t.updatedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
             : '—',
         }));
         this.applyFilters();

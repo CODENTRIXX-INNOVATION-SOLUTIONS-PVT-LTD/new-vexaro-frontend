@@ -5,7 +5,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><path d="M3 10h18v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z M3 10l2-6h14l2 6"></path></svg>
         Merchant Wallets
       </h1>
-      <p class="page-subtitle">View and manage wallet balances for all your merchants</p>
+      <p class="page-subtitle">{{ pageSubtitle }}</p>
     </div>
   </div>
 
@@ -23,7 +23,7 @@
     <div class="rp-header">
       <h3>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Merchant Top-up Requests
+        {{ pendingRequestsTitle }}
       </h3>
     </div>
     <div class="rp-loading">
@@ -39,10 +39,10 @@
       <div>
         <h3>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:middle;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Merchant Top-up Requests
+          {{ pendingRequestsTitle }}
           <span class="pending-badge">{{ pendingCount }} pending</span>
         </h3>
-        <p class="rp-sub">Merchants requesting wallet funds from you. Approving deducts from your wallet.</p>
+        <p class="rp-sub">{{ pendingRequestsSubtitle }}</p>
       </div>
     </div>
 
@@ -146,7 +146,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (w of filteredWallets; track w.id) {
+        @for (w of pagedWallets; track w.id) {
         <tr>
           <td>
             <div class="merchant-name" (click)="viewMerchant(w.id)" style="cursor:pointer;font-weight:600;color:rgb(11,74,111);">{{ w.businessName }}</div>
@@ -175,6 +175,14 @@
       </tbody>
     </table>
   </div>
+  <app-pagination
+    [page]="page"
+    [limit]="limit"
+    [total]="filteredWallets.length"
+    [disabled]="isLoading"
+    itemLabel="wallets"
+    (pageChange)="goToPage($event)"
+  />
   }
 </div>
 

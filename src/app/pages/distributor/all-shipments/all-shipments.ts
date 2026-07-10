@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ShipmentService } from '../../../services/shipment.service';
 import { CsvExportService } from '../../../shared/csv-export.service';
+import { PaginationComponent } from '../../../shared/pagination/pagination';
 
 interface ShipmentRow {
   id: string;
@@ -35,7 +36,7 @@ const STATUS_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-all-shipments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './all-shipments.html',
   styleUrl: './all-shipments.css',
 })
@@ -97,7 +98,13 @@ export class AllShipments implements OnInit {
           weight: s.weight ?? 0,
           amount: s.merchantCost ?? 0,
           carrier: s.carrier ?? '—',
-          date: new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date: new Date(s.createdAt).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
         }));
         this.isLoading = false;
       },
@@ -113,12 +120,10 @@ export class AllShipments implements OnInit {
     this.loadShipments();
   }
 
-  prevPage(): void {
-    if (this.page > 1) { this.page--; this.loadShipments(); }
-  }
-
-  nextPage(): void {
-    if (this.page < this.totalPages) { this.page++; this.loadShipments(); }
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
+    this.loadShipments();
   }
 
   viewTimeline(awb: string): void {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+import { PaginationComponent } from '../../../../shared/pagination/pagination';
 
 export interface DistributorMerchant {
   id: string;
@@ -23,7 +24,7 @@ export interface DistributorMerchant {
 @Component({
   selector: 'app-distributor-merchant-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './merchant-list.html',
   styleUrl: './merchant-list.css'
 })
@@ -36,6 +37,11 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
   isLoading: boolean = false;
   errorMessage: string = '';
   viewMode: 'table' | 'grid' = 'grid';
+  page = 1;
+  readonly limit = 20;
+  total = 0;
+
+  get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   constructor(
     private router: Router,
@@ -55,8 +61,13 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.merchantService.listMerchants({ limit: 100 }).pipe(takeUntil(this.destroy$)).subscribe({
+    this.merchantService.listMerchants({
+      page: this.page,
+      limit: this.limit,
+      search: this.searchTerm.trim() || undefined,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
+        this.total = res.meta?.total ?? res.data.users.length;
         this.merchants = res.data.users.map((merchant) => this.toDistributorMerchant(merchant));
         this.isLoading = false;
         this.applyFilters();
@@ -84,6 +95,17 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
       const matchesStatus = this.statusFilter === 'All' || m.status === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
+  }
+
+  applySearch() {
+    this.page = 1;
+    this.loadMerchants();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
+    this.loadMerchants();
   }
 
   viewMerchant(id: string) {
@@ -123,7 +145,15 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
       walletBalance: 0,
       totalShipments: 0,
       status: merchant.isActive ? 'Active' : 'Inactive',
-      createdAt: merchant.createdAt,
+      createdAt: merchant.createdAt
+        ? new Date(merchant.createdAt).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '',
     };
   }
 }

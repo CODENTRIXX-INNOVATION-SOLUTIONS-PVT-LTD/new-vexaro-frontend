@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { UserService } from "../../../services/user.service";
 import { RouterModule } from "@angular/router";
+import { PaginationComponent } from "../../../shared/pagination/pagination";
 
 interface PlatformUser {
   id: string;
@@ -15,7 +16,7 @@ interface PlatformUser {
 
 @Component({
   selector: "app-user-management",
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: "./user-management.html",
   styleUrl: "./user-management.css",
 })
@@ -26,6 +27,11 @@ export class UserManagement implements OnInit {
   roleFilter = signal<string>("ALL");
 
   users = signal<PlatformUser[]>([]);
+  page = signal<number>(1);
+  readonly limit = 20;
+  total = signal<number>(0);
+
+  get totalPages(): number { return Math.ceil(this.total() / this.limit) || 1; }
 
   // Form management
   showAddForm = signal<boolean>(false);
@@ -98,7 +104,13 @@ export class UserManagement implements OnInit {
   }
 
   private loadUsers() {
-    this.userService.listUsers({ page: 1, limit: 100 }).subscribe({
+    const role = ['Distributor', 'Merchant'].includes(this.roleFilter()) ? this.toApiRole(this.roleFilter()) : undefined;
+    this.userService.listUsers({
+      page: this.page(),
+      limit: this.limit,
+      role,
+      search: this.searchQuery().trim() || undefined,
+    }).subscribe({
       next: (res) => {
 
         const items = Array.isArray(res?.data?.users)
@@ -107,19 +119,50 @@ export class UserManagement implements OnInit {
             ? res.items
             : [];
 
+        this.total.set(res?.meta?.total ?? items.length);
         this.users.set(items.map((user: any) => ({
           id: String(user.id || user._id || ''),
           name: user.companyName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'Unknown User',
           email: user.email || '',
           role: this.getRoleLabel(user.role),
           status: user.isActive ? 'Active' : 'Inactive',
-          joinedDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : ''
+          joinedDate: user.createdAt ? this.formatDateTime(user.createdAt) : ''
         })));
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.showNotification('Unable to load users from the server.');
       }
+    });
+  }
+
+  applyFilters() {
+    this.page.set(1);
+    this.loadUsers();
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages || page === this.page()) return;
+    this.page.set(page);
+    this.loadUsers();
+  }
+
+  private toApiRole(role: string): string {
+    const map: Record<string, string> = {
+      'Super Admin': 'SUPER_ADMIN',
+      Distributor: 'DISTRIBUTOR',
+      Merchant: 'MERCHANT',
+    };
+    return map[role] ?? role;
+  }
+
+  private formatDateTime(value: string): string {
+    return new Date(value).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
@@ -135,7 +178,7 @@ export class UserManagement implements OnInit {
       email: this.newUserEmail,
       role: this.newUserRole,
       status: "Active",
-      joinedDate: new Date().toISOString().split("T")[0]
+      joinedDate: this.formatDateTime(new Date().toISOString())
     };
 
     this.users.update(all => [newUser, ...all]);

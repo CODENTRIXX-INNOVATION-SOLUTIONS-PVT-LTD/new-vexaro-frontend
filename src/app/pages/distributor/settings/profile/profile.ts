@@ -43,7 +43,7 @@ export class ProfileSettings implements OnInit {
         this.profileData.companyName = u.companyName ?? '';
         this.profileData.address     = u.address     ?? '';
         this.profileData.joiningDate = u.createdAt
-          ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+          ? new Date(u.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
           : '';
       },
       error: (err) => { this.error = err?.error?.message || 'Failed to load profile.'; },

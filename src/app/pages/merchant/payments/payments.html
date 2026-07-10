@@ -18,7 +18,7 @@
     </button>
     <button class="tab-btn" [class.active]="activeTab==='dist-request'" (click)="changeTab('dist-request')">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      Request from Distributor
+      {{ requestTabLabel }}
       @if (pendingDistRequestsCount > 0) { <span class="tab-badge">{{ pendingDistRequestsCount }}</span> }
     </button>
     <button class="tab-btn" [class.active]="activeTab==='requests'" (click)="changeTab('requests')">
@@ -215,8 +215,8 @@
   @if (activeTab === 'dist-request') {
   <div class="form-card">
     <div class="card-header">
-      <h3>Request Wallet Top-up from Distributor</h3>
-      <p class="card-sub">Your distributor will receive a notification and can approve the transfer directly from their wallet.</p>
+      <h3>{{ requestTitle }}</h3>
+      <p class="card-sub">{{ requestDescription }}</p>
     </div>
 
     @if (distRequestSuccess) {
@@ -240,7 +240,7 @@
     <div class="form-actions">
       <button class="btn-submit" (click)="submitDistributorRequest()" [disabled]="!distRequestAmount || distRequestAmount <= 0 || distRequestSubmitting">
         @if (distRequestSubmitting) { <span class="mini-spin white"></span> Sending… }
-        @else { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Request to Distributor }
+        @else { <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> {{ requestSubmitLabel }} }
       </button>
     </div>
   </div>
@@ -249,7 +249,7 @@
   @if (distRequestsLoading) { <div class="loading-row" style="margin-top:20px;"><span class="mini-spin"></span> Loading requests…</div> }
   @else if (distributorRequests.length > 0) {
   <div class="table-card" style="margin-top:20px;">
-    <div class="card-header"><h3>My Top-up Requests</h3><p class="card-sub">Requests sent to your distributor</p></div>
+    <div class="card-header"><h3>My Top-up Requests</h3><p class="card-sub">{{ requestHistorySubtitle }}</p></div>
     <div class="table-wrapper">
       <table><thead><tr><th>Date</th><th>Amount</th><th>Note</th><th>Status</th><th>Reason</th></tr></thead>
         <tbody>

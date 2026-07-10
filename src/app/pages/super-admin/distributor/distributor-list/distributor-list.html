@@ -183,7 +183,7 @@
                                 {{ dist.isActive ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
-                        <td class="date-cell">{{ dist.createdAt | date:'d MMM y' }}</td>
+                        <td class="date-cell">{{ dist.createdAt | date:'d MMM y, h:mm a' }}</td>
                         <td class="action-cell text-right">
                             <button class="view-btn" type="button" (click)="viewDistributor(dist.id, 'merchants')">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"

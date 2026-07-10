@@ -158,7 +158,7 @@ export class TrackingHistory implements OnInit {
           <hr style="border:0;border-top:1px solid #e2e8f0;margin-bottom:16px;" />
           <p style="font-size:14px;color:#475569;margin-bottom:24px;">
             <strong>AWB:</strong> ${this.escapeHtml(this.awb)} &nbsp;&nbsp;
-            <strong>Generated:</strong> ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+            <strong>Generated:</strong> ${new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </p>
           <table>
             <thead><tr>

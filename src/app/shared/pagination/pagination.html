@@ -1,0 +1,35 @@
+@if (total > 0) {
+  <nav class="pagination" aria-label="Pagination">
+    <p class="pagination__summary">
+      Showing {{ startItem }}-{{ endItem }} of {{ total }} {{ itemLabel }}
+    </p>
+
+    @if (totalPages > 1) {
+      <div class="pagination__controls">
+        <button type="button" class="pagination__button" (click)="goToPage(page - 1)" [disabled]="disabled || page === 1">
+          Prev
+        </button>
+
+        @for (p of visiblePages; track p; let i = $index) {
+          @if (i > 0 && p - visiblePages[i - 1] > 1) {
+            <span class="pagination__ellipsis">...</span>
+          }
+          <button
+            type="button"
+            class="pagination__button pagination__page"
+            [class.is-active]="p === page"
+            (click)="goToPage(p)"
+            [disabled]="disabled || p === page"
+            [attr.aria-current]="p === page ? 'page' : null"
+          >
+            {{ p }}
+          </button>
+        }
+
+        <button type="button" class="pagination__button" (click)="goToPage(page + 1)" [disabled]="disabled || page === totalPages">
+          Next
+        </button>
+      </div>
+    }
+  </nav>
+}

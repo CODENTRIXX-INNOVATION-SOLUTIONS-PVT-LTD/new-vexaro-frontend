@@ -6,11 +6,12 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { FinanceService } from '../../../../services/finance.service';
 import { UserService } from '../../../../services/user.service';
+import { PaginationComponent } from '../../../../shared/pagination/pagination';
 
 @Component({
   selector: 'app-all-merchant-wallets',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './all-merchant-wallets.html',
   styleUrl: './all-merchant-wallets.css',
 })
@@ -24,6 +25,14 @@ export class AllMerchantWallets implements OnInit {
   searchTerm = '';
   isLoading = false;
   totalBalance = 0;
+  page = 1;
+  readonly limit = 20;
+
+  get totalPages(): number { return Math.ceil(this.filteredWallets.length / this.limit) || 1; }
+  get pagedWallets(): any[] {
+    const start = (this.page - 1) * this.limit;
+    return this.filteredWallets.slice(start, start + this.limit);
+  }
 
   // ── Pending top-up requests from merchants ────────────────────────────────
   pendingRequests: any[] = [];
@@ -33,6 +42,7 @@ export class AllMerchantWallets implements OnInit {
   rejectingId = '';
   actionSuccess = '';
   actionError = '';
+  isSuperAdminPortal = false;
 
   constructor(
     private router: Router,
@@ -40,6 +50,8 @@ export class AllMerchantWallets implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.isSuperAdminPortal = this.router.url.startsWith('/super-admin');
+
     // Pre-fill searchTerm from URL query param (e.g. ?search=acme)
     const initialSearch = this.route.snapshot.queryParams['search'] ?? '';
     if (initialSearch) {
@@ -48,6 +60,22 @@ export class AllMerchantWallets implements OnInit {
 
     this.loadWallets();
     this.loadPendingRequests();
+  }
+
+  get pageSubtitle(): string {
+    return this.isSuperAdminPortal
+      ? 'View and manage wallet balances for all merchants'
+      : 'View and manage wallet balances for all your merchants';
+  }
+
+  get pendingRequestsTitle(): string {
+    return this.isSuperAdminPortal ? 'Merchant Requests to Super Admin' : 'Merchant Top-up Requests';
+  }
+
+  get pendingRequestsSubtitle(): string {
+    return this.isSuperAdminPortal
+      ? 'Direct merchants requesting wallet funds from Super Admin. Approving deducts from the admin wallet.'
+      : 'Merchants requesting wallet funds from you. Approving deducts from your wallet.';
   }
 
   // ── Wallets ───────────────────────────────────────────────────────────────
@@ -120,18 +148,32 @@ export class AllMerchantWallets implements OnInit {
             w.email.toLowerCase().includes(q),
         )
       : [...this.merchantWallets];
+    this.page = 1;
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
   }
 
   // ── Pending top-up requests ───────────────────────────────────────────────
 
   loadPendingRequests(): void {
     this.requestsLoading = true;
-    this.financeService.listMerchantRechargeRequests({ status: 'PENDING', limit: 50 }).subscribe({
+    const params: { status: string; limit: number; directOnly?: boolean } = { status: 'PENDING', limit: 50 };
+    if (this.isSuperAdminPortal) params.directOnly = true;
+    this.financeService.listMerchantRechargeRequests(params).subscribe({
       next: (res) => {
         const raw: any[] = res?.data?.requests ?? [];
         this.pendingRequests = raw.map((r: any) => ({
           id:           r._id,
-          date:         new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date:         new Date(r.createdAt).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
           merchantName: r.merchantId?.companyName ?? r.merchantId?.firstName ?? '—',
           merchantEmail: r.merchantId?.email ?? '—',
           amount:       r.amount ?? 0,
@@ -204,14 +246,23 @@ export class AllMerchantWallets implements OnInit {
   // ── Navigation ────────────────────────────────────────────────────────────
 
   topupMerchant(merchantId: string): void {
-    this.router.navigate(['/distributor/merchant-finance/topup'], { queryParams: { merchantId } });
+    this.router.navigate([`${this.merchantFinanceBaseRoute}/topup`], { queryParams: { merchantId } });
   }
 
   viewTransactions(merchantId: string): void {
-    this.router.navigate(['/distributor/merchant-finance/transactions'], { queryParams: { merchantId } });
+    this.router.navigate([`${this.merchantFinanceBaseRoute}/transactions`], { queryParams: { merchantId } });
   }
 
   viewMerchant(merchantId: string): void {
+    if (this.isSuperAdminPortal) {
+      this.router.navigate(['/super-admin/merchants/profile', merchantId]);
+      return;
+    }
+
     this.router.navigate(['/distributor/merchants', merchantId]);
+  }
+
+  private get merchantFinanceBaseRoute(): string {
+    return this.isSuperAdminPortal ? '/super-admin/merchant-finance' : '/distributor/merchant-finance';
   }
 }

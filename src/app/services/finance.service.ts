@@ -71,6 +71,9 @@ export class FinanceService {
     if (params.limit)  httpParams = httpParams.set('limit',  params.limit.toString());
     if (params.userId) httpParams = httpParams.set('userId', params.userId);
     if (params.type)   httpParams = httpParams.set('type',   params.type);
+    if (params.scope)  httpParams = httpParams.set('scope',  params.scope);
+    if (params.dateFrom) httpParams = httpParams.set('dateFrom', params.dateFrom);
+    if (params.dateTo)   httpParams = httpParams.set('dateTo',   params.dateTo);
     return this.http.get<any>(`${this.baseUrl}/finance/transactions`, { params: httpParams });
   }
 
@@ -312,11 +315,12 @@ export class FinanceService {
   }
 
   // Merchant: list own requests  |  Distributor: list incoming requests
-  listMerchantRechargeRequests(params: { page?: number; limit?: number; status?: string } = {}): Observable<any> {
+  listMerchantRechargeRequests(params: { page?: number; limit?: number; status?: string; directOnly?: boolean } = {}): Observable<any> {
     let httpParams = new HttpParams();
     if (params.page)   httpParams = httpParams.set('page',   params.page.toString());
     if (params.limit)  httpParams = httpParams.set('limit',  params.limit.toString());
     if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.directOnly) httpParams = httpParams.set('directOnly', 'true');
     return this.http.get<any>(`${this.baseUrl}/finance/merchant-recharge-requests`, { params: httpParams });
   }
 

@@ -153,7 +153,7 @@ export class MarchandeDashboardPage implements OnInit {
       courier: shipment.carrier || 'Velocity',
       status: shipment.status || '-',
       date: shipment.createdAt
-        ? new Date(shipment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        ? new Date(shipment.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : '-',
       amount: `₹${Number(shipment.merchantCost || 0).toFixed(2)}`,
       weight: `${weightKg.toFixed(2)} kg`,

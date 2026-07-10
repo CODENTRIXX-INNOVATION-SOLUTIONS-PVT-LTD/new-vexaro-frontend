@@ -136,7 +136,7 @@ export class SuperAdminMerchantReports implements OnInit, AfterViewInit {
             merchantName: m.companyName || m.firstName || 'Unknown',
             city: m.city || '—',
             joinedDate: m.createdAt 
-              ? new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+              ? new Date(m.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               : '—',
             status: m.status || 'Active'
           }));

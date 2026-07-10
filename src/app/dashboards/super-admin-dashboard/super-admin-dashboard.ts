@@ -13,7 +13,24 @@ export class SuperAdminDashboard {
 
 menuItems = [
   { label: 'Dashboard', route: '/super-admin/dashboard', icon: 'fa-chart-pie' },
-  { label: 'Merchants', route: '/super-admin/merchants', icon: 'fa-store' },
+  {
+    label: 'Merchants',
+    icon: 'fa-store',
+    expanded: false,
+    children: [
+      { label: 'Merchant List', route: '/super-admin/merchants' },
+      { label: 'Create Merchant', route: '/super-admin/merchants/create' }
+    ]
+  },
+  {
+    label: 'Merchant Finance',
+    icon: 'fa-money-bill-wave',
+    expanded: false,
+    children: [
+      { label: 'Merchant Wallets', route: '/super-admin/merchant-finance/wallets' },
+      { label: 'Merchant Transactions', route: '/super-admin/merchant-finance/transactions' }
+    ]
+  },
   { label: 'Distributors', route: '/super-admin/distributors', icon: 'fa-truck-ramp-box' },
   { label: 'Shipments', route: '/super-admin/shipments', icon: 'fa-box-open' },
   { label: 'Tracking', route: '/super-admin/tracking', icon: 'fa-map-marked-alt' },

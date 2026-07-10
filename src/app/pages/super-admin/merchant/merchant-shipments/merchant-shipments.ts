@@ -40,7 +40,7 @@ export class MerchantShipments implements OnInit {
             orderId: s.id || '—',
             destination: s.destination?.city || s.destination || '—',
             dispatchDate: s.createdAt
-              ? new Date(s.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+              ? new Date(s.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               : '—',
             status: this.formatStatus(s.status)
           }));

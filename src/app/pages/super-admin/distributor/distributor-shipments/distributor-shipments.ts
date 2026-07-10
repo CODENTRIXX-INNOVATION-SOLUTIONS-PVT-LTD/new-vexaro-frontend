@@ -52,10 +52,12 @@ export class DistributorShipments {
         this.shipments = shipments.map((shipment: any) => ({
           ...shipment,
           shipmentId: shipment.awb,
-          date: new Date(shipment.createdAt).toLocaleDateString('en-IN', {
+          date: new Date(shipment.createdAt).toLocaleString('en-IN', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
           }),
           amount: shipment.merchantCost != null ? `₹${shipment.merchantCost.toLocaleString('en-IN')}` : '—',
           merchantId: shipment.merchantId,

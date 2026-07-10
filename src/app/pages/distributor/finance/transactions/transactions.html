@@ -23,7 +23,7 @@
 
     <div class="filter-bar">
         <div class="form-row">
-            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="search-input"
+            <input type="date" [(ngModel)]="dateFilter" (change)="applyDateFilter()" class="search-input"
                 style="max-width: 200px;">
 
             <select [(ngModel)]="typeFilter" (change)="applyFilters()" class="status-select">
@@ -92,4 +92,12 @@
             </tbody>
         </table>
     </div>
+    <app-pagination
+        [page]="page"
+        [limit]="limit"
+        [total]="total"
+        [disabled]="isLoading"
+        itemLabel="transactions"
+        (pageChange)="goToPage($event)"
+    />
 </div>

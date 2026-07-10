@@ -85,7 +85,7 @@ export class Tracking {
 
           // Map timeline from statusHistory
           this.timeline = (data.statusHistory || []).map((event: any, index: number) => ({
-            date: new Date(event.timestamp || event.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            date: new Date(event.timestamp || event.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
             time: new Date(event.timestamp || event.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
             status: this.mapStatus(event.status),
             location: event.location || data.destination?.city || 'Unknown',
