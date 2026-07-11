@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../../../services/finance.service';
+import { PaginationComponent } from '../../../../shared/pagination/pagination';
 
 export interface Settlement {
   id: string;
@@ -17,7 +18,7 @@ export interface Settlement {
 @Component({
   selector: 'app-settlements',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './settlements.html',
   styleUrl: './settlements.css',
 })
@@ -27,6 +28,11 @@ export class Settlements implements OnInit {
   settlements: Settlement[] = [];
   filteredSettlements: Settlement[] = [];
   isLoading = false;
+  page = 1;
+  readonly limit = 20;
+  total = 0;
+
+  get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   searchTerm = '';
   statusFilter = 'All';
@@ -45,15 +51,22 @@ export class Settlements implements OnInit {
 
   loadSettlements() {
     this.isLoading = true;
-    this.financeService.listSettlements({ limit: 100 }).subscribe({
+    this.financeService.listSettlements({ page: this.page, limit: this.limit }).subscribe({
       next: (res) => {
         const raw: any[] = res?.data?.settlements ?? res?.data?.items ?? [];
+        this.total = res?.meta?.total ?? raw.length;
         this.settlements = raw.map((s: any) => ({
           id: s._id,
           displayId: (s._id as string)?.slice(-8)?.toUpperCase() ?? '—',
           user: s.userId?.companyName ?? s.userId?.firstName ?? 'Unknown',
           date: s.createdAt
-            ? new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            ? new Date(s.createdAt).toLocaleString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
             : '—',
           amount: s.amount ?? 0,
           status: s.status ?? 'PENDING',
@@ -91,6 +104,12 @@ export class Settlements implements OnInit {
       const matchesStatus = this.statusFilter === 'All' || s.status === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
+    this.loadSettlements();
   }
 
   openForm() {

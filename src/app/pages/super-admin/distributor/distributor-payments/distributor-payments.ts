@@ -46,8 +46,8 @@ export class DistributorPayments implements OnInit {
         this.payments = raw.map((p: any) => ({
           paymentId:        (p._id as string)?.slice(-8)?.toUpperCase() ?? '—',
           amount:           p.amountRupees ?? p.amount ?? 0,
-          date:             new Date(p.createdAt).toLocaleDateString('en-IN', {
-                              day: 'numeric', month: 'short', year: 'numeric',
+          date:             new Date(p.createdAt).toLocaleString('en-IN', {
+                              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
                             }),
           method:           p.paymentMethod ?? '—',
           status:           p.status ?? '—',

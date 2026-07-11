@@ -34,8 +34,8 @@ export class RecentRegistrations implements OnInit {
           role: u.role || 'User',
           email: u.email || '—',
           date: u.createdAt
-            ? new Date(u.createdAt).toLocaleDateString('en-IN', {
-                day: '2-digit', month: 'short', year: 'numeric',
+            ? new Date(u.createdAt).toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
               })
             : '—',
         })));

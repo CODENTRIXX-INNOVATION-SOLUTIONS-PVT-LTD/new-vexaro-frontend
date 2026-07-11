@@ -37,9 +37,6 @@
         <option value="CANCELLED">Cancelled</option>
       </select>
     </div>
-    @if (total > 0) {
-      <p style="font-size:12px;color:#94a3b8;margin:8px 0 0;">{{ total }} total shipments · Page {{ page }} of {{ totalPages }}</p>
-    }
   </div>
 
   <!-- Loading -->
@@ -74,7 +71,7 @@
             <th>Charge</th>
             <th>Payment</th>
             <th>Status</th>
-            <th>Date</th>
+            <th>Date & Time</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -135,18 +132,14 @@
       </table>
     </div>
 
-    <!-- Pagination -->
-    @if (totalPages > 1) {
-      <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding-top:20px;">
-        <button (click)="prevPage()" [disabled]="page === 1"
-          style="border:1.5px solid #e2e8f0;background:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:rgb(11,74,111);cursor:pointer;"
-          [style.opacity]="page === 1 ? '0.4' : '1'">← Prev</button>
-        <span style="font-size:13px;color:#64748b;font-weight:500;">Page {{ page }} of {{ totalPages }}</span>
-        <button (click)="nextPage()" [disabled]="page === totalPages"
-          style="border:1.5px solid #e2e8f0;background:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:rgb(11,74,111);cursor:pointer;"
-          [style.opacity]="page === totalPages ? '0.4' : '1'">Next →</button>
-      </div>
-    }
+    <app-pagination
+      [page]="page"
+      [limit]="limit"
+      [total]="total"
+      [disabled]="isLoading"
+      itemLabel="shipments"
+      (pageChange)="goToPage($event)"
+    />
   }
 
 </div>

@@ -35,7 +35,7 @@ function mapApiRow(s: any): ShipmentRow {
     courier: s.carrier ?? s.carrierAWB ?? '—',
     status:  m.label,
     date: s.createdAt
-      ? new Date(s.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      ? new Date(s.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '—',
   };
 }

@@ -38,7 +38,7 @@
             <thead>
                 <tr>
                     <th>Settlement ID</th>
-                    <th>Date</th>
+                    <th>Date & Time</th>
                     <th>User</th>
                     <th>Amount</th>
                     <th>Reference</th>
@@ -78,6 +78,14 @@
             </tbody>
         </table>
     </div>
+    <app-pagination
+        [page]="page"
+        [limit]="limit"
+        [total]="total"
+        [disabled]="isLoading"
+        itemLabel="settlements"
+        (pageChange)="goToPage($event)"
+    />
 </div>
 
 <!-- ── New Settlement Modal ── -->

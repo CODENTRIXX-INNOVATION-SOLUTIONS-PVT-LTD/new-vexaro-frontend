@@ -63,13 +63,13 @@
     <div class="search-group">
       <span class="material-icons search-icon">search</span>
       <input type="text" placeholder="Search users by name, email or ID..." [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)" />
+        (ngModelChange)="searchQuery.set($event); applyFilters()" />
     </div>
 
     <!-- Role Filters -->
     <div class="filter-group">
       <label for="roleFilterSelect">Role Type</label>
-      <select id="roleFilterSelect" [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event)">
+      <select id="roleFilterSelect" [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event); applyFilters()">
         <option value="ALL">All Roles</option>
         <option value="Super Admin">Super Admin</option>
         <option value="Distributor">Distributor</option>
@@ -87,7 +87,7 @@
             <th>User Details</th>
             <th>System ID</th>
             <th>Role Badge</th>
-            <th>Joined Date</th>
+            <th>Joined Date & Time</th>
             <th>Status Switch</th>
             <th>Actions</th>
           </tr>
@@ -113,7 +113,7 @@
               </span>
             </td>
             <td>
-              <span>{{ user.joinedDate | date: 'dd MMM yyyy' }}</span>
+              <span>{{ user.joinedDate }}</span>
             </td>
             <td>
               <!-- Toggle Slider -->
@@ -140,5 +140,12 @@
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [page]="page()"
+      [limit]="limit"
+      [total]="total()"
+      itemLabel="users"
+      (pageChange)="goToPage($event)"
+    />
   </div>
 </div>

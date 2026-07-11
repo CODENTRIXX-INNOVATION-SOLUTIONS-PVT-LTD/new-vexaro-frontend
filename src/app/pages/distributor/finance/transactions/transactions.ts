@@ -1,9 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FinanceService } from '../../../../services/finance.service';
 import { CsvExportService } from '../../../../shared/csv-export.service';
+import { PaginationComponent } from '../../../../shared/pagination/pagination';
 
 export interface Transaction {
   id: string;
@@ -19,7 +20,7 @@ export interface Transaction {
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './transactions.html',
   styleUrl: './transactions.css',
 })
@@ -27,10 +28,16 @@ export class Transactions implements OnInit {
   private financeService = inject(FinanceService);
   private csvService = inject(CsvExportService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
   isLoading = false;
+  page = 1;
+  readonly limit = 20;
+  total = 0;
+
+  get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   // Filters
   dateFilter = '';
@@ -38,26 +45,40 @@ export class Transactions implements OnInit {
 
   // Optional: scope to a specific merchant when coming from merchant-finance route
   private merchantId = '';
+  private isSuperAdminMerchantFinance = false;
 
   private readonly CREDIT_TYPES = ['CREDIT', 'TOPUP', 'REFUND', 'COD_CREDIT', 'TRANSFER_CREDIT', 'COMMISSION'];
 
   ngOnInit() {
     this.merchantId = this.route.snapshot.queryParams['merchantId'] || '';
+    this.isSuperAdminMerchantFinance = this.router.url.startsWith('/super-admin/merchant-finance');
     this.loadTransactions();
   }
 
   loadTransactions() {
     this.isLoading = true;
-    const params: any = { limit: 100 };
+    const params: any = { page: this.page, limit: this.limit };
     if (this.merchantId) params.userId = this.merchantId;
+    if (!this.merchantId && this.isSuperAdminMerchantFinance) params.scope = 'MERCHANT';
+    if (this.dateFilter) {
+      params.dateFrom = `${this.dateFilter}T00:00:00.000Z`;
+      params.dateTo = `${this.dateFilter}T23:59:59.999Z`;
+    }
 
     this.financeService.listTransactions(params).subscribe({
       next: (res) => {
         const raw: any[] = res?.data?.transactions ?? [];
+        this.total = res?.meta?.total ?? raw.length;
         this.transactions = raw.map((t: any) => ({
           id: t._id,
           date: t.createdAt
-            ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            ? new Date(t.createdAt).toLocaleString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
             : '—',
           rawDate: t.createdAt
             ? new Date(t.createdAt).toISOString().slice(0, 10) // "YYYY-MM-DD" for date input comparison
@@ -103,6 +124,17 @@ export class Transactions implements OnInit {
       const matchesType = this.typeFilter === 'All' || t.type === this.typeFilter;
       return matchesDate && matchesType;
     });
+  }
+
+  applyDateFilter() {
+    this.page = 1;
+    this.loadTransactions();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
+    this.loadTransactions();
   }
 
   exportCSV() {

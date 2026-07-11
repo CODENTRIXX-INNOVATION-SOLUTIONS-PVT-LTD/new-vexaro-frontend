@@ -45,7 +45,7 @@ export class AdminDisputeList implements OnInit {
     return {
       id: dispute._id,
       createdAt: dispute.createdAt
-        ? new Date(dispute.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        ? new Date(dispute.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : '',
       awb: dispute.shipmentId?.awb ?? 'N/A',
       category: dispute.category ?? 'Unknown',

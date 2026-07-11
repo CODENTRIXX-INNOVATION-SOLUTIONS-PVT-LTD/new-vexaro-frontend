@@ -56,10 +56,10 @@ export class ApiSettings implements OnInit, OnDestroy {
             name: k.name,
             keyPreview: k.keyPreview ?? k.key ?? '••••••••',
             createdAt: k.createdAt
-              ? new Date(k.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              ? new Date(k.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               : '—',
             lastUsedAt: k.lastUsedAt
-              ? new Date(k.lastUsedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              ? new Date(k.lastUsedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               : null,
             status: k.isActive === false ? 'Revoked' : 'Active',
           }));

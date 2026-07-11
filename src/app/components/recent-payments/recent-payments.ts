@@ -34,8 +34,8 @@ export class RecentPayments implements OnInit {
           amount: `₹${t.amount?.toLocaleString('en-IN') || '0'}`,
           method: t.type || 'Wallet',
           date: t.createdAt
-            ? new Date(t.createdAt).toLocaleDateString('en-IN', {
-                day: '2-digit', month: 'short', year: 'numeric',
+            ? new Date(t.createdAt).toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
               })
             : '—',
         })));

@@ -45,7 +45,7 @@ export class DisputeReport implements OnInit {
           charge:       d.extraCharge ?? 0,
           status:       d.status,
           resolvedDate: d.status === 'RESOLVED' || d.status === 'CLOSED'
-            ? new Date(d.updatedAt ?? d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            ? new Date(d.updatedAt ?? d.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
             : '—',
         }));
         this.totalCount    = this.disputes.length;

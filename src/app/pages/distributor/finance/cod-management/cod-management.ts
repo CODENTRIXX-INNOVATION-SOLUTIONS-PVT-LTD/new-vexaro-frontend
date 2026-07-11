@@ -70,7 +70,7 @@ export class CodManagement implements OnInit {
               amount: c.codAmount,
               status: uiStatus,
               rawStatus: c.status,
-              date: new Date(c.collectedAt || c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+              date: new Date(c.collectedAt || c.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
             };
           });
 

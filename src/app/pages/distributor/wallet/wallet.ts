@@ -87,7 +87,7 @@ export class DistributorWallet implements OnInit {
         const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
         this.transactions = (res?.data?.transactions ?? []).map((t: any) => ({
           id: t._id,
-          date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date: this.formatDateTime(t.createdAt),
           description: t.note || t.type,
           type: DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
           amount: Math.abs(t.amount),
@@ -108,7 +108,7 @@ export class DistributorWallet implements OnInit {
         this.paymentsTotal = res?.meta?.total ?? raw.length;
         this.payments = raw.map((p: any) => ({
           id: p._id,
-          date: new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date: this.formatDateTime(p.createdAt),
           amount: p.amountRupees ?? p.amount,
           method: p.paymentMethod ?? null,
           status: p.status,
@@ -128,7 +128,7 @@ export class DistributorWallet implements OnInit {
         this.myRequests = (res?.data?.rechargeRequests ?? res?.data?.requests ?? []).map((r: any) => ({
           id: r._id,
           requestId: r._id?.slice(-8).toUpperCase(),
-          date: new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date: this.formatDateTime(r.createdAt),
           amount: r.amount,
           method: r.paymentMethod,
           reference: r.referenceId || '—',
@@ -270,5 +270,15 @@ export class DistributorWallet implements OnInit {
 
   get totalTopupAmount(): number {
     return this.payments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
+  }
+
+  private formatDateTime(value: string): string {
+    return new Date(value).toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

@@ -155,7 +155,7 @@ export class SuperAdminShipmentReports implements OnInit {
             merchant: s.merchantId?.companyName || s.merchantId?.firstName || 'Unknown',
             status: this.getStatusLabel(s.status),
             date: s.createdAt 
-              ? new Date(s.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+              ? new Date(s.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               : '—'
           }));
         }

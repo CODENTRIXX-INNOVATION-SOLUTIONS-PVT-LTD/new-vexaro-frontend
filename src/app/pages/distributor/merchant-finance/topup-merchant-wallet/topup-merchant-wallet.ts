@@ -19,8 +19,9 @@ export class TopupMerchantWallet implements OnInit {
   amount: number | null = null;
   remarks: string = '';
   isSubmitting: boolean = false;
+  isSuperAdminPortal: boolean = false;
 
-  // Distributor wallet balance (from API)
+  // Funding wallet balance (from API)
   distributorBalance: number = 0;
 
   merchants: any[] = [];
@@ -31,6 +32,7 @@ export class TopupMerchantWallet implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit() {
+    this.isSuperAdminPortal = this.router.url.startsWith('/super-admin');
     this.selectedMerchantId = this.route.snapshot.queryParams['merchantId'] || '';
     this.isPreselected = !!this.selectedMerchantId;
     this.loadData();
@@ -71,6 +73,7 @@ export class TopupMerchantWallet implements OnInit {
   }
 
   get isInsufficient(): boolean {
+    if (this.isSuperAdminPortal) return false;
     return (this.amount || 0) > this.distributorBalance;
   }
 
@@ -79,24 +82,45 @@ export class TopupMerchantWallet implements OnInit {
     if (this.isInsufficient) return;
 
     this.isSubmitting = true;
-    this.financeService.transferToMerchant({
-      merchantId: this.selectedMerchantId,
-      amount: this.amount,
-      note: this.remarks
-    }).subscribe({
+    const request$ = this.isSuperAdminPortal
+      ? this.financeService.topupWallet({
+          userId: this.selectedMerchantId,
+          amount: this.amount,
+          note: this.remarks
+        })
+      : this.financeService.transferToMerchant({
+          merchantId: this.selectedMerchantId,
+          amount: this.amount,
+          note: this.remarks
+        });
+
+    request$.subscribe({
       next: (res) => {
-        window.alert(`₹${this.amount} transferred successfully to merchant wallet.`);
+        const action = this.isSuperAdminPortal ? 'credited' : 'transferred';
+        window.alert(`₹${this.amount} ${action} successfully to merchant wallet.`);
         this.isSubmitting = false;
-        this.router.navigate(['/distributor/merchant-finance/wallets']);
+        this.router.navigate([this.walletsRoute]);
       },
       error: (err) => {
-        window.alert(err?.error?.message || 'Failed to transfer funds. Please check your balance and try again.');
+        window.alert(err?.error?.message || 'Failed to fund merchant wallet. Please try again.');
         this.isSubmitting = false;
       }
     });
   }
 
   cancel() {
-    this.router.navigate(['/distributor/merchant-finance/wallets']);
+    this.router.navigate([this.walletsRoute]);
+  }
+
+  get fundingSourceLabel(): string {
+    return this.isSuperAdminPortal ? 'Admin Top-up' : `Your Wallet (₹${this.distributorBalance.toLocaleString('en-IN')})`;
+  }
+
+  get submitLabel(): string {
+    return this.isSuperAdminPortal ? 'Credit Funds' : 'Transfer Funds';
+  }
+
+  private get walletsRoute(): string {
+    return this.isSuperAdminPortal ? '/super-admin/merchant-finance/wallets' : '/distributor/merchant-finance/wallets';
   }
 }

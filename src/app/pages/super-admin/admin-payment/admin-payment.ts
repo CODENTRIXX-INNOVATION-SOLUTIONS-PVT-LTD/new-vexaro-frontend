@@ -176,7 +176,7 @@ export class AdminPayment implements OnInit {
               balance: w.balance ?? 0,
               lastRechargeAmount: w.lastRechargeAmount ?? 0,
               lastRechargeDate: w.lastRechargeDate
-                ? new Date(w.lastRechargeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                ? this.formatDateTime(w.lastRechargeDate)
                 : 'N/A',
               status: w.isActive === false ? 'Inactive' : 'Active',
             }));
@@ -199,7 +199,7 @@ export class AdminPayment implements OnInit {
             distributor: t.userId?.companyName ?? t.userId?.firstName ?? 'Unknown',
             rechargeAmount: Math.abs(t.amount ?? 0),
             paymentMethod: t.type ?? 'Wallet',
-            date: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+            date: t.createdAt ? this.formatDateTime(t.createdAt) : '—',
             status: DEBIT_TYPES.has(t.type) ? 'Debit' : 'Credit',
           }));
           this.cdr.detectChanges();
@@ -223,7 +223,7 @@ export class AdminPayment implements OnInit {
           userId: p.userId?._id ?? p.userId,
           userName: p.userId?.companyName ?? p.userId?.firstName ?? '—',
           userEmail: p.userId?.email ?? '—',
-          date: new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date: this.formatDateTime(p.createdAt),
           amount: p.amountRupees ?? p.amount,
           method: p.paymentMethod ?? null,
           status: p.status,
@@ -250,7 +250,7 @@ export class AdminPayment implements OnInit {
           amount: r.amountRupees ?? r.amount ?? 0,
           reason: r.metadata?.refund?.reason ?? r.failureReason ?? '—',
           date: r.capturedAt ?? r.createdAt
-            ? new Date(r.capturedAt ?? r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+            ? this.formatDateTime(r.capturedAt ?? r.createdAt)
             : '—',
           status: r.status ?? 'REFUNDED',
         }));
@@ -268,7 +268,7 @@ export class AdminPayment implements OnInit {
           user: c.userId?.companyName ?? c.userId?.firstName ?? 'Unknown',
           amount: Math.abs(c.amount ?? 0),
           commission: c.commission ?? 0,
-          date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+          date: c.createdAt ? this.formatDateTime(c.createdAt) : '—',
         }));
         this.cdr.detectChanges();
       },
@@ -286,7 +286,7 @@ export class AdminPayment implements OnInit {
           amount: r.amount ?? 0,
           method: r.paymentMethod ?? 'UPI',
           reference: r.referenceId ?? '—',
-          date: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+          date: r.createdAt ? this.formatDateTime(r.createdAt) : '—',
           status: r.status ?? 'Pending',
         }));
         this.cdr.detectChanges();

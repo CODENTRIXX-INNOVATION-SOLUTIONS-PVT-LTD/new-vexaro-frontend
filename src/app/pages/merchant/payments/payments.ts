@@ -6,6 +6,7 @@ import { takeUntil, finalize } from 'rxjs/operators';
 import { FinanceService } from '../../../services/finance.service';
 import { DisputeService } from '../../../services/dispute.service';
 import { SupportService } from '../../../services/support.service';
+import { AuthService } from '../../../services/auth.service';
 
 export interface MerchantTransaction {
   id: string;
@@ -70,6 +71,7 @@ export class Payments implements OnInit, OnDestroy {
   private financeService = inject(FinanceService);
   private disputeService = inject(DisputeService);
   private supportService = inject(SupportService);
+  private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
 
   // ── Active Tab ────────────────────────────────────────────────────────────
@@ -126,6 +128,7 @@ export class Payments implements OnInit, OnDestroy {
 
   // ── Request from Distributor ──────────────────────────────────────────────
   distributorRequests: DistributorTopupRequest[] = [];
+  requestApprover: 'Distributor' | 'Super Admin' = 'Distributor';
   distRequestsLoading = false;
   distRequestAmount: number | null = null;
   distRequestNote = '';
@@ -147,6 +150,7 @@ export class Payments implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadWalletDetails();
+    this.loadRequestApprover();
     this.loadTransactions();
     this.loadRefundRequests();
     this.loadRazorpayPayments();
@@ -175,6 +179,20 @@ export class Payments implements OnInit, OnDestroy {
       });
   }
 
+  loadRequestApprover(): void {
+    this.authService.getMe()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const user = res?.data?.user ?? res?.data ?? res?.user ?? res;
+          this.requestApprover = user?.invitedBy ? 'Distributor' : 'Super Admin';
+        },
+        error: () => {
+          this.requestApprover = 'Distributor';
+        },
+      });
+  }
+
   loadTransactions(): void {
     if (this.txLoading || this.transactions.length > 0) return;
     this.txLoading = true;
@@ -185,7 +203,7 @@ export class Payments implements OnInit, OnDestroy {
           const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
           this.transactions = (res?.data?.transactions ?? []).map((t: any) => ({
             id:          t._id,
-            date:        new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            date:        this.formatDateTime(t.createdAt),
             description: t.note || this.formatTxType(t.type),
             type:        DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
             amount:      Math.abs(t.amount ?? 0),
@@ -210,7 +228,7 @@ export class Payments implements OnInit, OnDestroy {
           this.paymentsTotal    = res?.meta?.total ?? raw.length;
           this.razorpayPayments = raw.map((p: any) => ({
             id:                p._id,
-            date:              new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            date:              this.formatDateTime(p.createdAt),
             amount:            p.amountRupees ?? p.amount,
             method:            p.paymentMethod ?? null,
             status:            p.status,
@@ -232,7 +250,7 @@ export class Payments implements OnInit, OnDestroy {
           const raw: any[] = res?.data?.refundRequests ?? res?.data?.requests ?? [];
           this.refundRequests = raw.map((r: any) => ({
             id:         r._id,
-            date:       new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            date:       this.formatDateTime(r.createdAt),
             awb:        r.shipmentId?.awb ?? r.awb ?? '—',
             amount:     r.amount ?? 0,
             reason:     r.reason ?? '—',
@@ -254,7 +272,7 @@ export class Payments implements OnInit, OnDestroy {
           const raw: any[] = res?.data?.requests ?? [];
           this.distributorRequests = raw.map((r: any) => ({
             id:              r._id,
-            date:            new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            date:            this.formatDateTime(r.createdAt),
             amount:          r.amount ?? 0,
             note:            r.note   ?? '—',
             status:          r.status ?? 'PENDING',
@@ -273,7 +291,7 @@ export class Payments implements OnInit, OnDestroy {
           if (res.data?.items) {
             this.disputes = res.data.items.map((d: any) => ({
               id:           d._id,
-              date:         new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+              date:         this.formatDateTime(d.createdAt),
               awb:          d.shipmentId?.awb || '—',
               billedWeight: d.billedWeight || 0,
               actualWeight: d.actualWeight || 0,
@@ -381,7 +399,7 @@ export class Payments implements OnInit, OnDestroy {
     )
     .subscribe({
       next: () => {
-        this.distRequestSuccess = `Top-up request for ₹${this.distRequestAmount!.toLocaleString('en-IN')} sent to your distributor.`;
+        this.distRequestSuccess = `Top-up request for ₹${this.distRequestAmount!.toLocaleString('en-IN')} sent to your ${this.requestApprover}.`;
         this.distRequestAmount  = null;
         this.distRequestNote    = '';
         // Force reload the list fresh
@@ -467,6 +485,28 @@ export class Payments implements OnInit, OnDestroy {
     return this.distributorRequests.filter(r => r.status === 'PENDING').length;
   }
 
+  get requestTabLabel(): string {
+    return `Request from ${this.requestApprover}`;
+  }
+
+  get requestTitle(): string {
+    return `Request Wallet Top-up from ${this.requestApprover}`;
+  }
+
+  get requestDescription(): string {
+    return this.requestApprover === 'Super Admin'
+      ? 'Super Admin will receive a notification and can approve the transfer directly from their wallet.'
+      : 'Your distributor will receive a notification and can approve the transfer directly from their wallet.';
+  }
+
+  get requestSubmitLabel(): string {
+    return `Send Request to ${this.requestApprover}`;
+  }
+
+  get requestHistorySubtitle(): string {
+    return `Requests sent to your ${this.requestApprover.toLowerCase()}`;
+  }
+
   get totalDisputeDeductions(): number {
     return this.disputes.filter(d => d.status === 'Applied').reduce((s, d) => s + d.deduction, 0);
   }
@@ -548,5 +588,15 @@ export class Payments implements OnInit, OnDestroy {
       RTO_CHARGE:      'RTO Charge',
     };
     return map[type] ?? type;
+  }
+
+  private formatDateTime(value: string): string {
+    return new Date(value).toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

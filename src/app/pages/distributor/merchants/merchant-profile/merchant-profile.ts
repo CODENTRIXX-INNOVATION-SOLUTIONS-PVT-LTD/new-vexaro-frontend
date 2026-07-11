@@ -55,7 +55,7 @@ function toView(user: MerchantUser, walletBalance: number): MerchantView {
     deliveredShipments: 0,
     status:             user.isActive ? 'Active' : 'Inactive',
     joinedDate:         user.createdAt
-      ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      ? new Date(user.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '—',
   };
 }
@@ -174,7 +174,7 @@ export class DistributorMerchantProfile implements OnInit {
         this.shipments = (res?.data?.shipments ?? []).map((s: any) => ({
           id:        s._id,
           awb:       s.awb,
-          date:      new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date:      new Date(s.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
           status:    this.STATUS_LABELS[s.status] ?? s.status,
           rawStatus: s.status,
           dest:      `${s.destination?.city ?? '—'}, ${s.destination?.state ?? ''}`.replace(/,\s*$/, ''),

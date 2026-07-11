@@ -141,7 +141,7 @@ export class SuperAdminDistributorReports implements OnInit, AfterViewInit {
             distributor: a.distributorName || a.companyName || 'Unknown',
             activity: a.activity || '—',
             date: a.createdAt 
-              ? new Date(a.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+              ? new Date(a.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
               : 'Today'
           }));
         }

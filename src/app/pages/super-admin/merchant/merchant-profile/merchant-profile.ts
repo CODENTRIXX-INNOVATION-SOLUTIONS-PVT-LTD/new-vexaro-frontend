@@ -48,7 +48,7 @@ function toViewModel(user: MerchantUser): MerchantViewModel {
     distributorId:    typeof user.invitedBy === 'string' ? user.invitedBy : '—',
     warehouseDetails: w ? (w.name || w.warehouseId) : '—',
     registrationDate: user.createdAt
-      ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      ? new Date(user.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '—',
   };
 }

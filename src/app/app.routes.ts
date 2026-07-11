@@ -86,10 +86,38 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "merchants/create",
+        loadComponent: () =>
+          import("./pages/distributor/merchants/create-merchant/create-merchant").then(
+            (m) => m.CreateMerchant,
+          ),
+      },
+      {
         path: "merchants/profile/:id",
         loadComponent: () =>
           import("./pages/super-admin/merchant/merchant-profile/merchant-profile").then(
             (m) => m.MerchantProfile,
+          ),
+      },
+      {
+        path: "merchant-finance/wallets",
+        loadComponent: () =>
+          import("./pages/distributor/merchant-finance/all-merchant-wallets/all-merchant-wallets").then(
+            (m) => m.AllMerchantWallets,
+          ),
+      },
+      {
+        path: "merchant-finance/topup",
+        loadComponent: () =>
+          import("./pages/distributor/merchant-finance/topup-merchant-wallet/topup-merchant-wallet").then(
+            (m) => m.TopupMerchantWallet,
+          ),
+      },
+      {
+        path: "merchant-finance/transactions",
+        loadComponent: () =>
+          import("./pages/distributor/finance/transactions/transactions").then(
+            (m) => m.Transactions,
           ),
       },
       {

@@ -59,7 +59,7 @@ export class ShipmentReports implements OnInit {
 
         this.recentShipments = (recentRes?.data?.shipments ?? []).map((sh: any) => ({
           awb:     sh.awb,
-          date:    new Date(sh.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          date:    new Date(sh.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
           status:  sh.status,
           dest:    sh.destination?.city ?? '—',
           carrier: sh.carrier ?? '—',
