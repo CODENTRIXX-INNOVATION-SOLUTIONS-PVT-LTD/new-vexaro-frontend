@@ -1,0 +1,52 @@
+name: Frontend Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on:
+      - self-hosted
+      - frontend-runner
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Update Frontend
+        run: |
+          cd /var/www/vexaro/new-vexaro-frontend
+          git fetch origin
+          git reset --hard origin/main
+
+      - name: Install Dependencies
+        run: |
+          cd /var/www/vexaro/new-vexaro-frontend
+          npm ci
+
+      - name: Build Angular
+        run: |
+          cd /var/www/vexaro/new-vexaro-frontend
+          npm run build
+
+      - name: Reload Nginx
+        run: |
+          sudo systemctl reload nginx
+
+      - name: Verify Website
+        run: |
+          sleep 5
+          curl -f http://localhost/ || exit 1
