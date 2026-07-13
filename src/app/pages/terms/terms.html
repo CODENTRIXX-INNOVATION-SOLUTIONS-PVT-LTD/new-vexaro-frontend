@@ -2,177 +2,185 @@
 
 <div class="pt-32 pb-20 bg-paper min-h-screen text-ink">
   <div class="container-custom max-w-4xl mx-auto">
-    <h1 class="text-4xl font-extrabold font-display mb-8">Terms & Conditions</h1>
-    
+    <p class="text-xs font-bold tracking-[0.2em] uppercase text-accent mb-4">
+      Last updated: 13 July 2026
+    </p>
+    <h1 class="text-4xl font-extrabold font-display mb-6">Terms &amp; Conditions</h1>
+    <p class="text-lg leading-relaxed text-ink/65 mb-10">
+      These Terms govern access to and use of the Vexaro Courier Solutions platform, website, dashboards,
+      shipment tools, wallet services, support workflows, and related APIs by distributors, merchants, warehouse
+      users, and authorised staff.
+    </p>
+
     <div class="space-y-8 text-lg leading-relaxed text-ink/80">
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">1. Introduction & Acceptance</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">1. Company and Scope</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Who this agreement is between (Vexaro Courier Solutions Pvt. Ltd., Distributors, Merchants)</li>
-          <li>By using the platform, you accept these terms</li>
-          <li>These terms apply to all three tiers &mdash; SuperAdmin, Distributor, Merchant</li>
-          <li>Last updated date</li>
+          <li>Vexaro Courier Solutions Private Limited operates the Vexaro platform. CIN: U53200MP2026PTC084168.</li>
+          <li>The platform supports shipment booking, tracking, wallet accounting, COD reconciliation, distributor margin management, merchant onboarding, warehouse management, reports, notifications, support tickets, and dispute handling.</li>
+          <li>By using the website, dashboard, APIs, or services, you agree to follow these Terms and all applicable laws.</li>
+          <li>If a written commercial agreement with Vexaro says something different for your account, that written agreement will apply for that specific subject.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">2. Definitions</h2>
-        <p class="mb-2">Define clearly:</p>
+        <h2 class="text-2xl font-bold text-ink mb-4">2. Platform Roles</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li><strong>Super Admin</strong> &mdash; Vexaro corporate entity, platform owner</li>
-          <li><strong>Distributor</strong> &mdash; Regional franchise partner onboarded by Vexaro</li>
-          <li><strong>Merchant</strong> &mdash; Business client onboarded by a Distributor</li>
-          <li><strong>Warehouse</strong> &mdash; Pickup location assigned to a Merchant at onboarding</li>
-          <li><strong>AWB (Air Waybill)</strong> &mdash; Unique shipment tracking number</li>
-          <li><strong>COD (Cash on Delivery)</strong> &mdash; Payment collected at delivery</li>
-          <li><strong>Wallet</strong> &mdash; Prepaid credit balance held in-platform</li>
-          <li><strong>Weight Dispute</strong> &mdash; Difference between declared and actual shipment weight at hub</li>
+          <li><strong>Super Admin</strong> means Vexaro's authorised internal administrator with platform-level control.</li>
+          <li><strong>Distributor</strong> means a regional or business partner authorised to onboard and manage merchants under Vexaro.</li>
+          <li><strong>Merchant</strong> means a business customer that books shipments and is linked to Vexaro directly or through a distributor.</li>
+          <li><strong>Warehouse</strong> means the merchant pickup location used for forward shipments and return destinations.</li>
+          <li><strong>AWB</strong> means the Vexaro or carrier tracking number generated for a shipment.</li>
+          <li><strong>Wallet</strong> means the INR balance maintained in the platform for charges, top-ups, transfers, refunds, COD credits, and adjustments.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">3. Platform Access & Account Responsibility</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">3. Account Access and Responsibility</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Accounts are not self-registered &mdash; they are created by the upper entity only</li>
-          <li>Credentials are personal and non-transferable</li>
-          <li>You are responsible for all activity under your account</li>
-          <li>Vexaro can suspend or deactivate accounts for policy violations</li>
-          <li>Merchants must keep warehouse address accurate at all times</li>
+          <li>Accounts are created or invited by an authorised higher-level account, such as Vexaro inviting distributors or distributors inviting their merchants.</li>
+          <li>Users must provide accurate name, company, phone, email, address, warehouse, and contact details during onboarding and keep them updated.</li>
+          <li>Credentials, invite links, reset links, refresh tokens, and API keys are confidential. You are responsible for activity performed through your account or keys.</li>
+          <li>Vexaro may suspend, deactivate, revoke, or restrict access for suspected misuse, incorrect information, payment risk, security risk, legal risk, or breach of these Terms.</li>
+          <li>Deleted or inactive records may be retained where needed for accounting, audit, tax, legal, dispute, or operational purposes.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">4. Wallet, Payments & Billing</h2>
-        <h3 class="font-bold text-ink mt-4 mb-2">For Distributors:</h3>
+        <h2 class="text-2xl font-bold text-ink mb-4">4. Distributor and Merchant Hierarchy</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Wallet must be topped up before Merchants can book</li>
-          <li>Distributor sets their own rate card markup for Merchants</li>
-          <li>Distributor's wallet is debited when a Merchant books a shipment</li>
-          <li>Minimum wallet balance thresholds may apply</li>
-        </ul>
-        <h3 class="font-bold text-ink mt-4 mb-2">For Merchants:</h3>
-        <ul class="list-disc pl-5 space-y-2">
-          <li>Wallet must have sufficient balance before booking is allowed</li>
-          <li>Booking amount is deducted upfront at time of order creation</li>
-          <li>COD amounts are held in escrow until delivery confirmation</li>
-          <li>COD is released to Merchant wallet after successful delivery</li>
-        </ul>
-        <h3 class="font-bold text-ink mt-4 mb-2">For Both:</h3>
-        <ul class="list-disc pl-5 space-y-2">
-          <li>Vexaro is not responsible for losses due to insufficient wallet balance</li>
-          <li>All transactions are logged and visible in the dashboard ledger</li>
-          <li>Disputed transactions must be raised within 7 working days</li>
+          <li>A distributor can view and manage merchants that belong to that distributor, including merchant wallets, shipments, reports, support items, warehouse requests, and relevant COD or settlement workflows.</li>
+          <li>A distributor may transfer funds only to merchants mapped to that distributor account.</li>
+          <li>A merchant is responsible for the orders, recipients, warehouse details, shipment information, and wallet usage submitted under its account.</li>
+          <li>Merchant warehouse address change requests are subject to distributor approval. Approved changes update the active warehouse record used for pickups.</li>
+          <li>Users must not attempt to access shipments, wallets, API keys, reports, or merchant records outside their authorised hierarchy.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">5. Shipment Booking Rules</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">5. Wallets, Top-Ups, and Ledger</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Merchant must declare accurate weight, dimensions, and item details</li>
-          <li>Incorrect declarations can result in weight dispute charges</li>
-          <li>Carrier selection is the Merchant's responsibility</li>
-          <li>Once a shipment is picked up, cancellation is not guaranteed</li>
-          <li>Vexaro does not guarantee delivery timelines &mdash; carrier SLAs apply</li>
-          <li>Restricted and prohibited items (weapons, flammables, contraband) cannot be shipped</li>
-        </ul>
-        <h3 class="font-bold text-ink mt-4 mb-2">Prohibited items list &mdash; include:</h3>
-        <ul class="list-disc pl-5 space-y-2">
-          <li>Hazardous materials</li>
-          <li>Perishables without proper packaging</li>
-          <li>Currency, jewellery above declared value limit</li>
-          <li>Illegal goods under Indian law</li>
+          <li>Wallets are maintained in INR and are required for platform charges, merchant funding, refunds, COD credits, dispute charges, RTO charges, and settlements.</li>
+          <li>Wallet transactions are recorded as an immutable ledger with the transaction type, amount, balance before and after, reference, note, related shipment, and performer where applicable.</li>
+          <li>Merchant and distributor wallets may be subject to a mandatory reserve. The current implemented reserve is &#8377;2,000 once the reserve phase is established.</li>
+          <li>The first training top-up for merchant and distributor wallets may be restricted to &#8377;200 through &#8377;2,000. A later top-up may be required to bring the balance to at least &#8377;2,200 so the reserve can be maintained.</li>
+          <li>Bookings, RTO charges, transfers, and other debits can fail if the wallet does not have enough available balance after considering the reserve.</li>
+          <li>Top-ups may be processed through Razorpay or through manual recharge requests using accepted methods such as UPI, NEFT, IMPS, RTGS, cash, or cheque, depending on the workflow enabled for your account.</li>
+          <li>A top-up or recharge request is not final until it is successfully paid, verified, approved, and credited in the wallet ledger.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">6. Weight Dispute Policy</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">6. Pricing and Shipment Charges</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>If hub scan shows weight/size exceeds declared values, a dispute is raised</li>
-          <li>Charges are applied based on actual slab, not declared slab</li>
-          <li>Amount is deducted from Distributor wallet, then cascaded to Merchant</li>
-          <li>Disputes can be contested within 3 days with photographic proof</li>
-          <li>Proof must show: shipment on a scale with AWB label visible</li>
-          <li>After 3 days, dispute is closed permanently and funds are non-refundable</li>
-          <li>Returning the shipment is not done &mdash; it proceeds to delivery with surcharge</li>
+          <li>Shipment pricing depends on active rate cards, service type, weight slabs, fuel surcharge, COD charge, super-admin markup, distributor margin, flat margin, and carrier pricing where available.</li>
+          <li>Billing weight is calculated using the higher of declared weight and volumetric weight. The platform uses length x breadth x height divided by 5000 for volumetric weight.</li>
+          <li>Forward shipment booking debits the merchant wallet for the merchant charge and, where a distributor is mapped, debits the distributor wallet for the distributor charge.</li>
+          <li>Rates, margins, COD charges, fuel surcharge, and carrier prices may change. The applicable charge is the charge shown or calculated at the time the shipment is booked.</li>
+          <li>If carrier booking fails after local wallet debit, the platform attempts a compensating refund and marks the shipment cancelled.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">7. Cancellation & Refund Policy</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">7. Shipment Booking Rules</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Cancellations are allowed only before shipment is picked up</li>
-          <li>Cancellation request must be raised through the dashboard</li>
-          <li>On successful cancellation: full amount is reversed to Merchant wallet, Distributor cost is reversed to Distributor wallet</li>
-          <li>If shipment is already picked up: cancellation is not possible, charges apply</li>
-          <li>COD orders cancelled after pickup &mdash; COD amount is not applicable</li>
+          <li>Merchants must provide accurate pickup, destination, recipient, phone, email, address, pincode, product, SKU, quantity, tax, discount, declared value, weight, and dimensions.</li>
+          <li>The platform may reject shipments that exceed configured limits, including weight above 50 kg, dimensions above 200 cm, declared value above &#8377;10,00,000, or COD amount above &#8377;50,000.</li>
+          <li>COD amount must be provided for COD shipments, must be positive, and cannot exceed the declared value or order value.</li>
+          <li>An active merchant warehouse is required. If a selected warehouse is unavailable or inactive, pickup booking may fail.</li>
+          <li>Forward shipments may be booked with carrier partners through Velocity Shipping or other enabled logistics providers. Carrier AWB, labels, manifests, estimated delivery dates, and tracking URLs depend on carrier response.</li>
+          <li>Users must not ship illegal, unsafe, restricted, falsely declared, inadequately packed, or carrier-prohibited items. This includes hazardous goods, contraband, weapons, illegal substances, and goods restricted by Indian law or carrier policy.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">8. Liability & Compensation</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">8. Tracking, Statuses, and Updates</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Standard compensation cap: &#8377;5,000 per shipment for loss or damage</li>
-          <li>Higher value items require declared insurance at booking time</li>
-          <li>Vexaro is not liable for delays caused by carrier, weather, or force majeure</li>
-          <li>Vexaro is not liable for losses due to incorrect delivery address provided by Merchant</li>
-          <li>Claims must be raised within 7 days of expected delivery date</li>
+          <li>Shipment statuses follow the platform workflow: order created, picked up, arrived at hub, out for delivery, delivered, delivery failed, RTO, or cancelled.</li>
+          <li>Once delivered, cancelled, or marked RTO, a shipment is treated as terminal in the platform.</li>
+          <li>Core shipment fields such as weight, dimensions, COD amount, COD flag, and service type can be restricted after the shipment moves beyond order created.</li>
+          <li>Tracking data may come from carrier systems, webhooks, warehouse users, or authorised staff. Carrier delays, network delays, webhook delays, and incomplete carrier events can affect displayed tracking information.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">9. Distributor-Specific Terms</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">9. Cancellation, Refunds, RTO, and Returns</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Distributor is responsible for Merchants they onboard</li>
-          <li>Distributor must ensure Merchants comply with these terms</li>
-          <li>Distributor is financially liable for Merchant wallet shortfalls in COD reconciliation</li>
-          <li>Distributor cannot onboard Merchants in another Distributor's territory</li>
-          <li>Termination of Distributor account will suspend all associated Merchant accounts</li>
+          <li>Cancellation is allowed only while the shipment status is order created and before the platform or carrier workflow has moved the shipment forward.</li>
+          <li>When cancellation succeeds, eligible merchant and distributor shipment charges are refunded to the respective wallets.</li>
+          <li>After pickup or movement, cancellation may not be available. Delivery failure, reattempt, RTO, and carrier rules may apply instead.</li>
+          <li>When a shipment moves to RTO, the platform may debit the configured RTO charge. The current default implemented RTO charge is &#8377;40.</li>
+          <li>Reverse shipment and return pickup workflows may have additional requirements, including active warehouse sync, return item details, and QC image requirements where quality check is enabled.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">10. Merchant-Specific Terms</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">10. COD Collection and Remittance</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Merchant is tied to one Distributor and one Warehouse</li>
-          <li>Merchant cannot transfer to another Distributor without approval</li>
-          <li>Merchant's warehouse address changes require Distributor approval</li>
-          <li>Merchant is responsible for correct consignee details at booking</li>
+          <li>For COD shipments, COD is marked collected when the shipment is delivered and the carrier/platform workflow confirms collection.</li>
+          <li>COD remittance credits the merchant wallet with net COD after deducting shipment cost. Applicable Vexaro and distributor margins may be credited separately.</li>
+          <li>COD status may remain pending until remitted by an authorised distributor or Vexaro user.</li>
+          <li>If COD amount is less than the shipping cost, remittance can fail and may require manual review.</li>
+          <li>COD mismatch, non-remittance, or related issues should be raised through support or dispute workflows with the relevant shipment reference.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">11. Platform Availability</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">11. Disputes, Support, and Refund Requests</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Vexaro targets 99.9% uptime but does not guarantee uninterrupted service</li>
-          <li>Planned maintenance will be communicated 24 hours in advance</li>
-          <li>Vexaro is not liable for losses due to platform downtime</li>
+          <li>Users can raise shipment disputes for lost, damaged, delayed, wrong delivery, COD mismatch, or other supported categories.</li>
+          <li>Disputes may include descriptions, comments, attachments, assigned reviewers, resolutions, and status changes.</li>
+          <li>Weight disputes can include declared weight, actual weight, extra charge, proof images, and an expiry period. The current configured weight dispute expiry is 3 days.</li>
+          <li>Refund requests must include the related shipment, requested amount, and reason. Approval or rejection depends on review and applicable operational records.</li>
+          <li>Support tickets may be created for shipment, billing, account, technical, or other issues, with priority and attachments where needed.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">12. Termination</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">12. API Keys and Integrations</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Vexaro can terminate any account for breach of terms</li>
-          <li>On termination: pending shipments will be completed, wallet balance will be refunded after deducting dues</li>
-          <li>Disputes pending at time of termination will be resolved per existing policy</li>
+          <li>API keys are provided only to authorised users and may carry read, write, webhook, or admin permissions.</li>
+          <li>The raw API key is shown once when created. Vexaro stores only a hash and preview of the key.</li>
+          <li>You must protect API keys, rotate them if exposed, and revoke keys that are no longer needed.</li>
+          <li>API misuse, excessive calls, unauthorised automation, or attempts to bypass access controls may result in suspension or revocation.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">13. Governing Law</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">13. Platform Availability and Third Parties</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>These terms are governed by the laws of India</li>
-          <li>Jurisdiction: Courts of Indore, Madhya Pradesh</li>
-          <li>Disputes to be first resolved through mediation before litigation</li>
+          <li>Vexaro works to keep the platform available, but access may be interrupted by maintenance, network issues, cloud provider issues, carrier downtime, payment gateway downtime, security controls, or events outside Vexaro's control.</li>
+          <li>Shipment pickup, transit, delivery, returns, carrier labels, estimated delivery dates, and carrier tracking are dependent on logistics partners and their serviceability.</li>
+          <li>Payment success, refunds to source, and payment-method availability may depend on Razorpay, banks, UPI, card networks, or other payment providers.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-2xl font-bold text-ink mb-4">14. Changes to Terms</h2>
+        <h2 class="text-2xl font-bold text-ink mb-4">14. Liability</h2>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Vexaro reserves the right to update terms at any time</li>
-          <li>Notice will be provided via email and platform notification</li>
-          <li>Continued use after notice = acceptance of new terms</li>
+          <li>You are responsible for losses caused by incorrect shipment details, incorrect customer address, insufficient packaging, restricted goods, unauthorised account use, or misuse of API credentials.</li>
+          <li>Vexaro is not responsible for indirect, incidental, special, punitive, or consequential losses, including lost profits, business interruption, or loss of goodwill.</li>
+          <li>Carrier liability, claim eligibility, proof requirements, and compensation limits may depend on carrier rules, shipment value, insurance availability, and the documents submitted for review.</li>
+          <li>Nothing in these Terms limits liability that cannot be limited under applicable law.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-ink mb-4">15. Termination</h2>
+        <ul class="list-disc pl-5 space-y-2">
+          <li>Vexaro may suspend or terminate access for breach, fraud risk, non-payment, unlawful shipment activity, security concern, prolonged inactivity, or legal requirement.</li>
+          <li>After termination, open shipments, wallet balances, COD records, refunds, disputes, and pending dues may be completed, adjusted, or settled according to platform records and applicable law.</li>
+          <li>Termination does not remove obligations that should reasonably survive, including payment obligations, audit rights, confidentiality, dispute resolution, and liability provisions.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-ink mb-4">16. Governing Law and Contact</h2>
+        <ul class="list-disc pl-5 space-y-2">
+          <li>These Terms are governed by the laws of India.</li>
+          <li>Subject to any mandatory legal process, courts at Indore, Madhya Pradesh will have jurisdiction.</li>
+          <li>Contact: info&#64;vexarocouriersolutions.com or Flat 1113, 1st Floor, Chikitsak Nagar, Vijay Nagar, Indore, MP-452010.</li>
+          <li>Vexaro may update these Terms to reflect product, legal, pricing, carrier, payment, or operational changes. Continued use after an update means you accept the updated Terms.</li>
         </ul>
       </section>
     </div>
