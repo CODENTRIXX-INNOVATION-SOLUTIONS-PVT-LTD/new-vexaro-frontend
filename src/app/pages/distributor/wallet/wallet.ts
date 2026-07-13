@@ -14,6 +14,14 @@ export interface RazorpayPaymentRecord {
   reference: string;
 }
 
+interface WalletTopupPolicy {
+  phase: 'training_first_topup' | 'reserve_completion_topup' | 'standard';
+  minAmount: number;
+  maxAmount: number | null;
+  message: string | null;
+  reserveEstablished: boolean;
+}
+
 @Component({
   selector: 'app-distributor-wallet',
   standalone: true,
@@ -29,6 +37,7 @@ export class DistributorWallet implements OnInit {
   balance: number = 0;
   reservedBalance = 0;
   availableBalance = 0;
+  topupPolicy: WalletTopupPolicy | null = null;
 
   // Top-up form
   packages = [2500, 5000, 10000, 25000, 50000, 100000];
@@ -73,6 +82,8 @@ export class DistributorWallet implements OnInit {
           this.balance = res.data.balance ?? 0;
           this.reservedBalance = res.data.reservedBalance ?? 0;
           this.availableBalance = res.data.availableBalance ?? 0;
+          this.topupPolicy = res.data.topupPolicy ?? null;
+          this.applyTopupPolicyOptions();
         }
       },
       error: (err) => console.error('Wallet load failed', err),
@@ -176,6 +187,12 @@ export class DistributorWallet implements OnInit {
       this.errorMessage = 'Minimum top-up amount is ₹100.';
       return;
     }
+
+    const policyError = this.getTopupValidationError(amount);
+    if (policyError) {
+      this.errorMessage = policyError;
+      return;
+    }
     
     this.isProcessing = true;
     this.successMessage = '';
@@ -193,6 +210,7 @@ export class DistributorWallet implements OnInit {
       this.paymentsLoading = false;
       this.transactions = [];
       this.txLoading = false;
+      this.loadWallet();
       this.loadPaymentHistory();
       this.loadTransactions();
     } catch (err: any) {
@@ -208,6 +226,11 @@ export class DistributorWallet implements OnInit {
   submitRechargeRequest(): void {
     if (!this.selectedPackage) {
       this.errorMessage = 'Please select a recharge amount.';
+      return;
+    }
+    const policyError = this.getTopupValidationError(this.selectedPackage);
+    if (policyError) {
+      this.errorMessage = policyError;
       return;
     }
     this.requestLoading = true;
@@ -270,6 +293,48 @@ export class DistributorWallet implements OnInit {
 
   get totalTopupAmount(): number {
     return this.payments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
+  }
+
+  get minTopupAmount(): number {
+    return this.topupPolicy?.minAmount ?? 100;
+  }
+
+  get maxTopupAmount(): number | null {
+    return this.topupPolicy?.maxAmount ?? null;
+  }
+
+  get topupPolicyMessage(): string {
+    return this.topupPolicy?.message ?? '';
+  }
+
+  private applyTopupPolicyOptions(): void {
+    if (this.topupPolicy?.phase === 'training_first_topup') {
+      this.packages = [200, 500, 1000, 2000];
+      this.customAmounts = [200, 500, 1000, 2000];
+    } else if (this.topupPolicy?.phase === 'reserve_completion_topup') {
+      const min = Math.max(1, this.topupPolicy.minAmount || 1);
+      this.packages = Array.from(new Set([min, 2500, 5000, 10000, 25000, 50000, 100000]))
+        .filter((amount) => amount >= min);
+      this.customAmounts = Array.from(new Set([min, 1000, 2000, 5000]))
+        .filter((amount) => amount >= min);
+    } else {
+      this.packages = [2500, 5000, 10000, 25000, 50000, 100000];
+      this.customAmounts = [100, 200, 500, 1000];
+    }
+
+    if (this.selectedPackage && this.getTopupValidationError(this.selectedPackage)) {
+      this.selectedPackage = null;
+    }
+  }
+
+  private getTopupValidationError(amount: number): string {
+    if (amount < this.minTopupAmount) {
+      return this.topupPolicyMessage || `Minimum top-up amount is INR ${this.minTopupAmount.toLocaleString('en-IN')}.`;
+    }
+    if (this.maxTopupAmount && amount > this.maxTopupAmount) {
+      return `First training top-up cannot be more than INR ${this.maxTopupAmount.toLocaleString('en-IN')}.`;
+    }
+    return '';
   }
 
   private formatDateTime(value: string): string {

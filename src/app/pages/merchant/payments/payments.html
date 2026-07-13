@@ -121,6 +121,11 @@
       {{ topupError }}
     </div>
     }
+    @if (topupPolicyMessage) {
+    <div style="background:#fff7ed;border-left:4px solid #f97316;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#9a3412;">
+      {{ topupPolicyMessage }}
+    </div>
+    }
 
     <label class="form-label">Select Amount</label>
     <div class="packages-grid">
@@ -143,7 +148,7 @@
         <option [ngValue]="'custom'">Other amount</option>
       </select>
       @if (customAmount === 'custom') {
-      <input type="number" [(ngModel)]="customAmountNumber" min="100" placeholder="Enter custom amount" class="form-input" style="margin-top:10px;" (input)="topupError='';topupSuccess=''" />
+      <input type="number" [(ngModel)]="customAmountNumber" [min]="minTopupAmount" [max]="maxTopupAmount || null" placeholder="Enter custom amount" class="form-input" style="margin-top:10px;" (input)="topupError='';topupSuccess=''" />
       }
     </div>
     }
@@ -225,11 +230,16 @@
     @if (distRequestError) {
     <div class="alert-error-box"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>{{ distRequestError }}</div>
     }
+    @if (topupPolicyMessage) {
+    <div style="background:#fff7ed;border-left:4px solid #f97316;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#9a3412;">
+      {{ topupPolicyMessage }}
+    </div>
+    }
 
     <div class="form-row-2">
       <div class="form-group">
         <label class="form-label">Amount (₹) <span style="color:#ef4444;">*</span></label>
-        <input type="number" [(ngModel)]="distRequestAmount" min="1" placeholder="e.g. 5000" class="form-input" />
+        <input type="number" [(ngModel)]="distRequestAmount" [min]="minTopupAmount" [max]="maxTopupAmount || null" placeholder="e.g. 5000" class="form-input" />
       </div>
       <div class="form-group">
         <label class="form-label">Note (optional)</label>

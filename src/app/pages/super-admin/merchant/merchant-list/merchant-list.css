@@ -724,3 +724,31 @@ tbody tr:hover {
     transform: translateY(0);
     box-shadow: none;
 }
+
+.delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    margin-right: 8px;
+    background: white;
+    border: 1.5px solid #fecaca;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.delete-btn:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #f87171;
+}
+
+.delete-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -7,6 +7,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { AddDistributorModal } from '../../../../models/add-distributor-modal/add-distributor-modal';
 import { DistributorCreatedSuccess } from '../../../../models/distributor-created-success/distributor-created-success';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+import { UserService } from '../../../../services/user.service';
 
 @Component({
   selector: 'app-distributor-list',
@@ -17,6 +18,7 @@ import { MerchantService, MerchantUser } from '../../../../services/merchant.ser
 export class DistributorList implements OnInit, OnDestroy {
   private router = inject(Router);
   private merchantService = inject(MerchantService);
+  private userService = inject(UserService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -24,6 +26,7 @@ export class DistributorList implements OnInit, OnDestroy {
   distributors = signal<MerchantUser[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
+  deletingDistributorId = signal<string | null>(null);
 
   // Pagination
   currentPage = signal(1);
@@ -118,6 +121,32 @@ export class DistributorList implements OnInit, OnDestroy {
     this.router.navigate(['/super-admin/distributors/profile', id], {
       queryParams: { tab },
     });
+  }
+
+  deleteDistributor(distributor: MerchantUser, event?: Event): void {
+    event?.stopPropagation();
+    if (this.deletingDistributorId()) return;
+
+    const name = this.getDisplayName(distributor);
+    const confirmed = window.confirm(
+      `Delete distributor "${name}"? This will disable the distributor portal and also delete merchants under this distributor.`,
+    );
+    if (!confirmed) return;
+
+    this.deletingDistributorId.set(distributor.id);
+    this.errorMessage.set('');
+    this.userService.deactivateUser(distributor.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.deletingDistributorId.set(null);
+          this.loadDistributors();
+        },
+        error: (err) => {
+          this.deletingDistributorId.set(null);
+          this.errorMessage.set(err?.error?.message || 'Failed to delete distributor. Please try again.');
+        },
+      });
   }
 
   onDistributorSaved(): void {

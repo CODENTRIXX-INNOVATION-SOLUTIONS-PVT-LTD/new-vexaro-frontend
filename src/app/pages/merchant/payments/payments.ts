@@ -60,6 +60,14 @@ export interface DistributorTopupRequest {
   rejectionReason: string;
 }
 
+interface WalletTopupPolicy {
+  phase: 'training_first_topup' | 'reserve_completion_topup' | 'standard';
+  minAmount: number;
+  maxAmount: number | null;
+  message: string | null;
+  reserveEstablished: boolean;
+}
+
 @Component({
   selector: 'app-payments',
   standalone: true,
@@ -94,6 +102,7 @@ export class Payments implements OnInit, OnDestroy {
   reservedBalance = 0;
   availableBalance = 0;
   codEscrowBalance = 0;
+  topupPolicy: WalletTopupPolicy | null = null;
 
   // ── Razorpay Top-up ───────────────────────────────────────────────────────
   packages = [2500, 5000, 10000, 25000];
@@ -173,6 +182,8 @@ export class Payments implements OnInit, OnDestroy {
             this.codEscrowBalance = res.data.codEscrowBalance ?? 0;
             this.reservedBalance  = res.data.reservedBalance  ?? 0;
             this.availableBalance = res.data.availableBalance ?? 0;
+            this.topupPolicy      = res.data.topupPolicy ?? null;
+            this.applyTopupPolicyOptions();
           }
         },
         error: () => {},
@@ -354,6 +365,12 @@ export class Payments implements OnInit, OnDestroy {
       this.topupError = 'Minimum top-up amount is ₹100.';
       return;
     }
+
+    const policyError = this.getTopupValidationError(amount);
+    if (policyError) {
+      this.topupError = policyError;
+      return;
+    }
     
     this.isPaymentProcessing = true;
     this.topupSuccess = '';
@@ -370,6 +387,7 @@ export class Payments implements OnInit, OnDestroy {
       this.loadTransactions();
       this.razorpayPayments = [];
       this.paymentsLoading  = false;
+      this.loadWalletDetails();
       this.loadRazorpayPayments();
     } catch (err: any) {
       this.topupError = err?.error?.message || err?.message || 'Payment could not be completed.';
@@ -383,6 +401,11 @@ export class Payments implements OnInit, OnDestroy {
   submitDistributorRequest(): void {
     if (!this.distRequestAmount || this.distRequestAmount <= 0) {
       this.distRequestError = 'Please enter a valid amount.';
+      return;
+    }
+    const policyError = this.getTopupValidationError(this.distRequestAmount);
+    if (policyError) {
+      this.distRequestError = policyError;
       return;
     }
     this.distRequestSubmitting = true;
@@ -509,6 +532,48 @@ export class Payments implements OnInit, OnDestroy {
 
   get totalDisputeDeductions(): number {
     return this.disputes.filter(d => d.status === 'Applied').reduce((s, d) => s + d.deduction, 0);
+  }
+
+  get minTopupAmount(): number {
+    return this.topupPolicy?.minAmount ?? 100;
+  }
+
+  get maxTopupAmount(): number | null {
+    return this.topupPolicy?.maxAmount ?? null;
+  }
+
+  get topupPolicyMessage(): string {
+    return this.topupPolicy?.message ?? '';
+  }
+
+  private applyTopupPolicyOptions(): void {
+    if (this.topupPolicy?.phase === 'training_first_topup') {
+      this.packages = [200, 500, 1000, 2000];
+      this.customAmounts = [200, 500, 1000, 2000];
+    } else if (this.topupPolicy?.phase === 'reserve_completion_topup') {
+      const min = Math.max(1, this.topupPolicy.minAmount || 1);
+      this.packages = Array.from(new Set([min, 2500, 5000, 10000, 25000]))
+        .filter((amount) => amount >= min);
+      this.customAmounts = Array.from(new Set([min, 1000, 2000, 5000]))
+        .filter((amount) => amount >= min);
+    } else {
+      this.packages = [2500, 5000, 10000, 25000];
+      this.customAmounts = [100, 200, 500, 1000];
+    }
+
+    if (this.selectedPackage && this.getTopupValidationError(this.selectedPackage)) {
+      this.selectedPackage = null;
+    }
+  }
+
+  private getTopupValidationError(amount: number): string {
+    if (amount < this.minTopupAmount) {
+      return this.topupPolicyMessage || `Minimum top-up amount is INR ${this.minTopupAmount.toLocaleString('en-IN')}.`;
+    }
+    if (this.maxTopupAmount && amount > this.maxTopupAmount) {
+      return `First training top-up cannot be more than INR ${this.maxTopupAmount.toLocaleString('en-IN')}.`;
+    }
+    return '';
   }
 
   // ── Contest Dispute ───────────────────────────────────────────────────────

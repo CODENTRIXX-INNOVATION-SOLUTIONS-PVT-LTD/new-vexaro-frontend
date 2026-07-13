@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+import { UserService } from '../../../../services/user.service';
 
 @Component({
   selector: 'app-merchants',
@@ -15,6 +16,7 @@ import { MerchantService, MerchantUser } from '../../../../services/merchant.ser
 export class Merchant implements OnInit, OnDestroy {
   private router = inject(Router);
   private merchantService = inject(MerchantService);
+  private userService = inject(UserService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -22,6 +24,7 @@ export class Merchant implements OnInit, OnDestroy {
   merchants = signal<MerchantUser[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
+  deletingMerchantId = signal<string | null>(null);
 
   // Pagination — backend meta keys are: total, page, limit, pages
   currentPage = signal(1);
@@ -130,6 +133,31 @@ export class Merchant implements OnInit, OnDestroy {
   // ── Actions ──────────────────────────────────────────────────────────────────
   viewMerchant(id: string): void {
     this.router.navigate(['/super-admin/merchants/profile', id]);
+  }
+
+  deleteMerchant(merchant: MerchantUser): void {
+    if (this.deletingMerchantId()) return;
+
+    const name = this.getDisplayName(merchant);
+    const confirmed = window.confirm(
+      `Delete merchant "${name}"? This will disable their portal access and remove them from active merchant lists.`,
+    );
+    if (!confirmed) return;
+
+    this.deletingMerchantId.set(merchant.id);
+    this.errorMessage.set('');
+    this.userService.deactivateUser(merchant.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.deletingMerchantId.set(null);
+          this.loadMerchants();
+        },
+        error: (err) => {
+          this.deletingMerchantId.set(null);
+          this.errorMessage.set(err?.error?.message || 'Failed to delete merchant. Please try again.');
+        },
+      });
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────

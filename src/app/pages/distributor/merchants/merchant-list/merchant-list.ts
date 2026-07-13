@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+import { UserService } from '../../../../services/user.service';
 import { PaginationComponent } from '../../../../shared/pagination/pagination';
 
 export interface DistributorMerchant {
@@ -40,12 +41,14 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
   page = 1;
   readonly limit = 20;
   total = 0;
+  deletingMerchantId: string | null = null;
 
   get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
   constructor(
     private router: Router,
     private merchantService: MerchantService,
+    private userService: UserService,
   ) {}
 
   ngOnInit() {
@@ -110,6 +113,31 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
 
   viewMerchant(id: string) {
     this.router.navigate(['/distributor/merchants', id]);
+  }
+
+  deleteMerchant(merchant: DistributorMerchant, event?: Event): void {
+    event?.stopPropagation();
+    if (this.deletingMerchantId) return;
+
+    const confirmed = window.confirm(
+      `Delete merchant "${merchant.businessName}"? This will disable their portal access and remove them from active merchant lists.`,
+    );
+    if (!confirmed) return;
+
+    this.deletingMerchantId = merchant.id;
+    this.errorMessage = '';
+    this.userService.deactivateUser(merchant.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.deletingMerchantId = null;
+          this.loadMerchants();
+        },
+        error: (err) => {
+          this.deletingMerchantId = null;
+          this.errorMessage = err?.error?.message || 'Failed to delete merchant. Please try again.';
+        },
+      });
   }
 
   createMerchant() {
