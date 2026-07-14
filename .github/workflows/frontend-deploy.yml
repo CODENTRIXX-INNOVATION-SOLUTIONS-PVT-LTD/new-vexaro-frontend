@@ -14,9 +14,12 @@ concurrency:
 
 jobs:
   deploy:
+    name: Deploy Frontend
     runs-on:
       - self-hosted
-      - frontend-runner
+      - Linux
+      - X64
+      - frontend
 
     defaults:
       run:
@@ -26,11 +29,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Update Frontend
+      - name: Update Frontend Code
         run: |
           cd /var/www/vexaro/new-vexaro-frontend
           git fetch origin
-          git reset --hard origin/main
+          git reset --hard origin/master
 
       - name: Install Dependencies
         run: |
@@ -49,4 +52,4 @@ jobs:
       - name: Verify Website
         run: |
           sleep 5
-          curl -f http://localhost/ || exit 1
+          curl -f http://localhost || exit 1
