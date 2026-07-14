@@ -52,4 +52,12 @@ jobs:
       - name: Verify Website
         run: |
           sleep 5
-          curl -f http://localhost || exit 1
+
+          STATUS=$(curl -k -o /dev/null -s -w "%{http_code}" https://courier.vexarocouriersolutions.com)
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Website returned HTTP $STATUS"
+            exit 1
+          fi
+
+          echo "✅ Frontend deployed successfully."
