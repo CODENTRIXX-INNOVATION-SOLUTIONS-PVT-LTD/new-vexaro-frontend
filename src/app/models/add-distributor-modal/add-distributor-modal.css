@@ -64,6 +64,9 @@
 
     background: #f1f5f9;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
     transition: .3s;
 }

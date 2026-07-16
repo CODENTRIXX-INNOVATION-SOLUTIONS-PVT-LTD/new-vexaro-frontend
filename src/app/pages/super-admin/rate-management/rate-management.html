@@ -25,10 +25,6 @@
       <span class="material-icons">line_weight</span>
       Weight Slabs
     </button>
-    <button [class.active]="activeTab() === 'cod'" (click)="activeTab.set('cod')">
-      <span class="material-icons">percent</span>
-      COD & Fuel Surcharges
-    </button>
   </div>
 
   <!-- TAB CONTENT: RATES -->
@@ -242,29 +238,6 @@
           </div>
         </div>
       }
-    </div>
-  }
-
-  <!-- TAB CONTENT: COD & FUEL -->
-  @if (activeTab() === 'cod') {
-    <div class="tab-content-panel animated-fade">
-      <div class="card info-card">
-        <div class="card-header">
-          <h3>Rate Card Configuration Info</h3>
-        </div>
-        <div class="card-body formula-body">
-          <p>COD and Fuel surcharge settings are now configured per rate card in the "Courier Rate Cards" tab.</p>
-          <div class="formula-box">
-            <code>Total Shipping Cost = Base Rate + (Weight × Rate per kg) + Fuel Surcharge (%) + COD Charges</code>
-          </div>
-          <ul class="formula-list">
-            <li>Weight slabs are configured per rate card with upper weight limits.</li>
-            <li>Fuel surcharge is a percentage added to the base shipping cost.</li>
-            <li>COD charges include a flat fee plus percentage of COD amount.</li>
-            <li>Super Admin markup percentage is applied when pricing to distributors.</li>
-          </ul>
-        </div>
-      </div>
     </div>
   }
 </div>

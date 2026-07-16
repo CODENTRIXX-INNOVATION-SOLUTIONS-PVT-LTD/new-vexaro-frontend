@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../services/user.service';
+import { getUserFriendlyError } from '../../shared/user-facing-error';
 
 @Component({
   selector: 'app-add-distributor-modal',
@@ -59,13 +60,8 @@ export class AddDistributorModal {
       },
       error: (err) => {
         this.isSaving = false;
-        
-        let errorMsg = err.error?.message || 'An error occurred while inviting the distributor.';
-        if (err.error?.errors && Array.isArray(err.error.errors)) {
-          errorMsg = err.error.errors.map((e: any) => `${e.field}: ${e.message}`).join(' | ');
-        }
-        
-        this.errorMessage = errorMsg;
+
+        this.errorMessage = getUserFriendlyError(err, 'We could not invite this distributor. Please check the details and try again.');
         console.error('Invite Distributor Error Details:', err.error);
       }
     });

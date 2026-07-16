@@ -2,6 +2,7 @@ import { Component, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { AuthService } from "../services/auth.service"; // <-- Update the path if needed
+import { getUserFriendlyError } from "../shared/user-facing-error";
 
 @Component({
   selector: "app-login",
@@ -64,9 +65,8 @@ export class LoginComponent {
 
       error: (error) => {
         this.isLoading.set(false);
-        console.log(error)
         this.errorMessage.set(
-          error?.error?.message || "Invalid email or password."
+          getUserFriendlyError(error, "Invalid email or password.")
         );
       },
     });

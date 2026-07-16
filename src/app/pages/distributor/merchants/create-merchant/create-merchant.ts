@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { UserService } from '../../../../services/user.service';
+import { getUserFriendlyError } from '../../../../shared/user-facing-error';
 
 @Component({
   selector: 'app-create-merchant',
@@ -123,12 +124,9 @@ export class CreateMerchant {
         setTimeout(() => this.router.navigate(this.merchantListRoute), 2000);
       },
       error: (err) => {
-        let msg = err.error?.message || 'Failed to invite merchant. Please try again.';
-        if (err.error?.errors && Array.isArray(err.error.errors)) {
-          msg = err.error.errors.map((e: any) => `${e.field}: ${e.message}`).join(' | ');
-        }
+        let msg = getUserFriendlyError(err, 'We could not invite this merchant. Please check the details and try again.');
         if (err.status === 409) {
-          msg = `${msg} Use a different email address, or check the Merchant List for this existing merchant.`;
+          msg = 'This merchant may already exist. Please use a different email address or check the Merchant List.';
         }
         this.errorMessage = msg;
         console.error('Create Merchant Error:', err.error);

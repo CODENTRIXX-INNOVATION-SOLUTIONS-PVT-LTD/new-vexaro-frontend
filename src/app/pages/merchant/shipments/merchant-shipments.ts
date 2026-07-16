@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 import { ShipmentService } from '../../../services/shipment.service';
 import { AuthService } from '../../../services/auth.service';
 import { MerchantService, MerchantWarehouse } from '../../../services/merchant.service';
+import { getUserFriendlyError } from '../../../shared/user-facing-error';
 
 @Component({
   selector: 'app-merchant-shipments',
@@ -441,7 +442,7 @@ export class MerchantShipments implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load warehouses:', err);
-        this.errorMessage = err.error?.message || 'Failed to load warehouse details.';
+        this.errorMessage = getUserFriendlyError(err, 'Failed to load warehouse details.');
       }
     });
   }
@@ -583,13 +584,13 @@ export class MerchantShipments implements OnInit {
               logo:  'fas fa-truck-fast',
               color: '#1e293b',
             }));
-            this.errorMessage = err.error?.message || err.message || 'Could not fetch live carrier rates. Charges will be calculated at booking.';
+            this.errorMessage = getUserFriendlyError(err, 'Could not fetch live carrier rates. Charges will be calculated at booking.');
           },
         });
       },
       error: (err) => {
         this.isLoadingRates.set(false);
-        this.errorMessage = err.error?.message || 'Failed to check serviceability.';
+        this.errorMessage = getUserFriendlyError(err, 'Failed to check serviceability.');
       },
     });
   }
@@ -649,7 +650,7 @@ export class MerchantShipments implements OnInit {
         this.errorMessage = `Shipment ${data.awb || ''} booked successfully via ${data.carrier || selected.name}!`;
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to create shipment. Please try again.';
+        this.errorMessage = getUserFriendlyError(err, 'Failed to create shipment. Please try again.');
       },
     });
   }
@@ -726,7 +727,7 @@ export class MerchantShipments implements OnInit {
         this.loadStats();
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Failed to cancel shipment.';
+        this.errorMessage = getUserFriendlyError(err, 'Failed to cancel shipment.');
         this.shipmentActionError = this.errorMessage;
       },
     });
@@ -786,7 +787,7 @@ export class MerchantShipments implements OnInit {
         this.loadStats();
       },
       error: (err) => {
-        this.shipmentActionError = err.error?.message || 'Failed to request delivery reattempt.';
+        this.shipmentActionError = getUserFriendlyError(err, 'Failed to request delivery reattempt.');
       },
     });
   }
@@ -805,7 +806,7 @@ export class MerchantShipments implements OnInit {
         this.loadStats();
       },
       error: (err) => {
-        this.shipmentActionError = err.error?.message || 'Failed to initiate RTO.';
+        this.shipmentActionError = getUserFriendlyError(err, 'Failed to initiate RTO.');
       },
     });
   }
@@ -1049,7 +1050,7 @@ export class MerchantShipments implements OnInit {
         }, 1500);
       },
       error: (err) => {
-        this.shipmentActionError = err.error?.message || 'Failed to book reverse pickup.';
+        this.shipmentActionError = getUserFriendlyError(err, 'Failed to book reverse pickup.');
       }
     });
   }

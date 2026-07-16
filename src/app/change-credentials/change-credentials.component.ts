@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { getUserFriendlyError } from '../shared/user-facing-error';
 
 @Component({
   selector: 'app-change-credentials',
@@ -117,7 +118,7 @@ export class ChangeCredentialsComponent {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(err?.error?.message || 'Failed to update credentials. Please try again.');
+        this.errorMessage.set(getUserFriendlyError(err, 'Failed to update credentials. Please try again.'));
       },
     });
   }

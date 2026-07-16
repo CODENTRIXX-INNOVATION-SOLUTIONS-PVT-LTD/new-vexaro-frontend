@@ -654,31 +654,6 @@
                     </div>
                 </div>
 
-                <!-- Price Breakdown Card -->
-                @if(selectedCourierIndex() >= 0 && couriers[selectedCourierIndex()]) {
-                <div class="summary-details-card" style="margin-top: 16px;">
-                    <h4 style="margin-bottom: 12px; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 6px;">Price Breakdown</h4>
-                    <div class="price-breakdown-grid">
-                        <div class="price-breakdown-item">
-                            <span class="price-label">Carrier Cost</span>
-                            <span class="price-value">₹{{ couriers[selectedCourierIndex()].carrierCost | number:'1.2-2' }}</span>
-                        </div>
-                        <div class="price-breakdown-item">
-                            <span class="price-label">Super Admin Markup</span>
-                            <span class="price-value" style="color: #16a34a;">+ ₹{{ couriers[selectedCourierIndex()].vexaroProfit | number:'1.2-2' }}</span>
-                        </div>
-                        <div class="price-breakdown-item">
-                            <span class="price-label">Distributor Margin</span>
-                            <span class="price-value" style="color: #16a34a;">+ ₹{{ couriers[selectedCourierIndex()].distributorProfit | number:'1.2-2' }}</span>
-                        </div>
-                        <div class="price-breakdown-item" style="border-top: 2px solid #0b4a6f; padding-top: 8px; margin-top: 8px;">
-                            <span class="price-label" style="font-weight: 700; color: #0b4a6f;">Final Price (You Pay)</span>
-                            <span class="price-value" style="font-weight: 700; color: #0b4a6f; font-size: 16px;">₹{{ couriers[selectedCourierIndex()].merchantCost | number:'1.2-2' }}</span>
-                        </div>
-                    </div>
-                </div>
-                }
-
                 <!-- Courier Selection List -->
                 <div class="couriers-section">
                     <h4>Select Courier & Service</h4>

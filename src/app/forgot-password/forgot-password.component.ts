@@ -2,6 +2,7 @@ import { Component, signal, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 import { AuthService } from "../services/auth.service";
+import { getUserFriendlyError } from "../shared/user-facing-error";
 
 @Component({
   selector: "app-forgot-password",
@@ -43,7 +44,7 @@ export class ForgotPasswordComponent {
         this.isLoading.set(false);
         // Surface a meaningful message if the API returns one, otherwise
         // fall back to the neutral success message so as not to leak info.
-        const serverMsg: string = err?.error?.message ?? "";
+        const serverMsg = getUserFriendlyError(err, "");
         if (serverMsg) {
           this.errorMessage.set(serverMsg);
         } else {

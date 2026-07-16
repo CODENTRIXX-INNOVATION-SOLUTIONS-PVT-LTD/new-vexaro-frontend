@@ -5,6 +5,7 @@ import { Observable, forkJoin, map, catchError, of } from 'rxjs';
 export interface DashboardStats {
   totalShipments: number;
   activeDistributors: number;
+  cashPool: number | null;
   pendingDisputes: number;
 }
 
@@ -48,6 +49,8 @@ export class DashboardService {
       { params: new HttpParams().set('role', 'DISTRIBUTOR').set('limit', '1') }
     );
 
+    const wallet$ = this.http.get<any>(`${this.baseUrl}/finance/wallet`);
+
     const disputes$ = this.http.get<any>(
       `${this.baseUrl}/disputes`,
       { params: new HttpParams().set('limit', '1') }
@@ -58,11 +61,13 @@ export class DashboardService {
     return forkJoin([
       shipments$.pipe(catchError(() => of(null))),
       distributors$.pipe(catchError(() => of(null))),
+      wallet$.pipe(catchError(() => of(null))),
       disputes$.pipe(catchError(() => of(null))),
     ]).pipe(
-      map(([shipmentsRes, distributorsRes, disputesRes]) => ({
+      map(([shipmentsRes, distributorsRes, walletRes, disputesRes]) => ({
         totalShipments:     shipmentsRes?.data?.total    ?? 0,
         activeDistributors: distributorsRes?.meta?.total ?? 0,
+        cashPool:           walletRes?.data?.balance ?? null,
         pendingDisputes:    disputesRes?.meta?.total     ?? 0,
       }))
     );

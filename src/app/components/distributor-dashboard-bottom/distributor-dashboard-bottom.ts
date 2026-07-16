@@ -57,19 +57,24 @@ export class DistributorDashboardBottom implements OnInit {
 
     const wallet$ = this.http.get<any>(`${this.baseUrl}/finance/wallet`).pipe(catchError(() => of(null)));
 
+    const commission$ = this.http.get<any>(`${this.baseUrl}/finance/commission`, {
+      params: new HttpParams().set('limit', '100'),
+    }).pipe(catchError(() => of(null)));
+
     const disputes$ = this.http.get<any>(`${this.baseUrl}/disputes`, {
       params: new HttpParams().set('limit', '1').set('status', 'OPEN'),
     }).pipe(catchError(() => of(null)));
 
-    forkJoin([transactions$, merchants$, wallet$, disputes$]).subscribe({
-      next: ([txRes, merchantsRes, walletRes, disputesRes]) => {
+    forkJoin([transactions$, merchants$, wallet$, commission$, disputes$]).subscribe({
+      next: ([txRes, merchantsRes, walletRes, commissionRes, disputesRes]) => {
         // ── Franchise Summary ─────────────────────────────────────────────
         const allMerchants: any[] = merchantsRes?.data?.users ?? [];
         this.summary.totalMerchants = merchantsRes?.meta?.total ?? allMerchants.length;
         this.summary.activeMerchants = allMerchants.filter(m => m.isActive).length;
         this.summary.totalRevenue = walletRes?.data?.balance ?? 0;
         this.summary.openDisputes = disputesRes?.meta?.total ?? 0;
-        this.summary.totalProfit = 0;
+        const commissions: any[] = commissionRes?.data?.commissions ?? [];
+        this.summary.totalProfit = commissions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
         // Build a map of merchant details keyed by user ID
         const merchantMap = new Map<string, any>();

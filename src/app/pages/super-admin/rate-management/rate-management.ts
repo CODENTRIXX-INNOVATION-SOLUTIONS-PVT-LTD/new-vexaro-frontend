@@ -32,7 +32,7 @@ interface RateCard {
   styleUrl: "./rate-management.css",
 })
 export class RateManagement implements OnInit {
-  activeTab = signal<"rates" | "slabs" | "cod">("rates");
+  activeTab = signal<"rates" | "slabs">("rates");
   private rateService = inject(RateService);
   
   rateCards = signal<RateCard[]>([]);

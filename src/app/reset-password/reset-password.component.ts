@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../services/auth.service';
+import { getUserFriendlyError } from '../shared/user-facing-error';
 
 @Component({
   selector: 'app-reset-password',
@@ -37,6 +38,34 @@ export class ResetPasswordComponent implements OnInit {
   // True when the token is missing or clearly invalid before we even submit
   invalidToken = signal(false);
 
+  private getPasswordErrors(password: string): string[] {
+    const errors: string[] = [];
+    if (password.length < 12) errors.push('make it at least 12 characters long');
+    if (!/[A-Z]/.test(password)) errors.push('add one uppercase letter');
+    if (!/[a-z]/.test(password)) errors.push('add one lowercase letter');
+    if (!/[0-9]/.test(password)) errors.push('add one number');
+    if (!/[^A-Za-z0-9\s]/.test(password)) errors.push('add one symbol, such as @, #, or !');
+    if (/\s/.test(password)) errors.push('remove any spaces');
+    return errors;
+  }
+
+  get passwordValid(): boolean {
+    return this.newPassword.length > 0 && this.getPasswordErrors(this.newPassword).length === 0;
+  }
+
+  passwordHelpText(): string {
+    if (!this.newPassword) {
+      return '';
+    }
+
+    const errors = this.getPasswordErrors(this.newPassword);
+    if (!errors.length) {
+      return 'Password looks good.';
+    }
+
+    return `Please ${errors.join(', ')}.`;
+  }
+
   ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -57,23 +86,15 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
-    if (pass.length < 6) {
+    const errors = this.getPasswordErrors(pass);
+    if (errors.length) {
       this.passwordStrength.set('weak');
       this.passwordStrengthClass.set('weak');
-    } else {
-      const hasNumber = /[0-9]/.test(pass);
-      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
-      const hasUpper = /[A-Z]/.test(pass);
-      const hasLower = /[a-z]/.test(pass);
-
-      if (pass.length >= 8 && hasNumber && hasSpecial && hasUpper && hasLower) {
-        this.passwordStrength.set('strong');
-        this.passwordStrengthClass.set('strong');
-      } else {
-        this.passwordStrength.set('fair');
-        this.passwordStrengthClass.set('fair');
-      }
+      return;
     }
+
+    this.passwordStrength.set('strong');
+    this.passwordStrengthClass.set('strong');
   }
 
   toggleNewPassword(): void {
@@ -93,7 +114,9 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
-    if (this.passwordStrength() === 'weak' || !this.newPassword) {
+    const passwordErrors = this.getPasswordErrors(this.newPassword);
+    if (passwordErrors.length) {
+      this.errorMessage.set(`Please update your password: ${passwordErrors.join(', ')}.`);
       return;
     }
 
@@ -107,14 +130,10 @@ export class ResetPasswordComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        const msg: string = err?.error?.message ?? '';
-        if (msg) {
-          this.errorMessage.set(msg);
-        } else if (err?.status === 400 || err?.status === 401) {
-          this.errorMessage.set('This reset link is invalid or has expired. Please request a new one.');
-        } else {
-          this.errorMessage.set('Something went wrong. Please try again.');
-        }
+        const fallback = err?.status === 400 || err?.status === 401
+          ? 'This reset link is invalid, expired, or already used. Please request a new link.'
+          : 'We could not update your password right now. Please try again in a moment.';
+        this.errorMessage.set(getUserFriendlyError(err, fallback));
       },
     });
   }

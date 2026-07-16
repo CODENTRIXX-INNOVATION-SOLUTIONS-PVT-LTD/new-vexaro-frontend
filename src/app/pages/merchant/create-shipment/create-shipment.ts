@@ -8,6 +8,7 @@ import {
   MerchantWarehouse,
 } from "../../../services/merchant.service";
 import { ShipmentService } from "../../../services/shipment.service";
+import { getUserFriendlyError } from "../../../shared/user-facing-error";
 
 @Component({
   selector: "app-create-shipment",
@@ -156,7 +157,7 @@ export class CreateShipment implements OnInit {
       error: (err) => {
         console.error("Failed to load warehouses:", err);
         this.errorMessage =
-          err.error?.message || "Failed to load warehouse details.";
+          getUserFriendlyError(err, "Failed to load warehouse details.");
       },
     });
   }
@@ -388,17 +389,14 @@ export class CreateShipment implements OnInit {
                 this.isLoadingRates.set(false);
                 this.couriers = [];
                 this.errorMessage =
-                  err.error?.message ||
-                  err.message ||
-                  "Could not fetch live Velocity rates. Booking is blocked until a live priced courier is available.";
+                  getUserFriendlyError(err, "Could not fetch live courier rates. Booking is blocked until a live priced courier is available.");
               },
             });
         },
         error: (err) => {
           this.isLoadingRates.set(false);
           this.errorMessage =
-            err.error?.message ||
-            "Failed to check serviceability. Please try again.";
+            getUserFriendlyError(err, "Failed to check serviceability. Please try again.");
         },
       });
   }
@@ -472,8 +470,7 @@ export class CreateShipment implements OnInit {
         },
         error: (err) => {
           this.errorMessage =
-            err.error?.message ||
-            "Failed to create shipment. Please try again.";
+            getUserFriendlyError(err, "Failed to create shipment. Please try again.");
         },
       });
   }

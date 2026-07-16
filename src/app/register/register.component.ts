@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { getUserFriendlyError } from '../shared/user-facing-error';
 
 @Component({
   selector: 'app-register',
@@ -39,6 +40,17 @@ export class RegisterComponent implements OnInit {
     MERCHANT:    'Merchant',
   };
 
+  private getPasswordErrors(password: string): string[] {
+    const errors: string[] = [];
+    if (password.length < 12) errors.push('make it at least 12 characters long');
+    if (!/[A-Z]/.test(password)) errors.push('add one uppercase letter');
+    if (!/[a-z]/.test(password)) errors.push('add one lowercase letter');
+    if (!/[0-9]/.test(password)) errors.push('add one number');
+    if (!/[^A-Za-z0-9\s]/.test(password)) errors.push('add one symbol, such as @, #, or !');
+    if (/\s/.test(password)) errors.push('remove any spaces');
+    return errors;
+  }
+
   get roleLabel(): string {
     return this.roleLabels[this.inviteeRole()] ?? this.inviteeRole();
   }
@@ -46,16 +58,7 @@ export class RegisterComponent implements OnInit {
   get passwordStrength(): 'weak' | 'fair' | 'strong' | '' {
     const p = this.password;
     if (!p) return '';
-    const score = [
-      /[A-Z]/.test(p),
-      /[a-z]/.test(p),
-      /[0-9]/.test(p),
-      /[^A-Za-z0-9]/.test(p),
-      p.length >= 8,
-    ].filter(Boolean).length;
-    if (score <= 2) return 'weak';
-    if (score <= 3) return 'fair';
-    return 'strong';
+    return this.getPasswordErrors(p).length ? 'weak' : 'strong';
   }
 
   ngOnInit(): void {
@@ -86,9 +89,7 @@ export class RegisterComponent implements OnInit {
         error: (err) => {
           this.isLoading.set(false);
           this.tokenValid.set(false);
-          // Surface the server error message so user knows if link expired vs invalid
-          const msg = err?.error?.message || 'This invite link is invalid or has expired.';
-          this.errorMessage.set(msg);
+          this.errorMessage.set(getUserFriendlyError(err, 'This invite link is invalid or has expired.'));
         },
       });
     });
@@ -104,16 +105,13 @@ export class RegisterComponent implements OnInit {
       this.errorMessage.set('Please enter and confirm your password.');
       return;
     }
-    if (this.password.length < 8) {
-      this.errorMessage.set('Password must be at least 8 characters.');
-      return;
-    }
-    if (this.passwordStrength === 'weak') {
-      this.errorMessage.set('Please choose a stronger password.');
+    const passwordErrors = this.getPasswordErrors(this.password);
+    if (passwordErrors.length) {
+      this.errorMessage.set(`Please update your password: ${passwordErrors.join(', ')}.`);
       return;
     }
     if (this.password !== this.confirmPassword) {
-      this.errorMessage.set('Passwords do not match.');
+      this.errorMessage.set('The two passwords do not match. Please type the same password in both fields.');
       return;
     }
 
@@ -122,7 +120,7 @@ export class RegisterComponent implements OnInit {
     this.authService.setPassword(this.token(), this.password).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        this.successMessage.set('Account activated! Redirecting to your dashboard...');
+        this.successMessage.set('Your account is ready. We are taking you to your dashboard.');
 
         const data = res.data;
 
@@ -159,11 +157,7 @@ export class RegisterComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        let errorMsg = err.error?.message || 'An error occurred while setting the password.';
-        if (err.error?.errors && Array.isArray(err.error.errors)) {
-          errorMsg = err.error.errors.map((e: any) => `${e.field}: ${e.message}`).join(' | ');
-        }
-        this.errorMessage.set(errorMsg);
+        this.errorMessage.set(getUserFriendlyError(err, 'Please choose a stronger password and try again.'));
       },
     });
   }

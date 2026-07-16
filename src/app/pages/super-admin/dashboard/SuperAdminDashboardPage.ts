@@ -91,8 +91,10 @@ export class SuperAdminDashboardPage implements OnInit {
         // Card 1 — Active Distributors
         this.cards[1].value = stats.activeDistributors.toLocaleString('en-IN');
 
-        // Card 2 — Cash Pool: no backend endpoint yet, keep placeholder
-        this.cards[2].value = '—';
+        // Card 2 - Cash Pool
+        this.cards[2].value = stats.cashPool !== null
+          ? `Rs ${stats.cashPool.toLocaleString('en-IN')}`
+          : 'Unavailable';
 
         // Card 3 — Disputes
         this.cards[3].value = stats.pendingDisputes.toLocaleString('en-IN');
@@ -100,7 +102,7 @@ export class SuperAdminDashboardPage implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        // On failure keep '0' so no broken UI — card 2 (Cash Pool) stays '—' always
+        // On failure keep the existing safe values so the dashboard still renders.
         this.isLoading.set(false);
         this.hasError.set(true);
       },
