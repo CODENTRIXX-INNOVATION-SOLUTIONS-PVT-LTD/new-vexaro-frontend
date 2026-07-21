@@ -73,6 +73,14 @@ export class ShipmentService {
     return this.http.post<any>(`${this.baseUrl}/shipments/serviceability`, payload);
   }
 
+  validatePincodeLocation(payload: {
+    pincode: string;
+    state: string;
+    city: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/shipments/pincode/validate`, payload);
+  }
+
   getStats(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/shipments/stats`);
   }

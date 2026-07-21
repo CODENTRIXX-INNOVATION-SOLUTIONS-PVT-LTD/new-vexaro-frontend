@@ -41,6 +41,8 @@ jobs:
           npm ci
 
       - name: Build Angular
+        env:
+          VEXARO_API_URL: /api/v1
         run: |
           cd /var/www/vexaro/new-vexaro-frontend
           npm run build
