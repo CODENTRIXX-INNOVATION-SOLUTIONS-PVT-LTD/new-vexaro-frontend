@@ -9,6 +9,7 @@ import {
 } from "../../../services/merchant.service";
 import { ShipmentService } from "../../../services/shipment.service";
 import { getUserFriendlyError } from "../../../shared/user-facing-error";
+import { INDIA_STATE_OPTIONS, IndiaStateOption } from "./india-location-options";
 
 @Component({
   selector: "app-create-shipment",
@@ -30,6 +31,7 @@ export class CreateShipment implements OnInit {
 
   currentStep = signal(1);
   isLoadingRates = signal(false);
+  isValidatingPincode = signal(false);
   isSubmitting = signal(false);
   errorMessage = "";
 
@@ -65,6 +67,11 @@ export class CreateShipment implements OnInit {
   receiverPincode = "";
   receiverCity = "";
   receiverState = "";
+  receiverStateName = "";
+  readonly receiverCountries = ["India"];
+  readonly receiverStates: IndiaStateOption[] = INDIA_STATE_OPTIONS;
+  receiverCities: string[] = [];
+  private verifiedReceiverPincodeKey = "";
 
   updateReceiverAddress(): void {
     this.receiverAddress =
@@ -72,6 +79,31 @@ export class CreateShipment implements OnInit {
       (this.receiverAddressLine2.trim()
         ? ", " + this.receiverAddressLine2.trim()
         : "");
+  }
+
+  onReceiverStateChange(stateName: string): void {
+    const selectedState = this.receiverStates.find(
+      (state) => state.name === stateName,
+    );
+    this.receiverStateName = stateName;
+    this.receiverState = selectedState?.name || "";
+    this.receiverCity = "";
+    this.receiverPincode = "";
+    this.receiverCities = selectedState ? [...selectedState.cities] : [];
+    this.resetReceiverPincodeValidation();
+  }
+
+  onReceiverCityChange(cityName: string): void {
+    this.receiverCity = cityName;
+    this.receiverPincode = "";
+    this.resetReceiverPincodeValidation();
+  }
+
+  onReceiverPincodeChange(value: string): void {
+    this.receiverPincode = String(value || "")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    this.resetReceiverPincodeValidation();
   }
 
   // ── Step 3: Package details ───────────────────────────────────────────────
@@ -232,8 +264,13 @@ export class CreateShipment implements OnInit {
 
   // ── Step navigation ───────────────────────────────────────────────────────
   nextStep(): void {
+    if (this.isValidatingPincode()) return;
     this.errorMessage = "";
     if (!this.isCurrentStepValid()) return;
+    if (this.currentStep() === 2) {
+      this.validateReceiverPincodeBeforeNext();
+      return;
+    }
     if (this.currentStep() === 3) {
       this.checkServiceability();
     }
@@ -254,7 +291,59 @@ export class CreateShipment implements OnInit {
     }
   }
 
-  // ── Serviceability check (called on Step 3 → 4 transition) ───────────────
+  // Receiver pincode verification
+  private receiverPincodeValidationKey(): string {
+    return [this.receiverPincode, this.receiverState, this.receiverCity]
+      .map((value) => String(value || "").trim().toLowerCase())
+      .join("|");
+  }
+
+  private resetReceiverPincodeValidation(): void {
+    this.verifiedReceiverPincodeKey = "";
+  }
+
+  private validateReceiverPincodeBeforeNext(): void {
+    const validationKey = this.receiverPincodeValidationKey();
+    if (this.verifiedReceiverPincodeKey === validationKey) {
+      this.currentStep.update((s) => s + 1);
+      return;
+    }
+
+    this.isValidatingPincode.set(true);
+    this.shipmentService
+      .validatePincodeLocation({
+        pincode: this.receiverPincode,
+        state: this.receiverState,
+        city: this.receiverCity,
+      })
+      .pipe(finalize(() => this.isValidatingPincode.set(false)))
+      .subscribe({
+        next: (res) => {
+          const data = res.data || res;
+          if (data?.isValid) {
+            this.verifiedReceiverPincodeKey = validationKey;
+            this.currentStep.update((s) => s + 1);
+            return;
+          }
+          this.errorMessage =
+            data?.message ||
+            "Pincode does not match the selected state and city.";
+        },
+        error: (err) => {
+          if (err?.status === 404) {
+            this.errorMessage =
+              "Pincode verification route not found. Please restart/deploy the backend with the latest shipment pincode validation endpoint.";
+            return;
+          }
+          this.errorMessage = getUserFriendlyError(
+            err,
+            "Could not verify pincode. Please try again.",
+          );
+        },
+      });
+  }
+
+  // Serviceability check (called on Step 3 to Step 4 transition)
   checkServiceability(): void {
     this.couriers = [];
     this.selectedCourierIndex.set(0);
@@ -497,6 +586,9 @@ export class CreateShipment implements OnInit {
     this.receiverPincode = "";
     this.receiverCity = "";
     this.receiverState = "";
+    this.receiverStateName = "";
+    this.receiverCities = [];
+    this.resetReceiverPincodeValidation();
     this.merchantOrderRef = "";
     this.isCOD = false;
     this.codAmount = 0;
