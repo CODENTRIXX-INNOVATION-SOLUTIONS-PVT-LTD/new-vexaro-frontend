@@ -815,6 +815,52 @@ export class MerchantShipments implements OnInit {
   viewShipmentDetails(shipment: any): void {
     this.selectedShipment.set(shipment);
     this.showDetailsModal.set(true);
+    if (!shipment?.isReturn && shipment?.id) {
+      this.shipmentService.getCustomerBillSummary(shipment.id).subscribe({
+        next: (res) => {
+          const summary = res.data || res;
+          if (this.selectedShipment()?.id === shipment.id) {
+            this.selectedShipment.set({ ...this.selectedShipment(), customerBillSummary: summary });
+          }
+        },
+        error: () => {
+          // The shipment details remain usable if the private summary cannot load.
+        },
+      });
+    }
+  }
+
+  downloadCustomerBill(shipment: any): void {
+    if (!shipment?.id || this.isShipmentActionLoading()) return;
+    this.shipmentActionError = '';
+    this.isShipmentActionLoading.set(true);
+    this.shipmentService.downloadCustomerBill(shipment.id)
+      .pipe(finalize(() => this.isShipmentActionLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `customer-bill-${shipment.awb}.pdf`;
+          link.click();
+          URL.revokeObjectURL(url);
+        },
+        error: async (err) => {
+          this.shipmentActionError = await this.getCustomerBillDownloadError(err);
+        },
+      });
+  }
+
+  private async getCustomerBillDownloadError(err: any): Promise<string> {
+    if (err?.error instanceof Blob) {
+      try {
+        const payload = JSON.parse(await err.error.text());
+        return payload?.message || 'Failed to download customer bill.';
+      } catch {
+        return 'Failed to download customer bill.';
+      }
+    }
+    return getUserFriendlyError(err, 'Failed to download customer bill.');
   }
 
   closeDetailsModal(): void {

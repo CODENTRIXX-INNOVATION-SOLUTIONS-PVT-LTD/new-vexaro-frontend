@@ -640,6 +640,19 @@
                             </div>
                         </div>
 
+                        @if(selectedShipment().customerBillSummary) {
+                            <div class="info-group-card">
+                                <h4>Private Customer Bill</h4>
+                                <div class="info-grid-2col">
+                                    <div><span class="detail-label">Product price</span><p class="detail-value">₹{{ selectedShipment().customerBillSummary.productAmount | number:'1.2-2' }}</p></div>
+                                    <div><span class="detail-label">Shipping cost</span><p class="detail-value">₹{{ selectedShipment().customerBillSummary.shippingCost | number:'1.2-2' }}</p></div>
+                                    <div><span class="detail-label">Your private markup</span><p class="detail-value">₹{{ selectedShipment().customerBillSummary.merchantMarkup | number:'1.2-2' }}</p></div>
+                                    <div><span class="detail-label">Customer delivery charge</span><p class="detail-value">₹{{ selectedShipment().customerBillSummary.deliveryCharge | number:'1.2-2' }}</p></div>
+                                    <div><span class="detail-label">Customer total payable</span><p class="detail-value amount">₹{{ selectedShipment().customerBillSummary.totalPayable | number:'1.2-2' }}</p></div>
+                                </div>
+                            </div>
+                        }
+
                         <div class="info-group-card">
                             <h4><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> Address Information</h4>
                             <div class="address-split">
@@ -822,6 +835,9 @@
                 <div class="modal-footer-bar">
                     @if (canCancelShipment(selectedShipment())) {
                         <button class="danger-btn" style="background-color: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500; margin-right: auto;" [disabled]="isShipmentActionLoading()" (click)="cancelShipment(selectedShipment().id)">Cancel Shipment</button>
+                    }
+                    @if (!selectedShipment()?.isReturn) {
+                        <button class="primary-btn" type="button" [disabled]="isShipmentActionLoading()" (click)="downloadCustomerBill(selectedShipment())">Download Customer Bill</button>
                     }
                     @if (canReattemptShipment(selectedShipment())) {
                         <button class="primary-btn" type="button" [disabled]="isShipmentActionLoading()" (click)="openNdrForm()">Reattempt Delivery</button>

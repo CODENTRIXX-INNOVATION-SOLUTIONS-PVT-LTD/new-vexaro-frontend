@@ -56,6 +56,11 @@
                 Download Shipping Label
             </a>
             }
+            @if(bookedShipmentId()) {
+            <button type="button" class="primary-btn" (click)="downloadCustomerBill()">
+                Download Customer Bill
+            </button>
+            }
             <button class="primary-btn" (click)="goToShipments()">View All Shipments</button>
             <button class="secondary-btn" (click)="bookAnother()">Book Another</button>
         </div>
@@ -710,14 +715,35 @@
                     </div>
                 </div>
 
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="merchantMarkup">Your private delivery markup</label>
+                    <div class="input-group">
+                        <input id="merchantMarkup" type="number" class="form-control" min="0" max="1000000"
+                            step="0.01" [(ngModel)]="merchantMarkup" placeholder="0.00">
+                        <span class="input-suffix">₹</span>
+                    </div>
+                    <small style="display:block; margin-top:6px; color:#64748b;">
+                        Private to you. Included in the customer delivery charge without changing Vexaro payments.
+                    </small>
+                </div>
+
+                <div class="info-group-card" style="margin-top: 16px;">
+                    <h4>Private customer-bill preview</h4>
+                    <div class="info-grid-2col">
+                        <div><span class="detail-label">Product price</span><p class="detail-value">₹{{ declaredValue | number:'1.2-2' }}</p></div>
+                        <div><span class="detail-label">Delivery charge</span><p class="detail-value">₹{{ customerDeliveryCharge | number:'1.2-2' }}</p></div>
+                        <div><span class="detail-label">Final payable</span><p class="detail-value amount">₹{{ customerPayableAmount | number:'1.2-2' }}</p></div>
+                    </div>
+                </div>
+
                 @if(errorMessage && currentStep() === 4){
                 <div class="form-error" style="margin-top: 12px; margin-bottom: 12px;">{{ errorMessage }}</div>
                 }
 
-                <!-- Total Amount Display -->
+                <!-- Existing Vexaro shipment charge; customer total is previewed above. -->
                 <div class="total-bar">
                     <div>
-                        <span class="total-label">Total Amount</span>
+                        <span class="total-label">Vexaro Shipping Cost</span>
                         <h3 class="total-price">₹{{ totalAmount | number:'1.2-2' }}</h3>
                     </div>
                     <button class="primary-btn create-shipment-btn" (click)="createShipment()"

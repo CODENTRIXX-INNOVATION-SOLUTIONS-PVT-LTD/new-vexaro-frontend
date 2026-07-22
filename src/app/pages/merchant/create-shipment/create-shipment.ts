@@ -41,6 +41,7 @@ export class CreateShipment implements OnInit {
   bookedCarrierAWB = signal("");
   bookedCarrier = signal("");
   bookedLabelUrl = signal<string | null>(null);
+  bookedShipmentId = signal("");
 
   // ── Step 1: Pickup details ────────────────────────────────────────────────
   pickupAddress = "";
@@ -124,6 +125,7 @@ export class CreateShipment implements OnInit {
   discount = 0;
   tax = 0;
   paymentMethod = "Prepaid";
+  merchantMarkup = 0;
 
   updateOrderValue(): void {
     const calculated =
@@ -220,6 +222,14 @@ export class CreateShipment implements OnInit {
 
   get totalAmount(): number {
     return this.couriers[this.selectedCourierIndex()]?.rate || 0;
+  }
+
+  get customerDeliveryCharge(): number {
+    return Number((Number(this.totalAmount) + Number(this.merchantMarkup || 0)).toFixed(2));
+  }
+
+  get customerPayableAmount(): number {
+    return Number((Number(this.declaredValue || 0) + this.customerDeliveryCharge).toFixed(2));
   }
 
   get canSubmitShipment(): boolean {
@@ -507,6 +517,21 @@ export class CreateShipment implements OnInit {
       this.errorMessage = "Please select a live priced courier before booking.";
       return;
     }
+    if (!Number.isFinite(Number(this.merchantMarkup)) || Number(this.merchantMarkup) < 0 || Number(this.merchantMarkup) > 1000000) {
+      this.errorMessage = "Enter a valid merchant markup between ₹0 and ₹10,00,000.";
+      return;
+    }
+    if (!/^\d+(\.\d{1,2})?$/.test(String(this.merchantMarkup))) {
+      this.errorMessage = "Merchant markup can have at most two decimal places.";
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Generate the customer bill for ₹${this.customerPayableAmount.toFixed(2)}?\n\n` +
+      `Product price: ₹${Number(this.declaredValue).toFixed(2)}\n` +
+      `Delivery charge: ₹${this.customerDeliveryCharge.toFixed(2)}`
+    );
+    if (!confirmed) return;
 
     this.updateReceiverAddress();
 
@@ -540,6 +565,7 @@ export class CreateShipment implements OnInit {
       discount: this.discount,
       tax: this.tax,
       merchantOrderRef: this.merchantOrderRef || undefined,
+      merchantMarkup: Number(this.merchantMarkup || 0),
     };
 
     this.isSubmitting.set(true);
@@ -555,6 +581,7 @@ export class CreateShipment implements OnInit {
           this.bookedCarrierAWB.set(data.carrierAWB || "");
           this.bookedCarrier.set(data.carrier || selected.name || "");
           this.bookedLabelUrl.set(data.labelUrl || null);
+          this.bookedShipmentId.set(data._id || data.id || "");
           this.bookingSuccess.set(true);
         },
         error: (err) => {
@@ -568,6 +595,36 @@ export class CreateShipment implements OnInit {
     this.router.navigate(["/merchant/shipments"]);
   }
 
+  downloadCustomerBill(): void {
+    const shipmentId = this.bookedShipmentId();
+    if (!shipmentId) return;
+    this.shipmentService.downloadCustomerBill(shipmentId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `customer-bill-${this.bookedAWB()}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: async (err) => {
+        this.errorMessage = await this.getCustomerBillDownloadError(err);
+      },
+    });
+  }
+
+  private async getCustomerBillDownloadError(err: any): Promise<string> {
+    if (err?.error instanceof Blob) {
+      try {
+        const payload = JSON.parse(await err.error.text());
+        return payload?.message || "Failed to download customer bill.";
+      } catch {
+        return "Failed to download customer bill.";
+      }
+    }
+    return getUserFriendlyError(err, "Failed to download customer bill.");
+  }
+
   bookAnother(): void {
     this.bookingSuccess.set(false);
     this.currentStep.set(1);
@@ -575,6 +632,7 @@ export class CreateShipment implements OnInit {
     this.bookedCarrierAWB.set("");
     this.bookedCarrier.set("");
     this.bookedLabelUrl.set(null);
+    this.bookedShipmentId.set("");
     this.couriers = [];
     this.receiverName = "";
     this.receiverPhone = "";
@@ -606,6 +664,7 @@ export class CreateShipment implements OnInit {
     this.discount = 0;
     this.tax = 0;
     this.paymentMethod = "Prepaid";
+    this.merchantMarkup = 0;
     this.pickupGST = "";
     this.ensureGeneratedReferences();
   }

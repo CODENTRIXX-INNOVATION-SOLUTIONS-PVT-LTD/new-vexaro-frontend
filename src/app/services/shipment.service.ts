@@ -51,6 +51,14 @@ export class ShipmentService {
     return this.http.post<any>(`${this.baseUrl}/shipments`, payload);
   }
 
+  downloadCustomerBill(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/shipments/${id}/customer-bill`, { responseType: 'blob' });
+  }
+
+  getCustomerBillSummary(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/shipments/${id}/customer-bill-summary`);
+  }
+
   createReverseShipment(payload: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/shipments/reverse`, payload);
   }
