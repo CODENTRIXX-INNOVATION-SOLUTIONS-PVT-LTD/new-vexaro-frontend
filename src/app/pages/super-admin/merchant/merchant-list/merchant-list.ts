@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
-import { UserService } from '../../../../services/user.service';
 
 @Component({
   selector: 'app-merchants',
@@ -16,7 +15,6 @@ import { UserService } from '../../../../services/user.service';
 export class Merchant implements OnInit, OnDestroy {
   private router = inject(Router);
   private merchantService = inject(MerchantService);
-  private userService = inject(UserService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -24,7 +22,6 @@ export class Merchant implements OnInit, OnDestroy {
   merchants = signal<MerchantUser[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
-  deletingMerchantId = signal<string | null>(null);
 
   // Pagination — backend meta keys are: total, page, limit, pages
   currentPage = signal(1);
@@ -56,18 +53,27 @@ export class Merchant implements OnInit, OnDestroy {
   /** Active count on the current loaded page. */
   get activeMerchantsOnPage() { return this.merchants().filter(m => m.isActive).length; }
 
-  /** Inactive count on the current loaded page. */
-  get inactiveMerchantsOnPage() { return this.merchants().filter(m => !m.isActive).length; }
+  /** Inactive count on the current loaded page (excluding not activated users). */
+  get inactiveMerchantsOnPage() {
+    return this.merchants().filter(m => !m.isActive && !this.isNotActivated(m)).length;
+  }
+
+  /** Not activated count on the current loaded page. */
+  get notActivatedMerchantsOnPage() { return this.merchants().filter(m => this.isNotActivated(m)).length; }
 
   /**
    * Client-side status filter applied on top of the backend result.
    * When 'All': shows everything.
-   * When 'Active' / 'Inactive': filters the current page rows.
+   * When 'Active': shows only active merchants (excluding not activated).
+   * When 'Inactive': shows only inactive merchants (excluding not activated).
+   * When 'NotActivated': shows merchants who haven't set password or logged in.
    */
   get filteredMerchants(): MerchantUser[] {
     if (this.statusFilter === 'All') return this.merchants();
-    const wantActive = this.statusFilter === 'Active';
-    return this.merchants().filter(m => m.isActive === wantActive);
+    if (this.statusFilter === 'Active') return this.merchants().filter(m => m.isActive && !this.isNotActivated(m));
+    if (this.statusFilter === 'Inactive') return this.merchants().filter(m => !m.isActive && !this.isNotActivated(m));
+    if (this.statusFilter === 'NotActivated') return this.merchants().filter(m => this.isNotActivated(m));
+    return this.merchants();
   }
 
   /** True when status filter is narrowing the visible rows. */
@@ -135,31 +141,6 @@ export class Merchant implements OnInit, OnDestroy {
     this.router.navigate(['/super-admin/merchants/profile', id]);
   }
 
-  deleteMerchant(merchant: MerchantUser): void {
-    if (this.deletingMerchantId()) return;
-
-    const name = this.getDisplayName(merchant);
-    const confirmed = window.confirm(
-      `Delete merchant "${name}"? This will disable their portal access and remove them from active merchant lists.`,
-    );
-    if (!confirmed) return;
-
-    this.deletingMerchantId.set(merchant.id);
-    this.errorMessage.set('');
-    this.userService.deactivateUser(merchant.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.deletingMerchantId.set(null);
-          this.loadMerchants();
-        },
-        error: (err) => {
-          this.deletingMerchantId.set(null);
-          this.errorMessage.set(err?.error?.message || 'Failed to delete merchant. Please try again.');
-        },
-      });
-  }
-
   // ── Helpers ──────────────────────────────────────────────────────────────────
   getInitials(firstName: string, lastName: string, companyName?: string): string {
     const src = companyName || `${firstName} ${lastName}`;
@@ -175,6 +156,23 @@ export class Merchant implements OnInit, OnDestroy {
   }
 
   getStatusLabel(merchant: MerchantUser): string {
+    // If not activated, show that status instead of active/inactive
+    if (this.isNotActivated(merchant)) {
+      if (merchant.mustChangeCredentials) return 'Not Set Password';
+      if (!merchant.lastLoginAt) return 'Not Activated';
+    }
     return merchant.isActive ? 'Active' : 'Inactive';
+  }
+
+  isNotActivated(merchant: MerchantUser): boolean {
+    // User is not activated if they must change credentials or have never logged in
+    return merchant.mustChangeCredentials || !merchant.lastLoginAt;
+  }
+
+  getActivationStatus(merchant: MerchantUser): string {
+    if (!merchant.isActive) return 'Inactive';
+    if (merchant.mustChangeCredentials) return 'Not Set Password';
+    if (!merchant.lastLoginAt) return 'Not Activated';
+    return 'Active';
   }
 }

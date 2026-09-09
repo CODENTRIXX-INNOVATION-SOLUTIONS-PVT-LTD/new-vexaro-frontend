@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 
 import { MerchantShipments } from '../merchant-shipments/merchant-shipments';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+import { UserService } from '../../../../services/user.service';
 
 // The shape the HTML template binds to — kept identical to avoid touching the
 // template. Fields not present in the DB are filled with '—' (an em dash) so
@@ -23,6 +24,7 @@ interface MerchantViewModel {
   contactEmail: string;
   gstNumber: string;
   status: string;
+  activationStatus: string;
   distributorId: string;
   warehouseDetails: string;
   registrationDate: string;
@@ -31,21 +33,36 @@ interface MerchantViewModel {
 // DB → ViewModel mapping
 function toViewModel(user: MerchantUser): MerchantViewModel {
   const w = user.warehouse;
+  let status = user.isActive ? 'Active' : 'Inactive';
+  let activationStatus = '';
+
+  // Determine if user is not activated
+  const isNotActivated = user.mustChangeCredentials || !user.lastLoginAt;
+
+  if (isNotActivated) {
+    if (user.mustChangeCredentials) {
+      status = 'Not Set Password';
+    } else if (!user.lastLoginAt) {
+      status = 'Not Activated';
+    }
+  }
+
   return {
-    id:               user.id,
-    merchantName:     user.companyName || `${user.firstName} ${user.lastName}`,
-    email:            user.email,
-    phone:            user.phone || '—',
-    address:          user.address || (w ? `${w.address}, ${w.city}, ${w.state} - ${w.pincode}` : '—'),
-    city:             w?.city  || '—',
-    state:            w?.state || '—',
-    pincode:          w?.pincode || '—',
-    contactPerson:    w?.contactPerson || `${user.firstName} ${user.lastName}`,
-    contactPhone:     w?.phone || user.phone || '—',
-    contactEmail:     w?.email || user.email,
-    gstNumber:        w?.gstNo || '—',
-    status:           user.isActive ? 'Active' : 'Inactive',
-    distributorId:    typeof user.invitedBy === 'string' ? user.invitedBy : '—',
+    id: user.id,
+    merchantName: user.companyName || `${user.firstName} ${user.lastName}`,
+    email: user.email,
+    phone: user.phone || '—',
+    address: user.address || (w ? `${w.address}, ${w.city}, ${w.state} - ${w.pincode}` : '—'),
+    city: w?.city || '—',
+    state: w?.state || '—',
+    pincode: w?.pincode || '—',
+    contactPerson: w?.contactPerson || `${user.firstName} ${user.lastName}`,
+    contactPhone: w?.phone || user.phone || '—',
+    contactEmail: w?.email || user.email,
+    gstNumber: w?.gstNo || '—',
+    status: status,
+    activationStatus: activationStatus,
+    distributorId: typeof user.invitedBy === 'string' ? user.invitedBy : '—',
     warehouseDetails: w ? (w.name || w.warehouseId) : '—',
     registrationDate: user.createdAt
       ? new Date(user.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -67,12 +84,14 @@ export class MerchantProfile implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private merchantService = inject(MerchantService);
+  private userService = inject(UserService);
 
   activeTab = 'profile';
   merchantId!: string;
 
   isLoading = signal(true);
   errorMessage = signal('');
+  isResending = signal(false);
 
   // Initialised with blank strings so template bindings never blow up before
   // data arrives.
@@ -80,7 +99,7 @@ export class MerchantProfile implements OnInit {
     id: '', merchantName: '', email: '', phone: '',
     address: '', city: '', state: '', pincode: '',
     contactPerson: '', contactPhone: '', contactEmail: '',
-    gstNumber: '', status: 'Active', distributorId: '',
+    gstNumber: '', status: 'Active', activationStatus: '', distributorId: '',
     warehouseDetails: '', registrationDate: '',
   };
 
@@ -109,7 +128,15 @@ export class MerchantProfile implements OnInit {
 
     this.merchantService.getMerchantById(this.merchantId).subscribe({
       next: (res) => {
+        console.log('Raw merchant data:', res.data);
+        console.log('isActive:', res.data.isActive);
+        console.log('mustChangeCredentials:', res.data.mustChangeCredentials);
+        console.log('lastLoginAt:', res.data.lastLoginAt);
+
         this.merchant = toViewModel(res.data);
+        console.log('Transformed status:', this.merchant.status);
+        console.log('isNotActivated():', this.isNotActivated());
+
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -126,9 +153,57 @@ export class MerchantProfile implements OnInit {
   }
 
   toggleStatus(): void {
-    // Optimistic local toggle — wire to PATCH /users/:id when ready
-    this.merchant.status = this.merchant.status === 'Active' ? 'Inactive' : 'Active';
-    alert(`Merchant ${this.merchant.status === 'Active' ? 'Activated' : 'Deactivated'} Successfully`);
+    const newStatus = this.merchant.status === 'Active' ? false : true;
+    const statusText = newStatus ? 'Activated' : 'Deactivated';
+
+    this.userService.updateUserStatus(this.merchantId, newStatus).subscribe({
+      next: (response: any) => {
+        this.merchant.status = newStatus ? 'Active' : 'Inactive';
+        alert(`Merchant ${statusText} Successfully`);
+        this.loadMerchant(); // Reload to get fresh data from backend
+      },
+      error: (err: any) => {
+        alert(`Failed to ${statusText.toLowerCase()} merchant: ${err?.error?.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  deleteMerchant(): void {
+    const merchantName = this.merchant.merchantName;
+    const confirmed = window.confirm(
+      `Delete merchant "${merchantName}"? This will disable their portal access and remove them from active merchant lists. This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    this.userService.deactivateUser(this.merchantId).subscribe({
+      next: () => {
+        alert('Merchant deleted successfully');
+        this.router.navigate(['/super-admin/merchants']);
+      },
+      error: (err: any) => {
+        alert(`Failed to delete merchant: ${err?.error?.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  resendInvitation(): void {
+    this.isResending.set(true);
+
+    this.userService.resendInvite(this.merchantId).subscribe({
+      next: () => {
+        this.isResending.set(false);
+        alert('Invitation resent successfully to ' + this.merchant.email);
+        this.loadMerchant(); // Reload to get updated data
+      },
+      error: (err: any) => {
+        this.isResending.set(false);
+        alert(`Failed to resend invitation: ${err?.error?.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  isNotActivated(): boolean {
+    return this.merchant.status === 'Not Set Password' || this.merchant.status === 'Not Activated';
   }
 
   assignWarehouse(): void {

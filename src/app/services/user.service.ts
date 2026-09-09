@@ -33,6 +33,18 @@ export class UserService {
     });
   }
 
+  updateUserStatus(id: string, isActive: boolean): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/users/${id}/status`, { isActive }, {
+      headers: this.jsonHeaders,
+    });
+  }
+
+  resendInvite(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/${id}/resend-invite`, {}, {
+      headers: this.jsonHeaders,
+    });
+  }
+
   inviteUser(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/invite`, payload, {
       headers: this.jsonHeaders,
