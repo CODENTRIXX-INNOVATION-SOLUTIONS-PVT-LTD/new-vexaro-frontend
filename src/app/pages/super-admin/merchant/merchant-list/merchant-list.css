@@ -81,7 +81,7 @@
 /* Metrics Dashboard Bar */
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 24px;
 }
@@ -141,6 +141,11 @@
 .metric-card.inactive .metric-icon {
     background: #fef2f2;
     color: rgb(239, 68, 68);
+}
+
+.metric-card.not-activated .metric-icon {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 /* Table Card Container */
@@ -385,6 +390,11 @@ tbody tr:hover {
     color: #b91c1c;
 }
 
+.warning-status {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 /* Action Dropdown Menu */
 .text-right {
     text-align: right;
@@ -579,7 +589,9 @@ tbody tr:hover {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ── Error banner ──────────────────────────────────────────────────────────── */
