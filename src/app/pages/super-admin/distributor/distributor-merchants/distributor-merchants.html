@@ -15,6 +15,7 @@
                     <th>City</th>
                     <th>Total Orders</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
 
@@ -31,6 +32,13 @@
                             [class.inactive]="merchant.status === 'Inactive'">
                             {{ merchant.status }}
                         </span>
+                    </td>
+                    <td>
+                        <button class="action-btn" [class.activate-btn]="merchant.status === 'Inactive'"
+                            [class.deactivate-btn]="merchant.status === 'Active'"
+                            (click)="toggleMerchantStatus(merchant)" [disabled]="isLoading()">
+                            {{ merchant.status === 'Active' ? 'Deactivate' : 'Activate' }}
+                        </button>
                     </td>
 
                 </tr>

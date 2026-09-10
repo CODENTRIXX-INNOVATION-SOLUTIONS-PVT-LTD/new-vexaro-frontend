@@ -64,11 +64,9 @@
 
     border-radius: 20px;
 
-    background: linear-gradient(
-        135deg,
-        rgb(11, 74, 111),
-        #4f46e5
-    );
+    background: linear-gradient(135deg,
+            rgb(11, 74, 111),
+            #4f46e5);
 
     color: white;
 
@@ -135,6 +133,16 @@
     color: #b91c1c;
 }
 
+.not-activated-chip {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.not-set-password-chip {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
 .header-actions {
     display: flex;
     flex-wrap: wrap;
@@ -144,7 +152,9 @@
 }
 
 .btn-outline,
-.btn-status {
+.btn-status,
+.btn-delete,
+.btn-resend {
     min-height: 44px;
     padding: 12px 18px;
     border-radius: 12px;
@@ -167,6 +177,31 @@
 
 .btn-outline:hover {
     background: #f8fafc;
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
+}
+
+.btn-resend {
+    background: #2563eb;
+    color: white;
+    border: none;
+}
+
+.btn-resend:hover {
+    background: #1d4ed8;
+}
+
+.btn-resend:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* Main Layout */
@@ -290,7 +325,6 @@
 .btn-status {
     border: none;
     color: white;
-    padding: 12px 20px;
     transition: .3s;
 }
 
@@ -317,6 +351,26 @@
 
     font-size: 14px;
     font-weight: 600;
+}
+
+.active-status {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.inactive-status {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.not-activated-status {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.not-set-password-status {
+    background: #e0e7ff;
+    color: #4338ca;
 }
 
 input[readonly],
@@ -369,7 +423,9 @@ select[readonly] {
     }
 
     .btn-outline,
-    .btn-status {
+    .btn-status,
+    .btn-delete,
+    .btn-resend {
         width: 100%;
         justify-content: center;
     }
@@ -407,6 +463,16 @@ select[readonly] {
 .btn-outline:hover {
     background: #f8fafc;
     border-color: #cbd5e1;
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
 }
 
 .active-tab {
@@ -451,7 +517,9 @@ select[readonly] {
 }
 
 @keyframes dist-profile-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .profile-error {

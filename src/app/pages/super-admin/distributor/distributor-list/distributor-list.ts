@@ -26,7 +26,6 @@ export class DistributorList implements OnInit, OnDestroy {
   distributors = signal<MerchantUser[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
-  deletingDistributorId = signal<string | null>(null);
 
   // Pagination
   currentPage = signal(1);
@@ -49,15 +48,20 @@ export class DistributorList implements OnInit, OnDestroy {
 
   // ── Derived counts ────────────────────────────────────────────────────────────
   get totalDistributors() { return this.totalCount(); }
-  get activeDistributors() { return this.distributors().filter(d => d.isActive).length; }
-  get inactiveDistributors() { return this.distributors().filter(d => !d.isActive).length; }
+  get activeDistributors() { return this.distributors().filter(d => this.getStatus(d) === 'Active').length; }
+  get inactiveDistributors() { return this.distributors().filter(d => this.getStatus(d) === 'Inactive').length; }
+  get notActivatedDistributors() { return this.distributors().filter(d => this.getStatus(d) === 'Not Activated').length; }
+  get notSetPasswordDistributors() { return this.distributors().filter(d => this.getStatus(d) === 'Not Set Password').length; }
 
   // Status filter — client-side on current page (backend has no isActive param)
   statusFilter = 'All';
   get filteredDistributors(): MerchantUser[] {
     if (this.statusFilter === 'All') return this.distributors();
-    const wantActive = this.statusFilter === 'Active';
-    return this.distributors().filter(d => d.isActive === wantActive);
+    if (this.statusFilter === 'Active') return this.distributors().filter(d => this.getStatus(d) === 'Active');
+    if (this.statusFilter === 'Inactive') return this.distributors().filter(d => this.getStatus(d) === 'Inactive');
+    if (this.statusFilter === 'Not Activated') return this.distributors().filter(d => this.getStatus(d) === 'Not Activated');
+    if (this.statusFilter === 'Not Set Password') return this.distributors().filter(d => this.getStatus(d) === 'Not Set Password');
+    return this.distributors();
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -123,32 +127,6 @@ export class DistributorList implements OnInit, OnDestroy {
     });
   }
 
-  deleteDistributor(distributor: MerchantUser, event?: Event): void {
-    event?.stopPropagation();
-    if (this.deletingDistributorId()) return;
-
-    const name = this.getDisplayName(distributor);
-    const confirmed = window.confirm(
-      `Delete distributor "${name}"? This will disable the distributor portal and also delete merchants under this distributor.`,
-    );
-    if (!confirmed) return;
-
-    this.deletingDistributorId.set(distributor.id);
-    this.errorMessage.set('');
-    this.userService.deactivateUser(distributor.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.deletingDistributorId.set(null);
-          this.loadDistributors();
-        },
-        error: (err) => {
-          this.deletingDistributorId.set(null);
-          this.errorMessage.set(err?.error?.message || 'Failed to delete distributor. Please try again.');
-        },
-      });
-  }
-
   onDistributorSaved(): void {
     this.showAddModal = false;
     this.showSuccessModal = true;
@@ -163,5 +141,22 @@ export class DistributorList implements OnInit, OnDestroy {
 
   getDisplayName(d: MerchantUser): string {
     return d.companyName || `${d.firstName} ${d.lastName}`;
+  }
+
+  getStatus(d: MerchantUser): string {
+    let status = d.isActive ? 'Active' : 'Inactive';
+
+    // Determine if user is not activated
+    const isNotActivated = d.mustChangeCredentials || !d.lastLoginAt;
+
+    if (isNotActivated) {
+      if (d.mustChangeCredentials) {
+        status = 'Not Set Password';
+      } else if (!d.lastLoginAt) {
+        status = 'Not Activated';
+      }
+    }
+
+    return status;
   }
 }

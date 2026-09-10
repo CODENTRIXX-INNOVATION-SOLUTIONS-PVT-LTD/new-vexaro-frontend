@@ -41,7 +41,6 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
   page = 1;
   readonly limit = 20;
   total = 0;
-  deletingMerchantId: string | null = null;
 
   get totalPages(): number { return Math.ceil(this.total / this.limit) || 1; }
 
@@ -49,7 +48,7 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
     private router: Router,
     private merchantService: MerchantService,
     private userService: UserService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadMerchants();
@@ -115,31 +114,6 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
     this.router.navigate(['/distributor/merchants', id]);
   }
 
-  deleteMerchant(merchant: DistributorMerchant, event?: Event): void {
-    event?.stopPropagation();
-    if (this.deletingMerchantId) return;
-
-    const confirmed = window.confirm(
-      `Delete merchant "${merchant.businessName}"? This will disable their portal access and remove them from active merchant lists.`,
-    );
-    if (!confirmed) return;
-
-    this.deletingMerchantId = merchant.id;
-    this.errorMessage = '';
-    this.userService.deactivateUser(merchant.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.deletingMerchantId = null;
-          this.loadMerchants();
-        },
-        error: (err) => {
-          this.deletingMerchantId = null;
-          this.errorMessage = err?.error?.message || 'Failed to delete merchant. Please try again.';
-        },
-      });
-  }
-
   createMerchant() {
     this.router.navigate(['/distributor/merchants/create']);
   }
@@ -175,12 +149,12 @@ export class DistributorMerchantList implements OnInit, OnDestroy {
       status: merchant.isActive ? 'Active' : 'Inactive',
       createdAt: merchant.createdAt
         ? new Date(merchant.createdAt).toLocaleString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
         : '',
     };
   }

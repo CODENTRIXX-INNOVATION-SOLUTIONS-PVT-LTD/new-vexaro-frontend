@@ -133,7 +133,7 @@
                 </svg>
                 Shipments
             </button>
-
+            @if (!isNotActivated()) {
             <button class="btn-status" [class.active-btn]="merchant.status !== 'Active'"
                 [class.inactive-btn]="merchant.status === 'Active'" (click)="toggleStatus()">
 
@@ -152,7 +152,7 @@
                 }}
 
             </button>
-
+            }
             <button class="btn-delete" (click)="deleteMerchant()">
 
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"

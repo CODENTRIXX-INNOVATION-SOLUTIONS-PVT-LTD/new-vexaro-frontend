@@ -22,6 +22,20 @@ interface DistributorViewModel {
 }
 
 function toViewModel(user: any): DistributorViewModel {
+  const w = user.warehouse;
+  let status = user.isActive ? 'Active' : 'Inactive';
+
+  // Determine if user is not activated
+  const isNotActivated = user.mustChangeCredentials || !user.lastLoginAt;
+
+  if (isNotActivated) {
+    if (user.mustChangeCredentials) {
+      status = 'Not Set Password';
+    } else if (!user.lastLoginAt) {
+      status = 'Not Activated';
+    }
+  }
+
   return {
     distributorName: user.companyName || `${user.firstName} ${user.lastName}`,
     email: user.email,
@@ -30,7 +44,7 @@ function toViewModel(user: any): DistributorViewModel {
     contactPerson: `${user.firstName} ${user.lastName}`,
     contactPhone: user.phone || '—',
     contactEmail: user.email,
-    status: user.isActive ? 'Active' : 'Inactive',
+    status: status,
   };
 }
 
@@ -55,6 +69,7 @@ export class DistributorProfile implements OnInit {
 
   isLoading = signal(true);
   errorMessage = signal('');
+  isResending = signal(false);
 
   // Initialised blank so template bindings never throw before data arrives
   distributor: DistributorViewModel = {
@@ -103,9 +118,7 @@ export class DistributorProfile implements OnInit {
 
   toggleStatus(): void {
     const isActive = this.distributor.status === 'Active';
-    const request = isActive
-      ? this.userService.deactivateUser(this.distributorId)
-      : this.userService.reactivateUser(this.distributorId);
+    const request = this.userService.updateUserStatus(this.distributorId, !isActive);
 
     request.subscribe({
       next: () => {
@@ -117,6 +130,43 @@ export class DistributorProfile implements OnInit {
           err?.error?.message || 'Failed to update distributor status.'
         );
       },
+    });
+  }
+
+  deleteDistributor(): void {
+    const confirmed = window.confirm(
+      `Delete distributor "${this.distributor.distributorName}"? This will disable the distributor portal and also delete merchants under this distributor. This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    this.userService.deactivateUser(this.distributorId).subscribe({
+      next: () => {
+        alert('Distributor deleted successfully');
+        this.router.navigate(['/super-admin/distributors']);
+      },
+      error: (err) => {
+        alert(`Failed to delete distributor: ${err?.error?.message || 'Unknown error'}`);
+      },
+    });
+  }
+
+  isNotActivated(): boolean {
+    return this.distributor.status === 'Not Set Password' || this.distributor.status === 'Not Activated';
+  }
+
+  resendInvitation(): void {
+    this.isResending.set(true);
+
+    this.userService.resendInvite(this.distributorId).subscribe({
+      next: () => {
+        this.isResending.set(false);
+        alert('Invitation resent successfully to ' + this.distributor.email);
+        this.loadDistributor();
+      },
+      error: (err) => {
+        this.isResending.set(false);
+        alert(`Failed to resend invitation: ${err?.error?.message || 'Unknown error'}`);
+      }
     });
   }
 

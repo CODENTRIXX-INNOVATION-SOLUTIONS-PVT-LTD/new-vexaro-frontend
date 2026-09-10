@@ -23,6 +23,7 @@ export class AdminPayment implements OnInit {
   adminWalletLoading = false;
   adminTopupPackages = [10000, 25000, 50000, 100000, 250000];
   adminSelectedPackage: number | null = null;
+  adminCustomAmount: number | null = null;
   adminTopupMode: 'checkout' | 'upi_qr' = 'checkout';
   adminTopupProcessing = false;
   adminTopupSuccess = '';
@@ -30,10 +31,10 @@ export class AdminPayment implements OnInit {
 
   // ── Stats Cards ───────────────────────────────────────────────────────────
   paymentCards = [
-    { title: 'Total Wallets Value',     value: '₹0', icon: 'fas fa-wallet',       bgColor: '#DBEAFE', iconColor: 'rgb(11,74,111)' },
-    { title: 'Total Admin Commission',  value: '₹0', icon: 'fas fa-percent',       bgColor: '#DCFCE7', iconColor: '#16A34A' },
-    { title: 'Successful Top-ups',      value: '0',  icon: 'fas fa-exchange-alt',  bgColor: '#FEF3C7', iconColor: '#D97706' },
-    { title: 'Pending Refunds',         value: '0',  icon: 'fas fa-undo-alt',      bgColor: '#FEE2E2', iconColor: '#DC2626' },
+    { title: 'Total Wallets Value', value: '₹0', icon: 'fas fa-wallet', bgColor: '#DBEAFE', iconColor: 'rgb(11,74,111)' },
+    { title: 'Total Admin Commission', value: '₹0', icon: 'fas fa-percent', bgColor: '#DCFCE7', iconColor: '#16A34A' },
+    { title: 'Successful Top-ups', value: '0', icon: 'fas fa-exchange-alt', bgColor: '#FEF3C7', iconColor: '#D97706' },
+    { title: 'Pending Refunds', value: '0', icon: 'fas fa-undo-alt', bgColor: '#FEE2E2', iconColor: '#DC2626' },
   ];
 
   // ── Distributor Wallets ───────────────────────────────────────────────────
@@ -69,9 +70,9 @@ export class AdminPayment implements OnInit {
   rechargeRequestsData: any[] = [];
   rechargeRequestActionInProgress = '';
   rechargeRequestSuccess = '';
-  rechargeRequestError   = '';
-  rejectingRequestId     = '';
-  rejectReasonInput      = '';
+  rechargeRequestError = '';
+  rejectingRequestId = '';
+  rejectReasonInput = '';
 
   // ── Commission ────────────────────────────────────────────────────────────
   commissionData: any[] = [];
@@ -82,9 +83,9 @@ export class AdminPayment implements OnInit {
     this.activeTab = tab;
     if (tab === 'adminwallet' && this.adminBalance === 0) this.loadAdminWallet();
     if (tab === 'razorpay' && this.razorpayPayments.length === 0) this.loadRazorpayPayments();
-    if (tab === 'commission' && this.commissionData.length === 0)  this.loadCommission();
-    if (tab === 'refunds'   && this.refunds.length === 0)          this.loadRefunds();
-    if (tab === 'requests'  && this.rechargeRequestsData.length === 0) this.loadRechargeRequests();
+    if (tab === 'commission' && this.commissionData.length === 0) this.loadCommission();
+    if (tab === 'refunds' && this.refunds.length === 0) this.loadRefunds();
+    if (tab === 'requests' && this.rechargeRequestsData.length === 0) this.loadRechargeRequests();
   }
 
   // ── Loaders ───────────────────────────────────────────────────────────────
@@ -118,19 +119,32 @@ export class AdminPayment implements OnInit {
     });
   }
 
+  selectCustomAmount() {
+    this.adminCustomAmount = 0;
+    this.adminSelectedPackage = null;
+    this.adminTopupError = '';
+    this.adminTopupSuccess = '';
+  }
+
   async startAdminTopup(): Promise<void> {
-    if (!this.adminSelectedPackage) {
+    const amount = this.adminSelectedPackage ?? this.adminCustomAmount;
+    if (!amount || amount <= 0) {
       this.adminTopupError = 'Please select an amount.';
+      return;
+    }
+    if (amount < 100) {
+      this.adminTopupError = 'Minimum top-up amount is ₹100.';
       return;
     }
     this.adminTopupProcessing = true;
     this.adminTopupSuccess = '';
     this.adminTopupError = '';
     try {
-      const result = await this.financeService.startRazorpayWalletTopup(this.adminSelectedPackage, this.adminTopupMode);
+      const result = await this.financeService.startRazorpayWalletTopup(amount, this.adminTopupMode);
       this.adminBalance = result.balance;
-      this.adminTopupSuccess = `₹${this.adminSelectedPackage.toLocaleString('en-IN')} added to your admin wallet!`;
+      this.adminTopupSuccess = `₹${amount.toLocaleString('en-IN')} added to your admin wallet!`;
       this.adminSelectedPackage = null;
+      this.adminCustomAmount = null;
     } catch (err: any) {
       this.adminTopupError = err?.error?.message || err?.message || 'Payment could not be completed.';
     } finally {
@@ -150,10 +164,10 @@ export class AdminPayment implements OnInit {
           if (res.success && res.data) {
             const d = res.data;
             this.paymentCards = [
-              { title: 'Total Wallets Value',    value: '₹' + (d.totalWalletValue || 0).toLocaleString('en-IN'), icon: 'fas fa-wallet',      bgColor: '#DBEAFE', iconColor: 'rgb(11,74,111)' },
-              { title: 'Total Admin Commission', value: '₹' + (d.totalCommission  || 0).toLocaleString('en-IN'), icon: 'fas fa-percent',      bgColor: '#DCFCE7', iconColor: '#16A34A' },
-              { title: 'Successful Top-ups',     value: String(d.successTransactions || 0),                       icon: 'fas fa-exchange-alt', bgColor: '#FEF3C7', iconColor: '#D97706' },
-              { title: 'Pending Refunds',        value: String(d.pendingRefunds      || 0),                       icon: 'fas fa-undo-alt',     bgColor: '#FEE2E2', iconColor: '#DC2626' },
+              { title: 'Total Wallets Value', value: '₹' + (d.totalWalletValue || 0).toLocaleString('en-IN'), icon: 'fas fa-wallet', bgColor: '#DBEAFE', iconColor: 'rgb(11,74,111)' },
+              { title: 'Total Admin Commission', value: '₹' + (d.totalCommission || 0).toLocaleString('en-IN'), icon: 'fas fa-percent', bgColor: '#DCFCE7', iconColor: '#16A34A' },
+              { title: 'Successful Top-ups', value: String(d.successTransactions || 0), icon: 'fas fa-exchange-alt', bgColor: '#FEF3C7', iconColor: '#D97706' },
+              { title: 'Pending Refunds', value: String(d.pendingRefunds || 0), icon: 'fas fa-undo-alt', bgColor: '#FEE2E2', iconColor: '#DC2626' },
             ];
           }
           this.cdr.detectChanges();
@@ -345,7 +359,7 @@ export class AdminPayment implements OnInit {
 
   approveRequest(req: any) {
     this.rechargeRequestSuccess = '';
-    this.rechargeRequestError   = '';
+    this.rechargeRequestError = '';
     this.rechargeRequestActionInProgress = req._id;
 
     this.financeService.approveRechargeRequest(req._id).subscribe({
@@ -366,15 +380,15 @@ export class AdminPayment implements OnInit {
   }
 
   openRejectForm(req: any) {
-    this.rejectingRequestId   = req._id;
-    this.rejectReasonInput    = '';
+    this.rejectingRequestId = req._id;
+    this.rejectReasonInput = '';
     this.rechargeRequestError = '';
     this.rechargeRequestSuccess = '';
   }
 
   cancelRejectForm() {
     this.rejectingRequestId = '';
-    this.rejectReasonInput  = '';
+    this.rejectReasonInput = '';
   }
 
   confirmRejectRequest(req: any) {
