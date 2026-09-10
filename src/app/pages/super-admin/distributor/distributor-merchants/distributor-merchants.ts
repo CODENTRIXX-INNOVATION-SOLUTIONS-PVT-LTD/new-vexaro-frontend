@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, signal } from '@angular/core';
 import { MerchantService, MerchantUser } from '../../../../services/merchant.service';
+import { UserService } from '../../../../services/user.service';
 
 interface DistributorMerchant {
   id: string;
@@ -27,6 +28,7 @@ export class DistributorMerchants {
 
   constructor(
     private merchantService: MerchantService,
+    private userService: UserService,
   ) {
     // Use setTimeout to ensure input is bound before loading
     setTimeout(() => {
@@ -36,11 +38,13 @@ export class DistributorMerchants {
 
   private userBelongsToDistributor(user: MerchantUser): boolean {
     const invitedBy = user.invitedBy as any;
+    const currentDistributorId = this.distributorId();
+
     if (!invitedBy) return false;
     if (typeof invitedBy === 'string') {
-      return invitedBy === this.distributorId();
+      return invitedBy === currentDistributorId;
     }
-    return invitedBy._id?.toString?.() === this.distributorId();
+    return invitedBy._id?.toString?.() === currentDistributorId;
   }
 
   private mapMerchant(user: MerchantUser): DistributorMerchant {
@@ -68,6 +72,21 @@ export class DistributorMerchants {
       error: (err) => {
         this.isLoading.set(false);
         this.error.set(err?.error?.message || 'Failed to load merchants.');
+      },
+    });
+  }
+
+  toggleMerchantStatus(merchant: DistributorMerchant): void {
+    const newStatus = merchant.status === 'Active' ? false : true;
+    const statusText = newStatus ? 'Activated' : 'Deactivated';
+
+    this.userService.updateUserStatus(merchant.id, newStatus).subscribe({
+      next: () => {
+        merchant.status = newStatus ? 'Active' : 'Inactive';
+        alert(`Merchant ${statusText} successfully`);
+      },
+      error: (err) => {
+        alert(`Failed to ${statusText.toLowerCase()} merchant: ${err?.error?.message || 'Unknown error'}`);
       },
     });
   }

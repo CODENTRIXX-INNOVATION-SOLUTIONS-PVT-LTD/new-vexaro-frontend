@@ -34,27 +34,40 @@ interface MerchantView {
 
 function toView(user: MerchantUser, walletBalance: number): MerchantView {
   const w = user.warehouse;
+  let status = user.isActive ? 'Active' : 'Inactive';
+
+  // Determine if user is not activated
+  const isNotActivated = user.mustChangeCredentials || !user.lastLoginAt;
+
+  if (isNotActivated) {
+    if (user.mustChangeCredentials) {
+      status = 'Not Set Password';
+    } else if (!user.lastLoginAt) {
+      status = 'Not Activated';
+    }
+  }
+
   return {
-    merchantCode:       user.id ? `MRC-${user.id.slice(-6).toUpperCase()}` : '—',
-    businessName:       user.companyName || `${user.firstName} ${user.lastName}`.trim(),
-    displayName:        user.companyName || `${user.firstName} ${user.lastName}`.trim(),
-    contactPerson:      `${user.firstName} ${user.lastName}`.trim(),
-    phone:              user.phone || '—',
-    email:              user.email,
-    addressLine1:       user.address || (w ? `${w.address}, ${w.city}, ${w.state}` : '—'),
-    city:               w?.city    || '—',
-    state:              w?.state   || '—',
-    pincode:            w?.pincode || '—',
-    gstin:              w?.gstNo   || '—',
-    pan:                '—',
-    warehouseId:        w?.warehouseId || '—',
+    merchantCode: user.id ? `MRC-${user.id.slice(-6).toUpperCase()}` : '—',
+    businessName: user.companyName || `${user.firstName} ${user.lastName}`.trim(),
+    displayName: user.companyName || `${user.firstName} ${user.lastName}`.trim(),
+    contactPerson: `${user.firstName} ${user.lastName}`.trim(),
+    phone: user.phone || '—',
+    email: user.email,
+    addressLine1: user.address || (w ? `${w.address}, ${w.city}, ${w.state}` : '—'),
+    city: w?.city || '—',
+    state: w?.state || '—',
+    pincode: w?.pincode || '—',
+    gstin: w?.gstNo || '—',
+    pan: '—',
+    warehouseId: w?.warehouseId || '—',
     walletBalance,
-    creditLimit:        0,
-    paymentTerms:       'Prepaid',
-    totalShipments:     0,
+    creditLimit: 0,
+    paymentTerms: 'Prepaid',
+    totalShipments: 0,
     deliveredShipments: 0,
-    status:             user.isActive ? 'Active' : 'Inactive',
-    joinedDate:         user.createdAt
+    status: status,
+    joinedDate: user.createdAt
       ? new Date(user.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '—',
   };
@@ -68,17 +81,17 @@ function toView(user: MerchantUser, walletBalance: number): MerchantView {
   styleUrl: './merchant-profile.css',
 })
 export class DistributorMerchantProfile implements OnInit {
-  private route           = inject(ActivatedRoute);
-  private router          = inject(Router);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private merchantService = inject(MerchantService);
-  private financeService  = inject(FinanceService);
-  private userService     = inject(UserService);
+  private financeService = inject(FinanceService);
+  private userService = inject(UserService);
   private shipmentService = inject(ShipmentService);
 
-  merchantId   = '';
-  activeTab    = 'overview';
-  isLoading    = true;
-  isSaving     = false;
+  merchantId = '';
+  activeTab = 'overview';
+  isLoading = true;
+  isSaving = false;
   errorMessage = '';
 
   merchant: MerchantView = {
@@ -90,27 +103,27 @@ export class DistributorMerchantProfile implements OnInit {
   };
 
   // ── Shipments tab ────────────────────────────────────────────────────────
-  shipments: any[]     = [];
-  shipmentsLoading     = false;
-  shipmentsError       = '';
-  shipmentsPage        = 1;
-  shipmentsTotal       = 0;
+  shipments: any[] = [];
+  shipmentsLoading = false;
+  shipmentsError = '';
+  shipmentsPage = 1;
+  shipmentsTotal = 0;
   readonly shipmentsLimit = 15;
-  shipmentsFilter      = '';
+  shipmentsFilter = '';
 
   get shipmentsTotalPages(): number {
     return Math.ceil(this.shipmentsTotal / this.shipmentsLimit) || 1;
   }
 
   readonly STATUS_LABELS: Record<string, string> = {
-    ORDER_CREATED:    'Pending',
-    PICKED_UP:        'Picked Up',
-    ARRIVED_AT_HUB:   'At Hub',
+    ORDER_CREATED: 'Pending',
+    PICKED_UP: 'Picked Up',
+    ARRIVED_AT_HUB: 'At Hub',
     OUT_FOR_DELIVERY: 'Out for Delivery',
-    DELIVERED:        'Delivered',
-    DELIVERY_FAILED:  'Failed',
-    RTO:              'RTO',
-    CANCELLED:        'Cancelled',
+    DELIVERED: 'Delivered',
+    DELIVERY_FAILED: 'Failed',
+    RTO: 'RTO',
+    CANCELLED: 'Cancelled',
   };
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -125,29 +138,29 @@ export class DistributorMerchantProfile implements OnInit {
 
   // ── Profile load ─────────────────────────────────────────────────────────
   loadMerchant(): void {
-    this.isLoading    = true;
+    this.isLoading = true;
     this.errorMessage = '';
 
-    const user$   = this.merchantService.getMerchantById(this.merchantId).pipe(catchError(() => of(null)));
+    const user$ = this.merchantService.getMerchantById(this.merchantId).pipe(catchError(() => of(null)));
     const wallet$ = this.financeService.listWallets({ userId: this.merchantId, limit: 1 }).pipe(catchError(() => of(null)));
 
     forkJoin([user$, wallet$]).subscribe({
       next: ([userRes, walletRes]) => {
         if (!userRes?.data) {
           this.errorMessage = 'Merchant not found.';
-          this.isLoading    = false;
+          this.isLoading = false;
           return;
         }
         const wallets: any[] = walletRes?.data?.wallets ?? [];
         const balance = wallets.find(
           (w: any) => w.userId?._id === this.merchantId || w.userId === this.merchantId
         )?.balance ?? 0;
-        this.merchant  = toView(userRes.data, balance);
+        this.merchant = toView(userRes.data, balance);
         this.isLoading = false;
       },
       error: (err) => {
         this.errorMessage = err?.error?.message || 'Failed to load merchant profile.';
-        this.isLoading    = false;
+        this.isLoading = false;
       },
     });
   }
@@ -163,7 +176,7 @@ export class DistributorMerchantProfile implements OnInit {
   // ── Shipments loader ─────────────────────────────────────────────────────
   loadShipments(): void {
     this.shipmentsLoading = true;
-    this.shipmentsError   = '';
+    this.shipmentsError = '';
 
     const params: any = { page: this.shipmentsPage, limit: this.shipmentsLimit };
     if (this.shipmentsFilter) params.status = this.shipmentsFilter;
@@ -172,22 +185,22 @@ export class DistributorMerchantProfile implements OnInit {
       next: (res) => {
         this.shipmentsTotal = res?.meta?.total ?? 0;
         this.shipments = (res?.data?.shipments ?? []).map((s: any) => ({
-          id:        s._id,
-          awb:       s.awb,
-          date:      new Date(s.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-          status:    this.STATUS_LABELS[s.status] ?? s.status,
+          id: s._id,
+          awb: s.awb,
+          date: new Date(s.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          status: this.STATUS_LABELS[s.status] ?? s.status,
           rawStatus: s.status,
-          dest:      `${s.destination?.city ?? '—'}, ${s.destination?.state ?? ''}`.replace(/,\s*$/, ''),
-          amount:    s.merchantCost ?? 0,
-          weight:    s.weight ?? 0,
-          isCOD:     s.isCOD ?? false,
-          cod:       s.codAmount ?? 0,
-          carrier:   s.carrier ?? '—',
+          dest: `${s.destination?.city ?? '—'}, ${s.destination?.state ?? ''}`.replace(/,\s*$/, ''),
+          amount: s.merchantCost ?? 0,
+          weight: s.weight ?? 0,
+          isCOD: s.isCOD ?? false,
+          cod: s.codAmount ?? 0,
+          carrier: s.carrier ?? '—',
         }));
         this.shipmentsLoading = false;
       },
       error: (err) => {
-        this.shipmentsError   = err?.error?.message || 'Failed to load shipments.';
+        this.shipmentsError = err?.error?.message || 'Failed to load shipments.';
         this.shipmentsLoading = false;
       },
     });
@@ -195,7 +208,7 @@ export class DistributorMerchantProfile implements OnInit {
 
   applyShipmentsFilter(): void {
     this.shipmentsPage = 1;
-    this.shipments     = [];
+    this.shipments = [];
     this.loadShipments();
   }
 
@@ -231,7 +244,7 @@ export class DistributorMerchantProfile implements OnInit {
   suspendMerchant(): void {
     if (!confirm(`Suspend ${this.merchant.businessName}? They will not be able to log in.`)) return;
     this.isSaving = true;
-    this.userService.deactivateUser(this.merchantId).subscribe({
+    this.userService.updateUserStatus(this.merchantId, false).subscribe({
       next: () => { this.merchant.status = 'Inactive'; this.isSaving = false; },
       error: (err) => { alert(err?.error?.message || 'Failed to suspend merchant.'); this.isSaving = false; },
     });
@@ -239,9 +252,48 @@ export class DistributorMerchantProfile implements OnInit {
 
   activateMerchant(): void {
     this.isSaving = true;
-    this.userService.reactivateUser(this.merchantId).subscribe({
+    this.userService.updateUserStatus(this.merchantId, true).subscribe({
       next: () => { this.merchant.status = 'Active'; this.isSaving = false; },
       error: (err) => { alert(err?.error?.message || 'Failed to activate merchant.'); this.isSaving = false; },
+    });
+  }
+
+  deleteMerchant(): void {
+    const confirmed = window.confirm(
+      `Delete merchant "${this.merchant.businessName}"? This will disable their portal access and remove them from active merchant lists.`,
+    );
+    if (!confirmed) return;
+
+    this.isSaving = true;
+    this.userService.updateUserStatus(this.merchantId, false).subscribe({
+      next: () => {
+        this.isSaving = false;
+        alert('Merchant deleted successfully.');
+        this.router.navigate(['/distributor/merchants']);
+      },
+      error: (err) => {
+        this.isSaving = false;
+        alert(err?.error?.message || 'Failed to delete merchant. Please try again.');
+      },
+    });
+  }
+
+  isNotActivated(): boolean {
+    return this.merchant.status === 'Not Set Password' || this.merchant.status === 'Not Activated';
+  }
+
+  resendInvitation(): void {
+    this.isSaving = true;
+    this.userService.resendInvite(this.merchantId).subscribe({
+      next: () => {
+        this.isSaving = false;
+        alert('Invitation resent successfully to ' + this.merchant.email);
+        this.loadMerchant();
+      },
+      error: (err) => {
+        this.isSaving = false;
+        alert(`Failed to resend invitation: ${err?.error?.message || 'Unknown error'}`);
+      }
     });
   }
 
