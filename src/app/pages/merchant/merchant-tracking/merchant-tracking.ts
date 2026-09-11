@@ -14,24 +14,24 @@ export class MerchantTracking {
   private shipmentService = inject(ShipmentService);
 
   searchQuery = signal<string>('');
-  isLoading   = signal<boolean>(false);
+  isLoading = signal<boolean>(false);
   hasSearched = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
   // â”€â”€ Normalised shipment data for display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   activeDetails = signal<{
-    awb:               string;
-    carrierAWB:        string | null;
-    courierName:       string | null;
-    status:            string;
-    statusLabel:       string;
-    origin:            string;
-    destination:       string;
-    recipientName:     string;
-    recipientPhone:    string;
+    awb: string;
+    carrierAWB: string | null;
+    courierName: string | null;
+    status: string;
+    statusLabel: string;
+    origin: string;
+    destination: string;
+    recipientName: string;
+    recipientPhone: string;
     estimatedDelivery: string | null;
-    trackingUrl:       string | null;
-    checkpoints:       { time: string; location: string; status: string; description: string; source: string }[];
+    trackingUrl: string | null;
+    checkpoints: { time: string; location: string; status: string; description: string; source: string }[];
   } | null>(null);
 
   trackShipment(): void {
@@ -53,34 +53,34 @@ export class MerchantTracking {
         const localEvents: any[] = Array.isArray(d.statusHistory) ? d.statusHistory : (Array.isArray(d.history) ? d.history : []);
         const checkpoints = [
           ...velocityEvents.map((e: any) => ({
-            time:        this.eventTime(e),
-            location:    e.location || e.city || e.scan_location || e.scanLocation || '',
-            status:      this.formatStatus(e.status || e.current_status || e.activity || e.remark || ''),
+            time: this.eventTime(e),
+            location: e.location || e.city || e.scan_location || e.scanLocation || '',
+            status: this.formatStatus(e.status || e.current_status || e.activity || e.remark || ''),
             description: e.remark || e.activity || e.description || e.status || '',
-            source:      'Velocity',
+            source: 'Velocity',
           })),
           ...localEvents.map((h: any) => ({
-            time:        h.timestamp || h.updatedAt || h.createdAt || '',
-            location:    h.location || '',
-            status:      this.formatStatus(h.status || ''),
+            time: h.timestamp || h.updatedAt || h.createdAt || '',
+            location: h.location || '',
+            status: this.formatStatus(h.status || ''),
             description: h.note || h.description || h.status || '',
-            source:      'Vexaro',
+            source: 'Vexaro',
           })),
         ].sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
 
         const status = d.status || 'UNKNOWN';
         this.activeDetails.set({
-          awb:               d.awb              || awb,
-          carrierAWB:        d.carrierAWB        || null,
-          courierName:       d.carrier           || null,
+          awb: d.awb || awb,
+          carrierAWB: d.carrierAWB || null,
+          courierName: d.carrier || null,
           status,
-          statusLabel:       this.formatStatus(status),
-          origin:            this.formatAddress(d.origin),
-          destination:       this.formatAddress(d.destination),
-          recipientName:     d.destination?.name  || '-',
-          recipientPhone:    this.formatPhone(d.destination?.phone),
+          statusLabel: this.formatStatus(status),
+          origin: this.formatAddress(d.origin),
+          destination: this.formatAddress(d.destination),
+          recipientName: d.destination?.name || '-',
+          recipientPhone: this.formatPhone(d.destination?.phone),
           estimatedDelivery: this.normalizeDate(d.estimatedDelivery || d.originalEstimatedDelivery),
-          trackingUrl:       this.extractTrackingUrl(d),
+          trackingUrl: this.extractTrackingUrl(d),
           checkpoints,
         });
       },
@@ -144,7 +144,7 @@ export class MerchantTracking {
   private extractVelocityEvents(raw: any): any[] {
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
-    return raw.tracking_data
+    const result = raw.tracking_data
       || raw.shipment_track_activities
       || raw.shipment_track
       || raw.track_activities
@@ -152,6 +152,7 @@ export class MerchantTracking {
       || raw.events
       || raw.scans
       || [];
+    return Array.isArray(result) ? result : [];
   }
 
   private extractTrackingUrl(data: any): string | null {
@@ -166,8 +167,8 @@ export class MerchantTracking {
   /** Map internal status codes to a human-readable stepper stage 0-3 */
   getStepperIndex(status: string): number {
     const s = (status || '').toUpperCase();
-    if (['DELIVERED'].includes(s))                         return 3;
-    if (['OUT_FOR_DELIVERY'].includes(s))                  return 2;
+    if (['DELIVERED'].includes(s)) return 3;
+    if (['OUT_FOR_DELIVERY'].includes(s)) return 2;
     if (['PICKED_UP', 'ARRIVED_AT_HUB', 'IN_TRANSIT'].includes(s)) return 1;
     return 0; // ORDER_CREATED / DELIVERY_FAILED / RTO / CANCELLED / UNKNOWN
   }
