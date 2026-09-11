@@ -59,46 +59,44 @@
             }
 
             <div class="card-body">
-                <!-- Left Section: Read-Only Address -->
+                <!-- Left Section: Editable Address -->
                 <div class="address-section">
-                    <h4>Registered Pickup Address</h4>
-                    <div class="address-details">
-                        <div class="detail-row">
-                            <span class="label">Street Address</span>
-                            <span class="value">{{ streetAddress }}</span>
+                    <h4>Pickup Address</h4>
+                    <form (submit)="saveAddress(); $event.preventDefault()">
+                        <div class="form-group">
+                            <label for="addressLine">Address Line</label>
+                            <input type="text" id="addressLine" [(ngModel)]="requestedAddressLine" name="addressLine" required>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">City</span>
-                            <span class="value">{{ city }}</span>
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" [(ngModel)]="requestedCity" name="city" required>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">State</span>
-                            <span class="value">{{ state }}</span>
+                        <div class="form-group">
+                            <label for="state">State</label>
+                            <input type="text" id="state" [(ngModel)]="requestedState" name="state" required>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Pincode</span>
-                            <span class="value highlight-pincode">{{ pincode }}</span>
+                        <div class="form-group">
+                            <label for="pincode">Pincode</label>
+                            <input type="text" id="pincode" [(ngModel)]="requestedPincode" name="pincode" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <input type="text" id="country" [(ngModel)]="requestedCountry" name="country">
                         </div>
                         <div class="detail-row">
                             <span class="label">Velocity Warehouse ID</span>
                             <span class="value">{{ velocityWarehouseId }}</span>
                         </div>
-                    </div>
-
-                    <div class="warning-box">
-                        <div class="warning-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        @if(addressError) {
+                            <div class="form-error">{{ addressError }}</div>
+                        }
+                        <div class="form-actions">
+                            <button type="submit" class="btn-save" [disabled]="isSavingAddress">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 6px;" class="svg-icon"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                {{ isSavingAddress ? 'Saving...' : 'Save Address' }}
+                            </button>
                         </div>
-                        <div class="warning-text">
-                            <strong>Address modification lock</strong>
-                            <p>Address modifications require verification. Changes must be approved by your distributor to prevent courier route misalignment.</p>
-                        </div>
-                    </div>
-
-                    <button class="btn-address-change" (click)="requestAddressChange()">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em; display: inline-block; vertical-align: middle; margin-right: 6px;" class="svg-icon"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
-                        Request Address Change
-                    </button>
+                    </form>
                 </div>
 
                 <!-- Right Section: Editable Form -->
@@ -145,135 +143,6 @@
             </div>
         </div>
     </div>
-
-    <div class="profile-container request-history-container">
-        <div class="profile-card glass-panel">
-            <div class="card-header">
-                <div class="card-title-group">
-                    <div class="header-icon-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
-                    </div>
-                    <div>
-                        <h3>Address Change Requests</h3>
-                        <p class="subtitle">Track distributor approval status for pickup address changes</p>
-                    </div>
-                </div>
-            </div>
-
-            @if(requestListError) {
-                <div class="form-error">{{ requestListError }}</div>
-            }
-
-            @if(isLoadingRequests) {
-                <div class="history-empty">Loading request history...</div>
-            } @else if(!addressRequests.length) {
-                <div class="history-empty">No address change requests submitted yet.</div>
-            } @else {
-                <div class="request-table-wrap">
-                    <table class="request-table">
-                        <thead>
-                            <tr>
-                                <th>Requested On</th>
-                                <th>Warehouse</th>
-                                <th>Requested Address</th>
-                                <th>Status</th>
-                                <th>Decision</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for(request of addressRequests; track request.id) {
-                                <tr>
-                                    <td>{{ formatDate(request.createdAt) }}</td>
-                                    <td>{{ request.warehouseId }}</td>
-                                    <td>{{ request.requestedAddress }}</td>
-                                    <td><span [class]="getRequestStatusClass(request.status)">{{ request.status }}</span></td>
-                                    <td>
-                                        @if(request.status === 'REJECTED') {
-                                            {{ request.rejectionReason || 'No reason provided' }}
-                                        } @else if(request.processedAt) {
-                                            {{ formatDate(request.processedAt) }}
-                                        } @else {
-                                            Awaiting review
-                                        }
-                                    </td>
-                                    <td>
-                                        @if(request.status === 'PENDING') {
-                                            <button class="btn-small-danger" [disabled]="cancellingRequestId === request.id" (click)="cancelAddressRequest(request)">
-                                                {{ cancellingRequestId === request.id ? 'Cancelling...' : 'Cancel' }}
-                                            </button>
-                                        } @else {
-                                            -
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="request-pagination">
-                    <button type="button" [disabled]="!requestHasPrevPage || isLoadingRequests" (click)="loadAddressRequests(requestPage - 1)">Previous</button>
-                    <span>Page {{ requestPage }} of {{ requestTotalPages }}</span>
-                    <button type="button" [disabled]="!requestHasNextPage || isLoadingRequests" (click)="loadAddressRequests(requestPage + 1)">Next</button>
-                </div>
-            }
-        </div>
-    </div>
     }
 </div>
 
-<!-- Address Change Request Dialog Modal -->
-@if (showAddressRequestConfirmation) {
-    <div class="modal-overlay" (click)="closeAddressRequest()">
-        <div class="modal-box" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-title-group">
-                    <div class="modal-icon warning">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1.2em; height: 1.2em;" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    </div>
-                    <div>
-                        <h3>Address Change Request</h3>
-                        <p class="modal-sub">Submit a ticket to request a new pickup location</p>
-                    </div>
-                </div>
-                <button class="modal-close-btn" (click)="closeAddressRequest()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;" class="svg-icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-            </div>
-            <div class="modal-body">
-                <p>To change your pickup address, submit the new address for distributor verification before it is used for Velocity shipment pickup.</p>
-                <div class="form-group">
-                    <label>Address Line</label>
-                    <input type="text" [(ngModel)]="requestedAddressLine" name="requestedAddressLine">
-                </div>
-                <div class="form-group">
-                    <label>City</label>
-                    <input type="text" [(ngModel)]="requestedCity" name="requestedCity">
-                </div>
-                <div class="form-group">
-                    <label>State</label>
-                    <input type="text" [(ngModel)]="requestedState" name="requestedState">
-                </div>
-                <div class="form-group">
-                    <label>Pincode</label>
-                    <input type="text" [(ngModel)]="requestedPincode" name="requestedPincode">
-                </div>
-                <div class="form-group">
-                    <label>Country</label>
-                    <input type="text" [(ngModel)]="requestedCountry" name="requestedCountry">
-                </div>
-                @if(requestError) {
-                    <div class="form-error">{{ requestError }}</div>
-                }
-                <div class="alert-info-box">
-                    <p>The existing warehouse address remains active until the request is approved.</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" (click)="closeAddressRequest()">Cancel</button>
-                <button class="btn-confirm" [disabled]="isRequestingAddressChange" (click)="submitAddressChangeRequest()">
-                    {{ isRequestingAddressChange ? 'Submitting...' : 'Submit Request' }}
-                </button>
-            </div>
-        </div>
-    </div>
-}

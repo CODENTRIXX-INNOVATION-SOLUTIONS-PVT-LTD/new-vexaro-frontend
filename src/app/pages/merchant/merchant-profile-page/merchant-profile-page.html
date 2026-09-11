@@ -16,7 +16,7 @@
     </div>
 
     @if(error) {
-        <div class="form-card error-card">{{ error }}</div>
+    <div class="form-card error-card">{{ error }}</div>
     }
 
     <div class="profile-tabs">
@@ -26,7 +26,7 @@
     </div>
 
     @if (isLoading) {
-        <div class="form-card">Loading merchant profile...</div>
+    <div class="form-card">Loading merchant profile...</div>
     }
 
     @if (!isLoading && activeTab === 'shop') {
@@ -41,11 +41,13 @@
         <div class="form-grid">
             <div class="form-group">
                 <label>Company / Shop Name <span class="req">*</span></label>
-                <input type="text" [(ngModel)]="shop.companyName" name="companyName" placeholder="Company or shop name" />
+                <input type="text" [(ngModel)]="shop.companyName" name="companyName"
+                    placeholder="Company or shop name" />
             </div>
             <div class="form-group">
                 <label>Registered Business Name</label>
-                <input type="text" [(ngModel)]="shop.businessName" name="businessName" placeholder="Registered business name" />
+                <input type="text" [(ngModel)]="shop.businessName" name="businessName"
+                    placeholder="Registered business name" />
             </div>
             <div class="form-group">
                 <label>Merchant Account ID</label>
@@ -99,7 +101,8 @@
                 <label>Mobile Number <span class="req">*</span></label>
                 <div class="input-with-prefix">
                     <span class="prefix">+91</span>
-                    <input type="tel" [(ngModel)]="owner.mobile" name="mobile" placeholder="10-digit number" maxlength="10" />
+                    <input type="tel" [(ngModel)]="owner.mobile" name="mobile" placeholder="10-digit number"
+                        maxlength="10" />
                 </div>
             </div>
             <div class="form-group">
@@ -118,33 +121,9 @@
 
     @if (!isLoading && activeTab === 'address') {
     <div class="form-card">
-        <div class="section-header">
-            <div>
-                <h3>Address & Pickup Warehouse</h3>
-                <p class="section-sub">Business address plus the Velocity pickup warehouse used for shipments.</p>
-            </div>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-group full-width">
-                <label>Registered Business Address</label>
-                <input type="text" [(ngModel)]="address.streetAddress" name="street" placeholder="Registered account address" />
-            </div>
-        </div>
-
-        <div class="form-actions compact-actions">
-            <button class="btn-save" (click)="saveChanges()" [disabled]="isSaving">
-                {{ isSaving ? 'Saving...' : 'Save Business Address' }}
-            </button>
-        </div>
-
         <div class="warehouse-section">
-            <div class="readonly-notice">
-                Pickup address changes require distributor approval. Use the <a routerLink="/merchant/warehouse">Warehouse page</a> for address change requests.
-            </div>
-
             @if (warehouseError) {
-                <div class="error-card inline-error">{{ warehouseError }}</div>
+            <div class="error-card inline-error">{{ warehouseError }}</div>
             }
 
             <div class="warehouse-grid">
@@ -157,7 +136,8 @@
                 <div class="info-card">
                     <div class="info-card-body">
                         <span class="info-label">Velocity Warehouse ID</span>
-                        <span class="info-val warehouse-id">{{ warehouse.velocityWarehouseId || 'Not synced yet' }}</span>
+                        <span class="info-val warehouse-id">{{ warehouse.velocityWarehouseId || 'Not synced yet'
+                            }}</span>
                     </div>
                 </div>
                 <div class="info-card">
