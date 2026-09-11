@@ -118,6 +118,13 @@ export class MerchantService {
     return this.http.patch<any>(`${this.baseUrl}/users/warehouses/${id}/contact`, payload);
   }
 
+  updateWarehouseAddress(
+    id: string,
+    payload: { addressLine?: string; city?: string; state?: string; pincode?: string; country?: string },
+  ): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/users/warehouses/${id}`, payload);
+  }
+
   requestWarehouseAddressChange(
     id: string,
     payload: { addressLine: string; city: string; state: string; pincode: string; country?: string },
