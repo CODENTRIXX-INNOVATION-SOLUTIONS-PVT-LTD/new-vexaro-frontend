@@ -203,6 +203,8 @@ export class MerchantProfile implements OnInit {
   }
 
   isNotActivated(): boolean {
+    // Show resend button for users who haven't completed initial setup
+    // This includes users who are not active OR active users who must change credentials
     return this.merchant.status === 'Not Set Password' || this.merchant.status === 'Not Activated';
   }
 
