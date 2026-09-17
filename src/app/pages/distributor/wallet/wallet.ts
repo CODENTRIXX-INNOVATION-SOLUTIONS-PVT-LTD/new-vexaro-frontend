@@ -15,7 +15,7 @@ export interface RazorpayPaymentRecord {
 }
 
 interface WalletTopupPolicy {
-  phase: 'training_first_topup' | 'reserve_completion_topup' | 'standard';
+  phase: 'reserve_completion_topup' | 'standard';
   minAmount: number;
   maxAmount: number | null;
   message: string | null;
@@ -169,7 +169,7 @@ export class DistributorWallet implements OnInit {
 
   async startTopup(): Promise<void> {
     let amount: number | null = null;
-    
+
     if (this.selectedPackage) {
       amount = this.selectedPackage;
     } else if (typeof this.customAmount === 'number' && this.customAmount > 0) {
@@ -177,12 +177,12 @@ export class DistributorWallet implements OnInit {
     } else if (this.customAmount === 'custom' && this.customAmountNumber && this.customAmountNumber > 0) {
       amount = this.customAmountNumber;
     }
-    
+
     if (!amount || amount <= 0) {
       this.errorMessage = 'Please select or enter a valid amount.';
       return;
     }
-    
+
     if (amount < 100) {
       this.errorMessage = 'Minimum top-up amount is ₹100.';
       return;
@@ -193,7 +193,7 @@ export class DistributorWallet implements OnInit {
       this.errorMessage = policyError;
       return;
     }
-    
+
     this.isProcessing = true;
     this.successMessage = '';
     this.errorMessage = '';
@@ -282,9 +282,9 @@ export class DistributorWallet implements OnInit {
     this.activeTab = tab;
     this.successMessage = '';
     this.errorMessage = '';
-    if (tab === 'history')      this.loadPaymentHistory();
+    if (tab === 'history') this.loadPaymentHistory();
     if (tab === 'transactions') this.loadTransactions();
-    if (tab === 'request')      this.loadRechargeRequests();
+    if (tab === 'request') this.loadRechargeRequests();
   }
 
   get successPaymentsCount(): number {
@@ -308,10 +308,7 @@ export class DistributorWallet implements OnInit {
   }
 
   private applyTopupPolicyOptions(): void {
-    if (this.topupPolicy?.phase === 'training_first_topup') {
-      this.packages = [200, 500, 1000, 2000];
-      this.customAmounts = [200, 500, 1000, 2000];
-    } else if (this.topupPolicy?.phase === 'reserve_completion_topup') {
+    if (this.topupPolicy?.phase === 'reserve_completion_topup') {
       const min = Math.max(1, this.topupPolicy.minAmount || 1);
       this.packages = Array.from(new Set([min, 2500, 5000, 10000, 25000, 50000, 100000]))
         .filter((amount) => amount >= min);
