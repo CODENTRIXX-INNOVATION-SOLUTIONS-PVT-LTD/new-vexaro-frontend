@@ -61,7 +61,7 @@ export interface DistributorTopupRequest {
 }
 
 interface WalletTopupPolicy {
-  phase: 'reserve_completion_topup' | 'standard';
+  phase: 'training_first_topup' | 'reserve_completion_topup' | 'standard';
   minAmount: number;
   maxAmount: number | null;
   message: string | null;
@@ -89,12 +89,12 @@ export class Payments implements OnInit, OnDestroy {
     this.activeTab = tab;
     this.topupSuccess = '';
     this.topupError = '';
-    if (tab === 'payments') this.loadRazorpayPayments();
-    if (tab === 'disputes') this.loadDisputes();
-    if (tab === 'transactions') this.loadTransactions();
-    if (tab === 'requests') this.loadRefundRequests();
-    if (tab === 'refunds') this.loadRefundRequests();
-    if (tab === 'dist-request') this.loadDistributorRequests();
+    if (tab === 'payments')      this.loadRazorpayPayments();
+    if (tab === 'disputes')      this.loadDisputes();
+    if (tab === 'transactions')  this.loadTransactions();
+    if (tab === 'requests')      this.loadRefundRequests();
+    if (tab === 'refunds')       this.loadRefundRequests();
+    if (tab === 'dist-request')  this.loadDistributorRequests();
   }
 
   // ── Wallet ────────────────────────────────────────────────────────────────
@@ -178,15 +178,15 @@ export class Payments implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           if (res?.data) {
-            this.balance = res.data.balance ?? 0;
+            this.balance          = res.data.balance         ?? 0;
             this.codEscrowBalance = res.data.codEscrowBalance ?? 0;
-            this.reservedBalance = res.data.reservedBalance ?? 0;
+            this.reservedBalance  = res.data.reservedBalance  ?? 0;
             this.availableBalance = res.data.availableBalance ?? 0;
-            this.topupPolicy = res.data.topupPolicy ?? null;
+            this.topupPolicy      = res.data.topupPolicy ?? null;
             this.applyTopupPolicyOptions();
           }
         },
-        error: () => { },
+        error: () => {},
       });
   }
 
@@ -213,16 +213,16 @@ export class Payments implements OnInit, OnDestroy {
         next: (res) => {
           const DEBIT_TYPES = new Set(['DEBIT', 'CHARGE', 'SETTLEMENT', 'TRANSFER_DEBIT', 'DISPUTE_CHARGE', 'RTO_CHARGE']);
           this.transactions = (res?.data?.transactions ?? []).map((t: any) => ({
-            id: t._id,
-            date: this.formatDateTime(t.createdAt),
+            id:          t._id,
+            date:        this.formatDateTime(t.createdAt),
             description: t.note || this.formatTxType(t.type),
-            type: DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
-            amount: Math.abs(t.amount ?? 0),
-            status: 'Success',
-            reference: t.reference || '—',
+            type:        DEBIT_TYPES.has(t.type) ? 'debit' : 'credit',
+            amount:      Math.abs(t.amount ?? 0),
+            status:      'Success',
+            reference:   t.reference || '—',
           }));
         },
-        error: () => { },
+        error: () => {},
       });
   }
 
@@ -236,18 +236,18 @@ export class Payments implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           const raw: any[] = res?.data?.payments ?? [];
-          this.paymentsTotal = res?.meta?.total ?? raw.length;
+          this.paymentsTotal    = res?.meta?.total ?? raw.length;
           this.razorpayPayments = raw.map((p: any) => ({
-            id: p._id,
-            date: this.formatDateTime(p.createdAt),
-            amount: p.amountRupees ?? p.amount,
-            method: p.paymentMethod ?? null,
-            status: p.status,
-            razorpayOrderId: p.razorpayOrderId,
+            id:                p._id,
+            date:              this.formatDateTime(p.createdAt),
+            amount:            p.amountRupees ?? p.amount,
+            method:            p.paymentMethod ?? null,
+            status:            p.status,
+            razorpayOrderId:   p.razorpayOrderId,
             razorpayPaymentId: p.razorpayPaymentId ?? null,
           }));
         },
-        error: () => { },
+        error: () => {},
       });
   }
 
@@ -260,16 +260,16 @@ export class Payments implements OnInit, OnDestroy {
         next: (res) => {
           const raw: any[] = res?.data?.refundRequests ?? res?.data?.requests ?? [];
           this.refundRequests = raw.map((r: any) => ({
-            id: r._id,
-            date: this.formatDateTime(r.createdAt),
-            awb: r.shipmentId?.awb ?? r.awb ?? '—',
-            amount: r.amount ?? 0,
-            reason: r.reason ?? '—',
-            status: r.status ?? 'PENDING',
+            id:         r._id,
+            date:       this.formatDateTime(r.createdAt),
+            awb:        r.shipmentId?.awb ?? r.awb ?? '—',
+            amount:     r.amount ?? 0,
+            reason:     r.reason ?? '—',
+            status:     r.status ?? 'PENDING',
             reviewNote: r.reviewNote ?? '—',
           }));
         },
-        error: () => { },
+        error: () => {},
       });
   }
 
@@ -282,15 +282,15 @@ export class Payments implements OnInit, OnDestroy {
         next: (res) => {
           const raw: any[] = res?.data?.requests ?? [];
           this.distributorRequests = raw.map((r: any) => ({
-            id: r._id,
-            date: this.formatDateTime(r.createdAt),
-            amount: r.amount ?? 0,
-            note: r.note ?? '—',
-            status: r.status ?? 'PENDING',
+            id:              r._id,
+            date:            this.formatDateTime(r.createdAt),
+            amount:          r.amount ?? 0,
+            note:            r.note   ?? '—',
+            status:          r.status ?? 'PENDING',
             rejectionReason: r.rejectionReason ?? '—',
           }));
         },
-        error: () => { },
+        error: () => {},
       });
   }
 
@@ -301,20 +301,20 @@ export class Payments implements OnInit, OnDestroy {
         next: (res) => {
           if (res.data?.items) {
             this.disputes = res.data.items.map((d: any) => ({
-              id: d._id,
-              date: this.formatDateTime(d.createdAt),
-              awb: d.shipmentId?.awb || '—',
+              id:           d._id,
+              date:         this.formatDateTime(d.createdAt),
+              awb:          d.shipmentId?.awb || '—',
               billedWeight: d.billedWeight || 0,
               actualWeight: d.actualWeight || 0,
-              difference: Math.max(0, (d.actualWeight || 0) - (d.billedWeight || 0)),
-              deduction: d.extraCharge || 0,
-              status: d.status,
-              contestNote: d.description || '',
-              attachments: (d.proofImages || []).map((img: string) => img.split('/').pop()),
+              difference:   Math.max(0, (d.actualWeight || 0) - (d.billedWeight || 0)),
+              deduction:    d.extraCharge || 0,
+              status:       d.status,
+              contestNote:  d.description || '',
+              attachments:  (d.proofImages || []).map((img: string) => img.split('/').pop()),
             }));
           }
         },
-        error: () => { },
+        error: () => {},
       });
   }
 
@@ -329,10 +329,10 @@ export class Payments implements OnInit, OnDestroy {
   }
 
   selectPackage(amount: number): void {
-    this.selectedPackage = amount;
-    this.customAmount = null;
-    this.topupSuccess = '';
-    this.topupError = '';
+    this.selectedPackage  = amount;
+    this.customAmount     = null;
+    this.topupSuccess     = '';
+    this.topupError       = '';
     this.distRequestError = '';
   }
 
@@ -340,14 +340,14 @@ export class Payments implements OnInit, OnDestroy {
     this.selectedPackage = null;
     this.customAmount = '';
     this.customAmountNumber = null;
-    this.topupSuccess = '';
-    this.topupError = '';
+    this.topupSuccess    = '';
+    this.topupError      = '';
     this.distRequestError = '';
   }
 
   async submitTopUp(): Promise<void> {
     let amount: number | null = null;
-
+    
     if (this.selectedPackage) {
       amount = this.selectedPackage;
     } else if (typeof this.customAmount === 'number' && this.customAmount > 0) {
@@ -355,12 +355,12 @@ export class Payments implements OnInit, OnDestroy {
     } else if (this.customAmount === 'custom' && this.customAmountNumber && this.customAmountNumber > 0) {
       amount = this.customAmountNumber;
     }
-
+    
     if (!amount || amount <= 0) {
       this.topupError = 'Please select or enter a valid amount to add.';
       return;
     }
-
+    
     if (amount < 100) {
       this.topupError = 'Minimum top-up amount is ₹100.';
       return;
@@ -371,22 +371,22 @@ export class Payments implements OnInit, OnDestroy {
       this.topupError = policyError;
       return;
     }
-
+    
     this.isPaymentProcessing = true;
     this.topupSuccess = '';
-    this.topupError = '';
+    this.topupError   = '';
     try {
       const result = await this.financeService.startRazorpayWalletTopup(amount);
-      this.balance = result.balance;
+      this.balance      = result.balance;
       this.topupSuccess = `₹${amount.toLocaleString('en-IN')} added to your wallet successfully!`;
-      this.selectedPackage = null;
-      this.customAmount = null;
+      this.selectedPackage  = null;
+      this.customAmount     = null;
       this.customAmountNumber = null;
-      this.transactions = [];
-      this.txLoading = false;
+      this.transactions     = [];
+      this.txLoading        = false;
       this.loadTransactions();
       this.razorpayPayments = [];
-      this.paymentsLoading = false;
+      this.paymentsLoading  = false;
       this.loadWalletDetails();
       this.loadRazorpayPayments();
     } catch (err: any) {
@@ -409,37 +409,37 @@ export class Payments implements OnInit, OnDestroy {
       return;
     }
     this.distRequestSubmitting = true;
-    this.distRequestSuccess = '';
-    this.distRequestError = '';
+    this.distRequestSuccess    = '';
+    this.distRequestError      = '';
 
     this.financeService.createMerchantRechargeRequest({
       amount: this.distRequestAmount,
-      note: this.distRequestNote.trim() || undefined,
+      note:   this.distRequestNote.trim() || undefined,
     })
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => { this.distRequestSubmitting = false; }),
-      )
-      .subscribe({
-        next: () => {
-          this.distRequestSuccess = `Top-up request for ₹${this.distRequestAmount!.toLocaleString('en-IN')} sent to your ${this.requestApprover}.`;
-          this.distRequestAmount = null;
-          this.distRequestNote = '';
-          // Force reload the list fresh
-          this.distRequestsLoading = false;
-          this.loadDistributorRequests();
-        },
-        error: (err: any) => {
-          this.distRequestError = err?.error?.message ?? 'Failed to send request. Please try again.';
-        },
-      });
+    .pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.distRequestSubmitting = false; }),
+    )
+    .subscribe({
+      next: () => {
+        this.distRequestSuccess = `Top-up request for ₹${this.distRequestAmount!.toLocaleString('en-IN')} sent to your ${this.requestApprover}.`;
+        this.distRequestAmount  = null;
+        this.distRequestNote    = '';
+        // Force reload the list fresh
+        this.distRequestsLoading = false;
+        this.loadDistributorRequests();
+      },
+      error: (err: any) => {
+        this.distRequestError = err?.error?.message ?? 'Failed to send request. Please try again.';
+      },
+    });
   }
 
   // ── Refund Request Form ───────────────────────────────────────────────────
 
   openRefundForm(): void {
-    this.showRefundForm = true;
-    this.newRefund = { shipmentId: '', amount: null, reason: '' };
+    this.showRefundForm  = true;
+    this.newRefund       = { shipmentId: '', amount: null, reason: '' };
     this.refundFormError = '';
     this.refundFormSuccess = '';
   }
@@ -452,34 +452,34 @@ export class Payments implements OnInit, OnDestroy {
       return;
     }
     this.refundSubmitting = true;
-    this.refundFormError = '';
+    this.refundFormError  = '';
     this.financeService.submitRefundRequest({
       shipmentId: this.newRefund.shipmentId.trim(),
-      amount: this.newRefund.amount,
-      reason: this.newRefund.reason.trim(),
+      amount:     this.newRefund.amount,
+      reason:     this.newRefund.reason.trim(),
     })
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => { this.refundSubmitting = false; }),
-      )
-      .subscribe({
-        next: () => {
-          this.refundFormSuccess = 'Refund request submitted successfully.';
-          this.newRefund = { shipmentId: '', amount: null, reason: '' };
-          this.refundRequestsLoading = false;
-          this.loadRefundRequests();
-          setTimeout(() => { this.showRefundForm = false; this.refundFormSuccess = ''; }, 2000);
-        },
-        error: (err: any) => {
-          this.refundFormError = err?.error?.message ?? 'Failed to submit refund request.';
-        },
-      });
+    .pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.refundSubmitting = false; }),
+    )
+    .subscribe({
+      next: () => {
+        this.refundFormSuccess = 'Refund request submitted successfully.';
+        this.newRefund         = { shipmentId: '', amount: null, reason: '' };
+        this.refundRequestsLoading = false;
+        this.loadRefundRequests();
+        setTimeout(() => { this.showRefundForm = false; this.refundFormSuccess = ''; }, 2000);
+      },
+      error: (err: any) => {
+        this.refundFormError = err?.error?.message ?? 'Failed to submit refund request.';
+      },
+    });
   }
 
   // ── Payments pagination / filter ──────────────────────────────────────────
 
   applyPaymentsFilter(): void {
-    this.paymentsPage = 1;
+    this.paymentsPage    = 1;
     this.paymentsLoading = false;
     this.loadRazorpayPayments();
   }
@@ -547,7 +547,10 @@ export class Payments implements OnInit, OnDestroy {
   }
 
   private applyTopupPolicyOptions(): void {
-    if (this.topupPolicy?.phase === 'reserve_completion_topup') {
+    if (this.topupPolicy?.phase === 'training_first_topup') {
+      this.packages = [200, 500, 1000, 2000];
+      this.customAmounts = [200, 500, 1000, 2000];
+    } else if (this.topupPolicy?.phase === 'reserve_completion_topup') {
       const min = Math.max(1, this.topupPolicy.minAmount || 1);
       this.packages = Array.from(new Set([min, 2500, 5000, 10000, 25000]))
         .filter((amount) => amount >= min);
@@ -582,11 +585,11 @@ export class Payments implements OnInit, OnDestroy {
     this.selectedFileNames = [];
     this.contestError = '';
     this.showContestModal = true;
-    this.contestSuccess = '';
+    this.contestSuccess    = '';
   }
 
   closeContest(): void {
-    this.showContestModal = false;
+    this.showContestModal  = false;
     this.contestingDispute = null;
   }
 
@@ -597,7 +600,7 @@ export class Payments implements OnInit, OnDestroy {
       this.selectedFileNames = this.selectedFiles.map(f => f.name);
       this.contestError = '';
     }
-    //     if (input.files) this.selectedFileNames = Array.from(input.files).map(f => f.name);
+//     if (input.files) this.selectedFileNames = Array.from(input.files).map(f => f.name);
   }
 
   submitContest(): void {
@@ -640,14 +643,14 @@ export class Payments implements OnInit, OnDestroy {
 
   private formatTxType(type: string): string {
     const map: Record<string, string> = {
-      TOPUP: 'Wallet Top-up',
-      CHARGE: 'Shipment Charge',
-      REFUND: 'Refund',
-      COD_CREDIT: 'COD Credit',
+      TOPUP:           'Wallet Top-up',
+      CHARGE:          'Shipment Charge',
+      REFUND:          'Refund',
+      COD_CREDIT:      'COD Credit',
       TRANSFER_CREDIT: 'Transfer In',
-      TRANSFER_DEBIT: 'Transfer Out',
-      DISPUTE_CHARGE: 'Dispute Deduction',
-      RTO_CHARGE: 'RTO Charge',
+      TRANSFER_DEBIT:  'Transfer Out',
+      DISPUTE_CHARGE:  'Dispute Deduction',
+      RTO_CHARGE:      'RTO Charge',
     };
     return map[type] ?? type;
   }
