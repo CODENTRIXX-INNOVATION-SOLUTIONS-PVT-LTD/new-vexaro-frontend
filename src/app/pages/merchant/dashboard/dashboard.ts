@@ -63,11 +63,14 @@ export class MarchandeDashboardPage implements OnInit {
   shipmentLimit = 10;
 
   cards = [
-    { title: 'Total Shipments', value: '-', icon: 'fas fa-box', iconColor: 'rgb(11, 74, 111)', bgColor: '#dbeafe' },
+    { title: 'Total Orders', value: '-', icon: 'fas fa-box', iconColor: 'rgb(11, 74, 111)', bgColor: '#dbeafe' },
+    { title: 'Pending Orders', value: '-', icon: 'fas fa-clock', iconColor: '#f59e0b', bgColor: '#fef3c7' },
+    { title: 'In Transit', value: '-', icon: 'fas fa-truck', iconColor: '#0284c7', bgColor: '#e0f2fe' },
     { title: 'Delivered', value: '-', icon: 'fas fa-check-circle', iconColor: '#16a34a', bgColor: '#dcfce7' },
-    { title: 'In Transit', value: '-', icon: 'fas fa-truck', iconColor: 'rgb(232, 116, 58)', bgColor: '#fef3c7' },
-    { title: 'Pending Pickup', value: '-', icon: 'fas fa-clock', iconColor: '#dc2626', bgColor: '#fee2e2' },
-    { title: 'Total Spend', value: '-', icon: 'fas fa-indian-rupee-sign', iconColor: '#7c3aed', bgColor: '#ede9fe' },
+    { title: 'Cancelled', value: '-', icon: 'fas fa-cancel', iconColor: '#ef4444', bgColor: '#fee2e2' },
+    { title: 'Failed / RTO', value: '-', icon: 'fas fa-scale-dispute', iconColor: '#dc2626', bgColor: '#fef2f2' },
+    { title: 'Today\'s Orders', value: '-', icon: 'fas fa-store', iconColor: '#8b5cf6', bgColor: '#ede9fe' },
+    { title: 'Total Spend', value: '-', icon: 'fas fa-indian-rupee-sign', iconColor: '#7c3aed', bgColor: '#f5f3ff' },
   ];
 
   shipments: DashboardShipment[] = [];
@@ -90,11 +93,18 @@ export class MarchandeDashboardPage implements OnInit {
 
     forkJoin([stats$, shipments$]).subscribe({
       next: ([statsRes, shipmentsRes]) => {
-        this.applyStats(statsRes?.data ?? statsRes ?? {});
+        const stats = statsRes?.data ?? statsRes ?? {};
+        console.log('[Dashboard] Stats API response:', statsRes);
+        console.log('[Dashboard] Resolved stats:', stats);
+        console.log('[Dashboard] byStatus:', stats?.byStatus);
+        this.applyStats(stats);
         this.applyShipmentResponse(shipmentsRes, null);
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: (err) => {
+        console.error('[Dashboard] forkJoin error:', err);
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -102,15 +112,37 @@ export class MarchandeDashboardPage implements OnInit {
     this.dashboardStats = stats || {};
     const by = this.dashboardStats.byStatus || {};
 
+    const getCount = (...keys: string[]): number => {
+      let sum = 0;
+      for (const k of keys) {
+        sum += (by[k] || by[k.toUpperCase()] || by[k.toLowerCase()] || 0);
+      }
+      return sum;
+    };
+
+    // 0 — Total Orders
     this.cards[0].value = (this.dashboardStats.total || 0).toLocaleString('en-IN');
-    this.cards[1].value = (by.DELIVERED || 0).toLocaleString('en-IN');
-    this.cards[2].value = (
-      (by.PICKED_UP || 0) +
-      (by.ARRIVED_AT_HUB || 0) +
-      (by.OUT_FOR_DELIVERY || 0)
-    ).toLocaleString('en-IN');
-    this.cards[3].value = (by.ORDER_CREATED || 0).toLocaleString('en-IN');
-    this.cards[4].value = `₹${(this.dashboardStats.totalCost || 0).toLocaleString('en-IN')}`;
+
+    // 1 — Pending Orders (ORDER_CREATED)
+    this.cards[1].value = getCount('ORDER_CREATED').toLocaleString('en-IN');
+
+    // 2 — In Transit (PICKED_UP + ARRIVED_AT_HUB + OUT_FOR_DELIVERY)
+    this.cards[2].value = getCount('PICKED_UP', 'ARRIVED_AT_HUB', 'OUT_FOR_DELIVERY').toLocaleString('en-IN');
+
+    // 3 — Delivered
+    this.cards[3].value = getCount('DELIVERED').toLocaleString('en-IN');
+
+    // 4 — Cancelled
+    this.cards[4].value = getCount('CANCELLED').toLocaleString('en-IN');
+
+    // 5 — Failed / RTO (DELIVERY_FAILED + RTO)
+    this.cards[5].value = getCount('DELIVERY_FAILED', 'RTO').toLocaleString('en-IN');
+
+    // 6 — Today's Orders
+    this.cards[6].value = (this.dashboardStats.today || 0).toLocaleString('en-IN');
+
+    // 7 — Total Spend
+    this.cards[7].value = `₹${Number(this.dashboardStats.totalCost || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   private applyShipmentResponse(response: any, selectionMode: ModalSelectionMode): void {
