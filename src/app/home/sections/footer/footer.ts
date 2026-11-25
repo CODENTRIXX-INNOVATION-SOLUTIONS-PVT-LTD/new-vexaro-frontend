@@ -20,7 +20,7 @@ export class Footer {
     address: '308, Shagun Tower, Vijay Nagar, Indore, MP - 452010',
     email: 'info@vexarocouriersolutions.com',
     emails: ['info@vexarocouriersolutions.com', 'Vexarocouriersolution@gmail.com'],
-    phone: '+91-9183888181'
+    phone: '+91-7024262355'
   };
 
   readonly legal = {
